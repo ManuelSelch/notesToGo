@@ -1,6 +1,7 @@
 import Foundation
 import PencilKit
 import PaperKit
+import PDFKit
 
 @Observable
 class Editor {
@@ -8,6 +9,7 @@ class Editor {
     var markup: PaperMarkup?
     let toolPicker = PKToolPicker()
     
+    // MARK: - controller
     func initializeController(_ rect: CGRect) {
         let controller = PaperMarkupViewController(supportedFeatureSet: .latest)
         let markup = PaperMarkup(bounds: rect)
@@ -23,7 +25,11 @@ class Editor {
         }
     }
     
-    /// markup editing methods
+    func refreshController() {
+        controller?.markup = markup
+    }
+    
+    // MARK: - markup editing methods
     func insertText(_ text: NSAttributedString, rect: CGRect = .zero) {
         markup?.insertNewTextbox(attributedText: text, frame: rect)
         refreshController()
@@ -41,8 +47,6 @@ class Editor {
         refreshController()
     }
     
-    
-    /// pencil
     func showPencilTools(_ isVisible: Bool) {
         guard let controller else { return }
         
@@ -54,12 +58,31 @@ class Editor {
         }
     }
     
-    /// updating controller
-    func refreshController() {
-        controller?.markup = markup
+    // MARK: - export
+    
+    // saves editable markup to url
+    func save(to url: URL) async {
+        guard let markup else { return }
+        
+        do {
+            let data = try await markup.dataRepresentation()
+            try data.write(to: url)
+        } catch {
+            
+        }
+    }
+    
+    // loads editable markup from url
+    func load(from url: URL) async {
+        do {
+            let data = try Data(contentsOf: url)
+            let markup = try PaperMarkup(dataRepresentation: data)
+            self.markup = markup
+        } catch {
+            
+        }
     }
 }
-
 
 /// calculating center rect
 extension NSAttributedString {
