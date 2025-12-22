@@ -1,29 +1,54 @@
 import SwiftUI
 
 struct ExplorerContainer: View {
-    @State var documents: [DocumentItem] = []
+    @State var docs: [Document] = []
+    @State var showCreateNote = false
+    @State var selectedFolder: URL? = nil
     
     let explorer = Explorer()
     
     var body: some View {
         NavigationStack {
-            ExplorerView(documents: $documents)
+            ExplorerView(docs: $docs)
                 .onAppear {
-                    self.documents = self.explorer.loadAllDocuments()
+                    Task {
+                        docs = (try? await explorer.loadAllDocs()) ?? []
+                    }
                 }
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing, content: CreateToolbar)
                 }
+                .sheet(isPresented: $showCreateNote) {
+                    VStack {
+                        Button(action: {
+                            Task {
+                                guard let note = try? await explorer.addNote(at: selectedFolder, name: "NewNote") else { return }
+                                docs.append(.note(note))
+                            }
+                        }) {
+                            Text("Add Note")
+                        }
+                        
+                        Button(action: {
+                            
+                        }) {
+                            Text("Add Folder")
+                        }
+                    }
+                    .presentationDetents([.medium])
+                }
         }
     }
+    
+    @ViewBuilder
+    func CreateToolbar() -> some View {
+        Button(action: { showCreateNote = true }) {
+            Image(systemName: "plus")
+        }
+    }
+
 }
 
-@ViewBuilder
-func CreateToolbar() -> some View {
-    Button(action: {}) {
-        Image(systemName: "plus")
-    }
-}
 
 #Preview {
     ExplorerContainer()
