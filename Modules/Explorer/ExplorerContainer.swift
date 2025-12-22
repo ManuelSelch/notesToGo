@@ -1,4 +1,5 @@
 import SwiftUI
+import Router
 
 struct ExplorerContainer: View {
     @State var docs: [Document] = []
@@ -24,6 +25,8 @@ struct ExplorerContainer: View {
                             Task {
                                 guard let note = try? await explorer.addNote(at: selectedFolder, name: "NewNote") else { return }
                                 docs.append(.note(note))
+                                
+                                MyRouter.shared.push(.editor)
                             }
                         }) {
                             Text("Add Note")
