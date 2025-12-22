@@ -1,4 +1,4 @@
-# NotesToGo 📝
+# NotesToGo
 
 - **NotesToGo** is a lightweight iOS notes app built with `SwiftUI`, focused on fast, distraction-free note-taking directly on PDFs.
 - The app is designed around speed, smooth interactions, and core functionality
