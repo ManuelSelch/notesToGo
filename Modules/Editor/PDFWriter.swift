@@ -57,8 +57,9 @@ class PageOverlayProvider: NSObject, PDFPageOverlayViewProvider {
             let canvas = PKCanvasView()
             canvas.backgroundColor = .clear
             canvas.isOpaque = false
-            canvas.tool = PKInkingTool(.pen, color: .blue, width: 30)
-            canvas.drawingPolicy = .anyInput
+            canvas.tool = PKInkingTool(.monoline, color: .blue, width: 1)
+            canvas.drawingPolicy = .pencilOnly
+            
             
             canvasViews[page] = canvas
             resultView = canvas
