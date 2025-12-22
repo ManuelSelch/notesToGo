@@ -3,15 +3,15 @@ import PaperKit
 
 struct EditorView: View {
     var size: CGSize
-    @State var data: EditorData
+    @Binding var editor: Editor
     
     var body: some View {
-        if let controller = data.controller {
+        if let controller = editor.controller {
             PaperControllerView(controller: controller)
         } else {
             ProgressView()
                 .onAppear {
-                    data.initializeController(.init(origin: .zero, size: size))
+                    editor.initializeController(.init(origin: .zero, size: size))
                 }
         }
     }
@@ -31,6 +31,6 @@ fileprivate struct PaperControllerView: UIViewControllerRepresentable {
 }
 
 #Preview {
-    ContentView()
+    EditorContainer()
 }
 

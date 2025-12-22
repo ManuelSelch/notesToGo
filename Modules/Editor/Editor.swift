@@ -3,7 +3,7 @@ import PencilKit
 import PaperKit
 
 @Observable
-class EditorData {
+class Editor {
     var controller: PaperMarkupViewController?
     var markup: PaperMarkup?
     let toolPicker = PKToolPicker()
@@ -21,28 +21,22 @@ class EditorData {
             self.controller?.markup = markup
             self.controller?.zoomRange = 0.8...1.5
         }
-        
-        let welcomeText = NSAttributedString(string: "Welcome", attributes: [
-            .font: UIFont.systemFont(ofSize: 18)
-        ])
-        let center = welcomeText.centerRect(in: rect)
-        insertText(welcomeText, rect: center)
     }
     
     /// markup editing methods
-    func insertText(_ text: NSAttributedString, rect: CGRect) {
+    func insertText(_ text: NSAttributedString, rect: CGRect = .zero) {
         markup?.insertNewTextbox(attributedText: text, frame: rect)
         refreshController()
     }
     
-    func insertImage(_ image: UIImage, rect: CGRect) {
+    func insertImage(_ image: UIImage, rect: CGRect = .zero) {
         guard let cgImage = image.cgImage else { return }
         
         markup?.insertNewImage(cgImage, frame: rect)
         refreshController()
     }
     
-    func insertShape(_ type: ShapeConfiguration, rect: CGRect) {
+    func insertShape(_ type: ShapeConfiguration, rect: CGRect = .zero) {
         markup?.insertNewShape(configuration: type, frame: rect)
         refreshController()
     }
