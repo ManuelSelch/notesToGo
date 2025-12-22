@@ -3,23 +3,18 @@ import PencilKit
 import PDFKit
 
 struct ContentView: View {
-    private static let examplePDFURL = Bundle.main.url(
-        forResource: "example",
-        withExtension: "pdf"
-    )!
-    
-    @State private var document: PDFDocument? = PDFDocument(url: examplePDFURL)
+    @State var data = EditorData()
+    @State var showTools = false
     
     var body: some View {
-        VStack {
-            Text("Notes to go")
-            
-            if let doc = document {
-                PDFKitViewWithOverlay(document: doc)
-                    .edgesIgnoringSafeArea(.all)
-            } else {
-                Text("Loading PDF…")
-            }
+        NavigationStack {
+            EditorView(size: .init(width: 350, height: 670), data: data)
+                .toolbar {
+                    Button(showTools ? "Hide": "Show") {
+                        showTools.toggle()
+                        data.showPencilTools(showTools)
+                    }
+                }
         }
     }
 }
