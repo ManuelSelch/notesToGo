@@ -9,7 +9,7 @@ enum Document: Identifiable, Hashable {
     var id: Self { self }
 }
 
-struct Note: Identifiable, Hashable {
+struct Note: Identifiable, Hashable, Codable {
     let pdf: URL
     let markup: URL
     
@@ -23,10 +23,8 @@ class Explorer {
     func loadAllDocs(in folder: URL? = nil) async throws -> [Document] {
         var docs: [Document] = []
         
-        let notes: [Document] = loadNotes(in: folder).map { .note($0) }
-        let folders: [Document] = loadFolders(in: folder).map { .folder($0) }
-        
-        docs.append(contentsOf: notes)
+        docs.append(contentsOf: loadNotes(in: folder).map { .note($0) })
+        docs.append(contentsOf: loadFolders(in: folder).map { .folder($0) })
         
         return docs
     }

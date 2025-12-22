@@ -10,7 +10,11 @@ struct ExplorerContainer: View {
     
     var body: some View {
         NavigationStack {
-            ExplorerView(docs: $docs)
+            ExplorerView(
+                docs: $docs,
+                noteTapped: { note in MyRouter.shared.push(.editor(note)) },
+                folderTapped: { folder in MyRouter.shared.push(.explorer(folder))}
+            )
                 .onAppear {
                     Task {
                         docs = (try? await explorer.loadAllDocs()) ?? []
@@ -26,7 +30,7 @@ struct ExplorerContainer: View {
                                 guard let note = try? await explorer.addNote(at: selectedFolder, name: "NewNote") else { return }
                                 docs.append(.note(note))
                                 
-                                MyRouter.shared.push(.editor)
+                                MyRouter.shared.push(.editor(note))
                             }
                         }) {
                             Text("Add Note")
