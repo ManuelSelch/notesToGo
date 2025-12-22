@@ -10,12 +10,29 @@ struct ContentView: View {
         NavigationStack {
             EditorView(size: .init(width: 350, height: 670), data: data)
                 .toolbar {
-                    Button(showTools ? "Hide": "Show") {
-                        showTools.toggle()
-                        data.showPencilTools(showTools)
-                    }
+                    toolbar()
                 }
+                .ignoresSafeArea(.all)
         }
     }
+    
+    @ViewBuilder
+    func toolbar() -> some View {
+        HStack {
+            Button("Text") {
+                data.insertText(.init(string: "Hello World"), rect: .zero)
+            }
+            
+            Button(showTools ? "Done": "Draw") {
+                showTools.toggle()
+                data.showPencilTools(showTools)
+            }
+        }
+    }
+
 }
 
+
+#Preview {
+    ContentView()
+}

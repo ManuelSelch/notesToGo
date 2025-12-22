@@ -35,6 +35,19 @@ class EditorData {
         refreshController()
     }
     
+    func insertImage(_ image: UIImage, rect: CGRect) {
+        guard let cgImage = image.cgImage else { return }
+        
+        markup?.insertNewImage(cgImage, frame: rect)
+        refreshController()
+    }
+    
+    func insertShape(_ type: ShapeConfiguration, rect: CGRect) {
+        markup?.insertNewShape(configuration: type, frame: rect)
+        refreshController()
+    }
+    
+    
     /// pencil
     func showPencilTools(_ isVisible: Bool) {
         guard let controller else { return }
