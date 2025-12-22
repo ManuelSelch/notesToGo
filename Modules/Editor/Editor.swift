@@ -47,6 +47,7 @@ class Editor {
         refreshController()
     }
     
+    /// show or hide native pencil tools
     func showPencilTools(_ isVisible: Bool) {
         guard let controller else { return }
         
@@ -59,8 +60,7 @@ class Editor {
     }
     
     // MARK: - export
-    
-    // saves editable markup to url
+    /// saves editable markup to url
     func save(to url: URL) async {
         guard let markup else { return }
         
@@ -72,7 +72,7 @@ class Editor {
         }
     }
     
-    // loads editable markup from url
+    /// loads editable markup from url
     func load(from url: URL) async {
         do {
             let data = try Data(contentsOf: url)

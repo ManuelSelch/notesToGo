@@ -13,8 +13,8 @@ struct EditorContainer: View {
         NavigationStack {
             EditorView(size: .init(width: 350, height: 670), editor: $editor)
                 .toolbar {
-                    ToolbarItem(placement: .topBarLeading, content: saveToolbar)
-                    ToolbarItem(placement: .topBarTrailing, content: editToolbar)
+                    ToolbarItem(placement: .topBarLeading, content: SaveToolbar)
+                    ToolbarItem(placement: .topBarTrailing, content: EditToolbar)
                 }
                 .ignoresSafeArea(.all)
         }
@@ -36,7 +36,7 @@ struct EditorContainer: View {
     }
     
     @ViewBuilder
-    func editToolbar() -> some View {
+    func EditToolbar() -> some View {
         HStack {
             Button("Text") {
                 editor.insertText(.init(string: "Hello World"))
@@ -54,7 +54,7 @@ struct EditorContainer: View {
     }
     
     @ViewBuilder
-    func saveToolbar() -> some View {
+    func SaveToolbar() -> some View {
         HStack {
             Button("Save") {
                 editor.insertText(.init(string: "Hello World"))
