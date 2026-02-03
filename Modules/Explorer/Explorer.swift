@@ -13,7 +13,7 @@ struct Note: Identifiable, Hashable, Codable {
     let pdf: URL
     let markup: URL
     
-    var id: URL { markup }
+    var id: URL { markup.absoluteURL }
 }
 
 /// load & save documents & folders
