@@ -2,14 +2,14 @@ import SwiftUI
 import Router
 
 struct AppContainer: View {
-    @StateObject var router = MyRouter.shared
+
     
     var body: some View {
-        StackRouterView(router, content: { route in
+        StackRouterView(MyRouter.shared, content: { route in
             VStack {
                 HStack {
                     Button("route", action: {
-                        router.push(.test)
+                        MyRouter.shared.push(.test)
                     })
                 }
                 switch route {

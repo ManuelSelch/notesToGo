@@ -10,7 +10,7 @@ struct EditorContainer: View {
     @State var photoItem: PhotosPickerItem?
     
     var body: some View {
-        NavigationStack {
+        VStack {
             EditorView(size: .init(width: 350, height: 670), editor: $editor)
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading, content: SaveToolbar)

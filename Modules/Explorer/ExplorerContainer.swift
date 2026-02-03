@@ -30,7 +30,9 @@ struct ExplorerContainer: View {
                                 guard let note = try? await explorer.addNote(at: selectedFolder, name: "NewNote") else { return }
                                 docs.append(.note(note))
                                 
-                                MyRouter.shared.push(.editor(note))
+                                await MainActor.run {
+                                    MyRouter.shared.push(.editor(note))
+                                }
                             }
                         }) {
                             Text("Add Note")
