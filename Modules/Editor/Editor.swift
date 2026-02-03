@@ -10,16 +10,13 @@ class Editor {
     
     // MARK: - controller
     func initializeController(_ rect: CGRect) {
-        let controller = PaperMarkupViewController(supportedFeatureSet: .latest)
-        let markup = PaperMarkup(bounds: rect)
+        guard controller == nil else { return } // create controller only once
         
-        if let existingController = self.controller {
-            existingController.markup = markup
-        } else {
-            self.controller = controller
-            self.controller?.markup = markup
-            self.controller?.zoomRange = 0.8...1.5
-        }
+        let controller = PaperMarkupViewController(supportedFeatureSet: .latest)
+        controller.markup = PaperMarkup(bounds: rect)
+        controller.zoomRange = 0.8...1.5
+        
+        self.controller = controller
     }
     
     func refreshController() {
