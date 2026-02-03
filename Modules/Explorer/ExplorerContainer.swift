@@ -1,7 +1,10 @@
 import SwiftUI
 import Router
+import Dependencies
 
 struct ExplorerContainer: View {
+    @Dependency(\.router) var router
+    
     @State var docs: [Document] = []
     @State var showCreateNote = false
     @State var selectedFolder: URL? = nil
@@ -12,8 +15,8 @@ struct ExplorerContainer: View {
         NavigationStack {
             ExplorerView(
                 docs: $docs,
-                noteTapped: { note in MyRouter.shared.push(.editor(note)) },
-                folderTapped: { folder in MyRouter.shared.push(.explorer(folder))}
+                noteTapped: { note in router.push(.editor(note)) },
+                folderTapped: { folder in router.push(.explorer(folder))}
             )
                 .onAppear {
                     Task {
@@ -30,9 +33,7 @@ struct ExplorerContainer: View {
                                 guard let note = try? await explorer.addNote(at: selectedFolder, name: "NewNote") else { return }
                                 docs.append(.note(note))
                                 
-                                await MainActor.run {
-                                    MyRouter.shared.push(.editor(note))
-                                }
+                                router.push(.editor(note))
                             }
                         }) {
                             Text("Add Note")

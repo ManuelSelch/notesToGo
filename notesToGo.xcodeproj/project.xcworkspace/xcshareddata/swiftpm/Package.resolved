@@ -1,6 +1,15 @@
 {
-  "originHash" : "14e64cdc13deb24792d14d9578f0ef77ad28505e67e4bfaefcecdd289c24f2c6",
+  "originHash" : "5277dbec3dfa260247c6a3f51f63d2d8050d51c31fef25a5720409b4c12d62e8",
   "pins" : [
+    {
+      "identity" : "dependencies",
+      "kind" : "remoteSourceControl",
+      "location" : "git@github.com:ManuelSelch/Dependencies.git",
+      "state" : {
+        "revision" : "05e83fce3f0d99224533d74499d09b2632884122",
+        "version" : "2.0.0"
+      }
+    },
     {
       "identity" : "objc-runtime-tools",
       "kind" : "remoteSourceControl",

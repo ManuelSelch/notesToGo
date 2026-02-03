@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		97C3AD792F325E77005535E0 /* Dependencies in Frameworks */ = {isa = PBXBuildFile; productRef = 97C3AD782F325E77005535E0 /* Dependencies */; };
 		97E9E6D82EF9B246007AEB5F /* Router in Frameworks */ = {isa = PBXBuildFile; productRef = 97E9E6D72EF9B246007AEB5F /* Router */; };
 /* End PBXBuildFile section */
 
@@ -33,6 +34,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				97E9E6D82EF9B246007AEB5F /* Router in Frameworks */,
+				97C3AD792F325E77005535E0 /* Dependencies in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,6 +80,7 @@
 			name = notesToGo;
 			packageProductDependencies = (
 				97E9E6D72EF9B246007AEB5F /* Router */,
+				97C3AD782F325E77005535E0 /* Dependencies */,
 			);
 			productName = notesToGo;
 			productReference = 97192D032EF32240000C9F6A /* notesToGo.app */;
@@ -109,6 +112,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				97E9E6D62EF9B246007AEB5F /* XCRemoteSwiftPackageReference "Router" */,
+				97C3AD772F325E77005535E0 /* XCRemoteSwiftPackageReference "Dependencies" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 97192D042EF32240000C9F6A /* Products */;
@@ -371,6 +375,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		97C3AD772F325E77005535E0 /* XCRemoteSwiftPackageReference "Dependencies" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "git@github.com:ManuelSelch/Dependencies.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
 		97E9E6D62EF9B246007AEB5F /* XCRemoteSwiftPackageReference "Router" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "git@github.com:ManuelSelch/Router.git";
@@ -382,6 +394,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		97C3AD782F325E77005535E0 /* Dependencies */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 97C3AD772F325E77005535E0 /* XCRemoteSwiftPackageReference "Dependencies" */;
+			productName = Dependencies;
+		};
 		97E9E6D72EF9B246007AEB5F /* Router */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 97E9E6D62EF9B246007AEB5F /* XCRemoteSwiftPackageReference "Router" */;

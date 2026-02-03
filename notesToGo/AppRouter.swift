@@ -1,5 +1,8 @@
 import Foundation
 import Router
+import Dependencies
+
+typealias MyRouter = StackRouter<AppRoute>
 
 enum AppRoute: Equatable & Hashable & Identifiable & Codable {
     case test
@@ -18,7 +21,10 @@ enum AppRoute: Equatable & Hashable & Identifiable & Codable {
     }
 }
 
-@MainActor
-struct MyRouter {
-    static let shared: StackRouter<AppRoute> = .init(root: .explorer(nil))
+struct RouterKey: DependencyKey {
+    static var liveValue: MyRouter = .init(root: .explorer(nil))
+}
+
+extension DependencyValues {
+    var router: MyRouter { Self[RouterKey.self] }
 }
