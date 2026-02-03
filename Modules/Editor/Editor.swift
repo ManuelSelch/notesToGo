@@ -6,7 +6,6 @@ import PDFKit
 @Observable
 class Editor {
     var controller: PaperMarkupViewController?
-    var markup: PaperMarkup?
     let toolPicker = PKToolPicker()
     
     // MARK: - controller
@@ -16,9 +15,7 @@ class Editor {
         
         if let existingController = self.controller {
             existingController.markup = markup
-            self.markup = markup
         } else {
-            self.markup = markup
             self.controller = controller
             self.controller?.markup = markup
             self.controller?.zoomRange = 0.8...1.5
@@ -26,24 +23,24 @@ class Editor {
     }
     
     func refreshController() {
-        controller?.markup = markup
+        // controller?.markup = markup
     }
     
     // MARK: - markup editing methods
     func insertText(_ text: NSAttributedString, rect: CGRect = .zero) {
-        markup?.insertNewTextbox(attributedText: text, frame: rect)
+        controller?.markup?.insertNewTextbox(attributedText: text, frame: rect)
         refreshController()
     }
     
     func insertImage(_ image: UIImage, rect: CGRect = .zero) {
         guard let cgImage = image.cgImage else { return }
         
-        markup?.insertNewImage(cgImage, frame: rect)
+        controller?.markup?.insertNewImage(cgImage, frame: rect)
         refreshController()
     }
     
     func insertShape(_ type: ShapeConfiguration, rect: CGRect = .zero) {
-        markup?.insertNewShape(configuration: type, frame: rect)
+        controller?.markup?.insertNewShape(configuration: type, frame: rect)
         refreshController()
     }
     
@@ -62,7 +59,7 @@ class Editor {
     // MARK: - export
     /// saves editable markup to url
     func save(to url: URL) async {
-        guard let markup else { return }
+        guard let markup = controller?.markup else { return }
         
         do {
             let data = try await markup.dataRepresentation()
@@ -77,7 +74,7 @@ class Editor {
         do {
             let data = try Data(contentsOf: url)
             let markup = try PaperMarkup(dataRepresentation: data)
-            self.markup = markup
+            controller?.markup = markup
         } catch {
             
         }

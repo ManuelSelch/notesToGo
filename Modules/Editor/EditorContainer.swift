@@ -39,7 +39,7 @@ struct EditorContainer: View {
     func EditToolbar() -> some View {
         HStack {
             Button("Text") {
-                editor.insertText(.init(string: "Hello World"))
+                editor.insertText(.init(string: "Hello World", attributes: [.font: UIFont.systemFont(ofSize: 18)]), rect: .init(x: 100, y: 100, width: 200, height: 50))
             }
             
             Button(showTools ? "Done": "Draw") {
