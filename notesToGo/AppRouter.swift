@@ -2,27 +2,18 @@ import Foundation
 import Router
 import Dependencies
 
-typealias MyRouter = StackRouter<AppRoute>
+typealias MyRouter = StackWithSheetRouter<AppRoute>
+typealias RouteType = Equatable & Hashable & Identifiable & Codable
 
-enum AppRoute: Equatable & Hashable & Identifiable & Codable {
-    case test
-    case explorer(URL?)
+enum AppRoute: RouteType {
+    case explorer(ExplorerRoute)
     case editor(Note)
     
-    var id: String {
-        switch self {
-        case .test:
-            return "test" // stable
-        case .explorer(let url):
-            return "explorer-\(url?.absoluteString ?? "root")" // unique per URL
-        case .editor(let note):
-            return "editor-\(note.id)" // unique per note
-        }
-    }
+    var id: Self { self }
 }
 
 struct RouterKey: DependencyKey {
-    static var liveValue: MyRouter = .init(root: .explorer(nil))
+    static var liveValue: MyRouter = .init(root: .explorer(.dashboard(path: nil)))
 }
 
 extension DependencyValues {
