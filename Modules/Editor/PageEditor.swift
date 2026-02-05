@@ -19,26 +19,19 @@ class PageEditor {
         self.controller = controller
     }
     
-    func refreshController() {
-        // controller?.markup = markup
-    }
-    
     // MARK: - markup editing methods
     func insertText(_ text: NSAttributedString, rect: CGRect = .zero) {
         controller?.markup?.insertNewTextbox(attributedText: text, frame: rect)
-        refreshController()
     }
     
     func insertImage(_ image: UIImage, rect: CGRect = .zero) {
         guard let cgImage = image.cgImage else { return }
         
         controller?.markup?.insertNewImage(cgImage, frame: rect)
-        refreshController()
     }
     
     func insertShape(_ type: ShapeConfiguration, rect: CGRect = .zero) {
         controller?.markup?.insertNewShape(configuration: type, frame: rect)
-        refreshController()
     }
     
     /// show or hide native pencil tools
@@ -75,18 +68,5 @@ class PageEditor {
         } catch {
             
         }
-    }
-}
-
-/// calculating center rect
-extension NSAttributedString {
-    func centerRect(in rect: CGRect) -> CGRect {
-        let textSize = self.size()
-        let textCenter = CGPoint(
-            x: rect.midX - textSize.width / 2,
-            y: rect.midY - textSize.height / 2
-        )
-        
-        return CGRect(origin: textCenter, size: textSize)
     }
 }

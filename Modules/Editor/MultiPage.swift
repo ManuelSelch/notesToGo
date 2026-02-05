@@ -2,215 +2,12 @@ import SwiftUI
 import PaperKit
 import PencilKit
 
-// MARK: - Page Model
-struct Page: Identifiable {
-    let id = UUID()
-    var markup: PaperMarkup
-    var backgroundImage: UIImage?
-    var backgroundColor: UIColor
-    
-    init(bounds: CGRect, backgroundImage: UIImage? = nil, backgroundColor: UIColor = .white) {
-        self.markup = PaperMarkup(bounds: bounds)
-        self.backgroundImage = backgroundImage
-        self.backgroundColor = backgroundColor
-    }
-    
-    /// Update markup bounds to match new size
-    mutating func updateBounds(_ newBounds: CGRect) {
-        // Only recreate if bounds actually changed significantly
-        let currentBounds = markup.bounds
-        if abs(currentBounds.width - newBounds.width) > 1 || abs(currentBounds.height - newBounds.height) > 1 {
-            // Note: This creates a new PaperMarkup - existing drawings would be lost
-            // In production, you'd want to transfer the markup data
-            markup = PaperMarkup(bounds: newBounds)
-        }
-    }
-}
-
-// MARK: - Document Model
-@Observable
-class MultiPageDocument {
-    var pages: [Page] = []
-    var currentPageIndex: Int = 0
-    
-    var currentPage: Page? {
-        guard pages.indices.contains(currentPageIndex) else { return nil }
-        return pages[currentPageIndex]
-    }
-    
-    init(pageCount: Int = 1, pageSize: CGSize) {
-        for _ in 0..<pageCount {
-            pages.append(Page(bounds: CGRect(origin: .zero, size: pageSize)))
-        }
-    }
-    
-    func addPage(with bounds: CGRect, backgroundImage: UIImage? = nil) {
-        let newPage = Page(bounds: bounds, backgroundImage: backgroundImage)
-        pages.append(newPage)
-    }
-    
-    func removePage(at index: Int) {
-        guard pages.count > 1, pages.indices.contains(index) else { return }
-        pages.remove(at: index)
-        if currentPageIndex >= pages.count {
-            currentPageIndex = pages.count - 1
-        }
-    }
-}
-
-// MARK: - Page Content View
-/// A simple UIView that holds background + paper markup for one page
-class PageContentView: UIView {
-    
-    private var backgroundImageView: UIImageView!
-    private var paperViewController: PaperMarkupViewController?
-    private weak var parentVC: UIViewController?
-    
-    var page: Page?
-    var featureSet: FeatureSet = .latest
-    var toolPicker: PKToolPicker?
-    
-    var onMarkupChanged: ((PaperMarkup) -> Void)?
-    
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        setup()
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    private func setup() {
-        backgroundColor = .white
-        clipsToBounds = true
-        layer.cornerRadius = 8
-        layer.shadowColor = UIColor.black.cgColor
-        layer.shadowOpacity = 0.15
-        layer.shadowOffset = CGSize(width: 0, height: 2)
-        layer.shadowRadius = 6
-        layer.masksToBounds = false
-        
-        // Background image view
-        backgroundImageView = UIImageView(frame: bounds)
-        backgroundImageView.contentMode = .scaleAspectFill
-        backgroundImageView.clipsToBounds = true
-        backgroundImageView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        addSubview(backgroundImageView)
-    }
-    
-    func configure(with page: Page, parentViewController: UIViewController, featureSet: FeatureSet, toolPicker: PKToolPicker?) {
-        self.page = page
-        self.parentVC = parentViewController
-        self.featureSet = featureSet
-        self.toolPicker = toolPicker
-        
-        // Update background
-        backgroundImageView.image = page.backgroundImage
-        backgroundImageView.backgroundColor = page.backgroundColor
-        
-        // Remove existing paper view controller
-        if let existingVC = paperViewController {
-            existingVC.willMove(toParent: nil)
-            existingVC.view.removeFromSuperview()
-            existingVC.removeFromParent()
-            paperViewController = nil
-        }
-        
-        // Ensure markup bounds match our view bounds
-        let pageBounds = CGRect(origin: .zero, size: bounds.size)
-        
-        // Create new PaperMarkup with correct bounds if needed
-        let markup: PaperMarkup
-        if abs(page.markup.bounds.width - pageBounds.width) > 1 || abs(page.markup.bounds.height - pageBounds.height) > 1 {
-            markup = PaperMarkup(bounds: pageBounds)
-        } else {
-            markup = page.markup
-        }
-        
-        // Create new paper markup view controller with correct bounds
-        let paperVC = PaperMarkupViewController(
-            markup: markup,
-            supportedFeatureSet: featureSet
-        )
-        
-        parentViewController.addChild(paperVC)
-        paperVC.view.frame = bounds
-        paperVC.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        paperVC.view.backgroundColor = .clear
-        addSubview(paperVC.view)
-        paperVC.didMove(toParent: parentViewController)
-        
-        // Disable any internal scroll views in PaperMarkupViewController
-        disableInternalScrolling(in: paperVC.view)
-        
-        // Set content view for background rendering under markup
-        if let backgroundImage = page.backgroundImage {
-            let templateView = UIImageView(image: backgroundImage)
-            templateView.contentMode = .scaleAspectFill
-            templateView.frame = bounds
-            paperVC.contentView = templateView
-        } else {
-            let colorView = UIView()
-            colorView.backgroundColor = page.backgroundColor
-            colorView.frame = bounds
-            paperVC.contentView = colorView
-        }
-        
-        // Register with tool picker
-        if let toolPicker = toolPicker {
-            toolPicker.addObserver(paperVC)
-        }
-        
-        paperViewController = paperVC
-    }
-    
-    /// Recursively find and disable scroll views within the PaperMarkupViewController
-    private func disableInternalScrolling(in view: UIView) {
-        for subview in view.subviews {
-            if let scrollView = subview as? UIScrollView {
-                // Disable scrolling but keep other interactions (like drawing)
-                scrollView.isScrollEnabled = false
-                scrollView.bounces = false
-                scrollView.bouncesZoom = false
-                scrollView.minimumZoomScale = 1.0
-                scrollView.maximumZoomScale = 1.0
-                scrollView.pinchGestureRecognizer?.isEnabled = false
-                scrollView.panGestureRecognizer.isEnabled = false
-            }
-            // Continue recursively
-            disableInternalScrolling(in: subview)
-        }
-    }
-    
-    func makeActive(with toolPicker: PKToolPicker?) {
-        guard let paperVC = paperViewController else { return }
-        toolPicker?.setVisible(true, forFirstResponder: paperVC)
-        paperVC.becomeFirstResponder()
-    }
-    
-    func cleanup() {
-        if let existingVC = paperViewController {
-            existingVC.willMove(toParent: nil)
-            existingVC.view.removeFromSuperview()
-            existingVC.removeFromParent()
-            paperViewController = nil
-        }
-    }
-}
-
 // MARK: - Multi-Page Container View Controller
-class MultiPageContainerViewController: UIViewController {
-    
-    // Single global scroll view
+class MultiPageController: UIViewController {
+    private var toolPicker = PKToolPicker()
     private var scrollView: UIScrollView!
     private var contentView: UIView!
-    
-    // Page views
-    private var pageViews: [PageContentView] = []
-    
-    // Tool picker
-    private var toolPicker: PKToolPicker?
+    private var pageViews: [PageView] = []
     
     // Layout constants
     private let pageSpacing: CGFloat = 30
@@ -224,12 +21,6 @@ class MultiPageContainerViewController: UIViewController {
         }
     }
     
-    var featureSet: FeatureSet = {
-        var features = FeatureSet.latest
-        features.colorMaximumLinearExposure = 4
-        return features
-    }()
-    
     // Callback when page count changes (for SwiftUI binding)
     var onPageCountChanged: (() -> Void)?
     
@@ -238,7 +29,6 @@ class MultiPageContainerViewController: UIViewController {
         view.backgroundColor = .systemGray5
         
         setupScrollView()
-        setupToolPicker()
         rebuildPages()
     }
     
@@ -264,20 +54,6 @@ class MultiPageContainerViewController: UIViewController {
         contentView = UIView()
         contentView.backgroundColor = .clear
         scrollView.addSubview(contentView)
-    }
-    
-    private func setupToolPicker() {
-        let picker = PKToolPicker()
-        picker.colorMaximumLinearExposure = 4
-        
-        let button = UIBarButtonItem(
-            barButtonSystemItem: .add,
-            target: self,
-            action: #selector(plusButtonPressed(_:))
-        )
-        picker.accessoryItem = button
-        
-        toolPicker = picker
     }
     
     private func rebuildPages() {
@@ -319,13 +95,8 @@ class MultiPageContainerViewController: UIViewController {
                 document.pages[index] = page
             }
             
-            let pageView = PageContentView(frame: pageFrame)
-            pageView.configure(
-                with: page,
-                parentViewController: self,
-                featureSet: featureSet,
-                toolPicker: toolPicker
-            )
+            let pageView = PageView(frame: pageFrame)
+            pageView.configure(with: page, toolPicker: toolPicker)
             
             contentView.addSubview(pageView)
             pageViews.append(pageView)
@@ -339,11 +110,6 @@ class MultiPageContainerViewController: UIViewController {
         
         contentView.frame = CGRect(x: 0, y: 0, width: contentWidth, height: contentHeight)
         scrollView.contentSize = CGSize(width: contentWidth, height: contentHeight)
-        
-        // Activate first page
-        if let firstPage = pageViews.first {
-            firstPage.makeActive(with: toolPicker)
-        }
     }
     
     override func viewDidLayoutSubviews() {
@@ -360,7 +126,7 @@ class MultiPageContainerViewController: UIViewController {
         guard let currentIndex = document?.currentPageIndex,
               pageViews.indices.contains(currentIndex) else { return }
         
-        let insertionVC = MarkupEditViewController(supportedFeatureSet: featureSet)
+        let insertionVC = MarkupEditViewController(supportedFeatureSet: .latest)
         insertionVC.modalPresentationStyle = .popover
         insertionVC.popoverPresentationController?.barButtonItem = button
         present(insertionVC, animated: true)
@@ -392,13 +158,8 @@ class MultiPageContainerViewController: UIViewController {
         )
         
         // Create and configure new page view
-        let pageView = PageContentView(frame: pageFrame)
-        pageView.configure(
-            with: document.pages[newIndex],
-            parentViewController: self,
-            featureSet: featureSet,
-            toolPicker: toolPicker
-        )
+        let pageView = PageView(frame: pageFrame)
+        pageView.configure(with: document.pages[newIndex], toolPicker: toolPicker)
         
         contentView.addSubview(pageView)
         pageViews.append(pageView)
@@ -429,12 +190,7 @@ class MultiPageContainerViewController: UIViewController {
         
         // Reconfigure the specific page view
         if pageViews.indices.contains(pageIndex) {
-            pageViews[pageIndex].configure(
-                with: document.pages[pageIndex],
-                parentViewController: self,
-                featureSet: featureSet,
-                toolPicker: toolPicker
-            )
+            pageViews[pageIndex].configure(with: document.pages[pageIndex], toolPicker: toolPicker)
         }
     }
     
@@ -450,7 +206,6 @@ class MultiPageContainerViewController: UIViewController {
         scrollView.setContentOffset(targetOffset, animated: animated)
         
         document?.currentPageIndex = index
-        pageView.makeActive(with: toolPicker)
     }
     
     func getCurrentPageIndex() -> Int {
@@ -488,7 +243,7 @@ class MultiPageContainerViewController: UIViewController {
 }
 
 // MARK: - UIScrollViewDelegate
-extension MultiPageContainerViewController: UIScrollViewDelegate {
+extension MultiPageController: UIScrollViewDelegate {
     
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
         updateCurrentPage()
@@ -505,10 +260,23 @@ extension MultiPageContainerViewController: UIScrollViewDelegate {
         
         if document?.currentPageIndex != newIndex {
             document?.currentPageIndex = newIndex
-            
-            if pageViews.indices.contains(newIndex) {
-                pageViews[newIndex].makeActive(with: toolPicker)
-            }
+        }
+    }
+}
+
+
+extension MultiPageController {
+    func showPencilTools(_ visible: Bool) {
+        guard
+            let document = document,
+            pageViews.indices.contains(document.currentPageIndex) else { return }
+        
+        let currentPageView = pageViews[document.currentPageIndex]
+        
+        if visible {
+            currentPageView.activate(with: toolPicker)
+        } else {
+            currentPageView.deactivate(with: toolPicker)
         }
     }
 }
@@ -518,8 +286,8 @@ struct MultiPagePaperKitView: UIViewControllerRepresentable {
     @Bindable var document: MultiPageDocument
     var onAddPage: (() -> Void)?
     
-    func makeUIViewController(context: Context) -> MultiPageContainerViewController {
-        let vc = MultiPageContainerViewController()
+    func makeUIViewController(context: Context) -> MultiPageController {
+        let vc = MultiPageController()
         vc.document = document
         vc.onPageCountChanged = {
             // Notify SwiftUI of changes
@@ -528,7 +296,7 @@ struct MultiPagePaperKitView: UIViewControllerRepresentable {
         return vc
     }
     
-    func updateUIViewController(_ uiViewController: MultiPageContainerViewController, context: Context) {
+    func updateUIViewController(_ uiViewController: MultiPageController, context: Context) {
         // Check if pages were added externally and rebuild if needed
         let vcPageCount = uiViewController.document?.pages.count ?? 0
         if vcPageCount != document.pages.count {
@@ -542,7 +310,7 @@ struct MultiPagePaperKitView: UIViewControllerRepresentable {
     
     class Coordinator: NSObject {
         var parent: MultiPagePaperKitView
-        weak var containerVC: MultiPageContainerViewController?
+        weak var containerVC: MultiPageController?
         
         init(_ parent: MultiPagePaperKitView) {
             self.parent = parent
@@ -563,6 +331,28 @@ struct MultiPagePaperKitView: UIViewControllerRepresentable {
     }
 }
 
+// MARK: - SwiftUI Wrapper with VC Reference
+struct MultiPageContainer: UIViewControllerRepresentable {
+    @Bindable var document: MultiPageDocument
+    @Binding var containerVC: MultiPageController?
+    
+    func makeUIViewController(context: Context) -> MultiPageController {
+        let vc = MultiPageController()
+        vc.document = document
+        
+        // Store reference for direct access
+        DispatchQueue.main.async {
+            containerVC = vc
+        }
+        
+        return vc
+    }
+    
+    func updateUIViewController(_ uiViewController: MultiPageController, context: Context) {
+        // Don't update/rebuild unless absolutely necessary
+    }
+}
+
 // MARK: - SwiftUI Content View
 struct ContentView: View {
     @State private var document = MultiPageDocument(
@@ -573,11 +363,11 @@ struct ContentView: View {
     @State private var pageCount = 2
     
     // Reference to the container VC for direct method calls
-    @State private var containerVC: MultiPageContainerViewController?
+    @State private var containerVC: MultiPageController?
     
     var body: some View {
         VStack {
-            MultiPagePaperKitViewWithRef(document: document, containerVC: $containerVC)
+            MultiPageContainer(document: document, containerVC: $containerVC)
                 .navigationTitle("Pages: \(pageCount)")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
@@ -611,13 +401,6 @@ struct ContentView: View {
                         }
                     }
                 }
-                .sheet(isPresented: $showingImagePicker) {
-                    ImagePicker { image in
-                        if let image = image {
-                            setBackgroundForCurrentPage(image)
-                        }
-                    }
-                }
         }
     }
     
@@ -638,66 +421,3 @@ struct ContentView: View {
     }
 }
 
-// MARK: - SwiftUI Wrapper with VC Reference
-struct MultiPagePaperKitViewWithRef: UIViewControllerRepresentable {
-    @Bindable var document: MultiPageDocument
-    @Binding var containerVC: MultiPageContainerViewController?
-    
-    func makeUIViewController(context: Context) -> MultiPageContainerViewController {
-        let vc = MultiPageContainerViewController()
-        vc.document = document
-        
-        // Store reference for direct access
-        DispatchQueue.main.async {
-            containerVC = vc
-        }
-        
-        return vc
-    }
-    
-    func updateUIViewController(_ uiViewController: MultiPageContainerViewController, context: Context) {
-        // Don't update/rebuild unless absolutely necessary
-    }
-}
-
-// MARK: - Simple Image Picker
-struct ImagePicker: UIViewControllerRepresentable {
-    var onImagePicked: (UIImage?) -> Void
-    
-    func makeUIViewController(context: Context) -> UIImagePickerController {
-        let picker = UIImagePickerController()
-        picker.delegate = context.coordinator
-        picker.sourceType = .photoLibrary
-        return picker
-    }
-    
-    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator(onImagePicked: onImagePicked)
-    }
-    
-    class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-        var onImagePicked: (UIImage?) -> Void
-        
-        init(onImagePicked: @escaping (UIImage?) -> Void) {
-            self.onImagePicked = onImagePicked
-        }
-        
-        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-            let image = info[.originalImage] as? UIImage
-            onImagePicked(image)
-            picker.dismiss(animated: true)
-        }
-        
-        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-            onImagePicked(nil)
-            picker.dismiss(animated: true)
-        }
-    }
-}
-
-// MARK: - Preview
-#Preview {
-    ContentView()
-}

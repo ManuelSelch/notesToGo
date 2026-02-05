@@ -1,8 +1,25 @@
-//
-//  MultiPageEditor.swift
-//  notesToGo
-//
-//  Created by Manuel Selch on 05.02.26.
-//
-
 import Foundation
+import PaperKit
+import PencilKit
+
+@Observable
+class MultiPageEditor {
+    let controller: MultiPageController
+    
+    init() {
+        controller = MultiPageController()
+    }
+    
+    func initialize(_ document: MultiPageDocument) {
+        controller.document = document
+    }
+    
+    func addPage() {
+        controller.addNewPage()
+    }
+    
+    /// show or hide native pencil tools
+    func showPencilTools(_ isVisible: Bool) {
+        controller.showPencilTools(isVisible)
+    }
+}

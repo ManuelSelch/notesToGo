@@ -4,53 +4,37 @@ import PDFKit
 import PhotosUI
 
 struct EditorContainer: View {
-    @State var editor = Editor()
+    @State var editor = MultiPageEditor()
     @State var showTools = false
-    @State var showImagePicker = false
-    @State var photoItem: PhotosPickerItem?
     
-    let note: Note
+    init() {
+        editor.initialize(MultiPageDocument(
+            pageCount: 2,
+            pageSize: .init(width: 300, height: 500)
+        ))
+    }
     
     var body: some View {
         VStack {
-            EditorView(size: .init(width: 650, height: 670), note: note, editor: $editor)
+            MultiPageView(controller: editor.controller)
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading, content: SaveToolbar)
                     ToolbarItem(placement: .topBarTrailing, content: EditToolbar)
                 }
                 .ignoresSafeArea(.all)
         }
-        .photosPicker(isPresented: $showImagePicker, selection: $photoItem)
-        .onChange(of: photoItem) {
-            guard let photoItem else { return }
-            
-            Task {
-                guard let data = try? await photoItem.loadTransferable(type: Data.self),
-                      let image = UIImage(data: data)
-                      else { return }
-                
-                editor.insertImage(image, rect: .init(origin: .zero, size: .init(width: 100, height: 100)))
-                
-                self.photoItem = nil
-                
-            }
-        }
     }
     
     @ViewBuilder
     func EditToolbar() -> some View {
         HStack {
-            Button("Text") {
-                editor.insertText(.init(string: "Hello World", attributes: [.font: UIFont.systemFont(ofSize: 18)]), rect: .init(x: 100, y: 100, width: 200, height: 50))
+            Button("Add Page") {
+                editor.addPage()
             }
             
             Button(showTools ? "Done": "Draw") {
                 showTools.toggle()
                 editor.showPencilTools(showTools)
-            }
-            
-            Button("Image") {
-                showImagePicker.toggle()
             }
         }
     }
@@ -59,11 +43,21 @@ struct EditorContainer: View {
     func SaveToolbar() -> some View {
         HStack {
             Button("Save") {
-                Task {
-                    await editor.save(to: note.markup)
-                }
+                
             }
         }
     }
 
+}
+
+
+// MARK: - SwiftUI Wrapper with VC Reference
+struct MultiPageView: UIViewControllerRepresentable {
+    let controller: MultiPageController
+    
+    func makeUIViewController(context: Context) -> MultiPageController {
+        return controller
+    }
+    
+    func updateUIViewController(_ uiViewController: MultiPageController, context: Context) { }
 }
