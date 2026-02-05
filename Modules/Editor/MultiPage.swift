@@ -8,6 +8,7 @@ class MultiPageController: UIViewController {
     private var scrollView: UIScrollView!
     private var contentView: UIView!
     private var pageViews: [PageView] = []
+    private var isToolPickerVisible = false
     
     // Layout constants
     private let pageSpacing: CGFloat = 30
@@ -260,6 +261,9 @@ extension MultiPageController: UIScrollViewDelegate {
         
         if document?.currentPageIndex != newIndex {
             document?.currentPageIndex = newIndex
+            
+            // Switch tool picker to new page if visible
+            updateToolPickerForCurrentPage()
         }
     }
 }
@@ -267,13 +271,18 @@ extension MultiPageController: UIScrollViewDelegate {
 
 extension MultiPageController {
     func showPencilTools(_ visible: Bool) {
-        guard
-            let document = document,
-            pageViews.indices.contains(document.currentPageIndex) else { return }
+        isToolPickerVisible = visible
+        updateToolPickerForCurrentPage()
+    }
+    
+    /// Updates tool picker for the current page based on isToolPickerVisible
+    private func updateToolPickerForCurrentPage() {
+        guard let document = document,
+              pageViews.indices.contains(document.currentPageIndex) else { return }
         
         let currentPageView = pageViews[document.currentPageIndex]
         
-        if visible {
+        if isToolPickerVisible {
             currentPageView.activate(with: toolPicker)
         } else {
             currentPageView.deactivate(with: toolPicker)
