@@ -9,9 +9,11 @@ struct EditorContainer: View {
     @State var showImagePicker = false
     @State var photoItem: PhotosPickerItem?
     
+    let note: Note
+    
     var body: some View {
         VStack {
-            EditorView(size: .init(width: 350, height: 670), editor: $editor)
+            EditorView(size: .init(width: 650, height: 670), note: note, editor: $editor)
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading, content: SaveToolbar)
                     ToolbarItem(placement: .topBarTrailing, content: EditToolbar)
@@ -57,14 +59,11 @@ struct EditorContainer: View {
     func SaveToolbar() -> some View {
         HStack {
             Button("Save") {
-                editor.insertText(.init(string: "Hello World"))
+                Task {
+                    await editor.save(to: note.markup)
+                }
             }
         }
     }
 
-}
-
-
-#Preview {
-    EditorContainer()
 }

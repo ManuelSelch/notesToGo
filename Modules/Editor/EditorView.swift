@@ -2,7 +2,9 @@ import SwiftUI
 import PaperKit
 
 struct EditorView: View {
-    var size: CGSize
+    let size: CGSize
+    let note: Note
+    
     @Binding var editor: Editor
     
     var body: some View {
@@ -12,6 +14,7 @@ struct EditorView: View {
             ProgressView()
                 .onAppear {
                     editor.initializeController(.init(origin: .zero, size: size))
+                    Task { await editor.load(from: note.markup) }
                 }
         }
     }
@@ -29,8 +32,3 @@ fileprivate struct PaperControllerView: UIViewControllerRepresentable {
         
     }
 }
-
-#Preview {
-    EditorContainer()
-}
-
