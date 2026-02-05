@@ -19,7 +19,6 @@ class PageView: UIView {
     }
     
     private func setup() {
-        backgroundColor = .white
         clipsToBounds = true
         layer.cornerRadius = 8
         layer.shadowColor = UIColor.black.cgColor
@@ -39,10 +38,6 @@ class PageView: UIView {
     func configure(with page: Page, toolPicker: PKToolPicker) {
         self.page = page
         
-        // Update background
-        backgroundImageView.image = page.backgroundImage
-        backgroundImageView.backgroundColor = page.backgroundColor
-        
         // Remove existing paper view controller
         if let existingVC = controller {
             existingVC.willMove(toParent: nil)
@@ -51,10 +46,10 @@ class PageView: UIView {
             controller = nil
         }
         
-        // Ensure markup bounds match our view bounds
+        // ensure markup bounds match our view bounds
         let pageBounds = CGRect(origin: .zero, size: bounds.size)
         
-        // Create new PaperMarkup with correct bounds if needed
+        // create new PaperMarkup with correct bounds if needed
         let markup: PaperMarkup
         if abs(page.markup.bounds.width - pageBounds.width) > 1 || abs(page.markup.bounds.height - pageBounds.height) > 1 {
             markup = PaperMarkup(bounds: pageBounds)
@@ -62,7 +57,7 @@ class PageView: UIView {
             markup = page.markup
         }
         
-        // Create new paper markup view controller with correct bounds
+        // create new paper markup view controller with correct bounds
         let paperVC = PaperMarkupViewController(
             markup: markup,
             supportedFeatureSet: .latest
@@ -77,18 +72,20 @@ class PageView: UIView {
         // Disable any internal scroll views in PaperMarkupViewController
         disableInternalScrolling(in: paperVC.view)
         
-        // Set content view for background rendering under markup
-        if let backgroundImage = page.backgroundImage {
-            let templateView = UIImageView(image: backgroundImage)
-            templateView.contentMode = .scaleAspectFill
-            templateView.frame = bounds
-            paperVC.contentView = templateView
+        // Set content view for PaperKit - this is what shows behind the drawing
+        let contentBackgroundView: UIView
+        if let patternImage = page.background.patternImage() {
+            // Create a view with tiled pattern using
+            let tiledView = UIView(frame: bounds)
+            tiledView.backgroundColor = UIColor(patternImage: patternImage)
+            contentBackgroundView = tiledView
         } else {
             let colorView = UIView()
-            colorView.backgroundColor = page.backgroundColor
+            colorView.backgroundColor = page.background.backgroundColor
             colorView.frame = bounds
-            paperVC.contentView = colorView
+            contentBackgroundView = colorView
         }
+        paperVC.contentView = contentBackgroundView
         
         controller = paperVC
         

@@ -10,7 +10,8 @@ struct EditorContainer: View {
     init() {
         editor.initialize(MultiPageDocument(
             pageCount: 2,
-            pageSize: .init(width: 300, height: 500)
+            pageSize: .init(width: 300, height: 500),
+            background: .dotted(dotColor: .black, backgroundColor: .white, spacing: 50, dotSize: 2)
         ))
     }
     

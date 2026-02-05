@@ -11,8 +11,8 @@ class MultiPageController: UIViewController {
     private var isToolPickerVisible = false
     
     // Layout constants
-    private let pageSpacing: CGFloat = 30
-    private let horizontalPadding: CGFloat = 20
+    private let pageSpacing: CGFloat = 10
+    private let horizontalPadding: CGFloat = 0
     
     var document: MultiPageDocument? {
         didSet {
@@ -135,7 +135,7 @@ class MultiPageController: UIViewController {
     
     // MARK: - Public Methods
     
-    func addNewPage(with backgroundImage: UIImage? = nil) {
+    func addNewPage(with background: PageBackground = .plain(.white)) {
         guard let document = document else { return }
         
         // Calculate page size
@@ -145,7 +145,7 @@ class MultiPageController: UIViewController {
         let bounds = CGRect(origin: .zero, size: pageSize)
         
         // Add page to document
-        document.addPage(with: bounds, backgroundImage: backgroundImage)
+        document.addPage(with: bounds, background: background)
         
         // Calculate position for new page
         let newIndex = document.pages.count - 1
@@ -183,11 +183,11 @@ class MultiPageController: UIViewController {
         onPageCountChanged?()
     }
     
-    func setBackground(image: UIImage, for pageIndex: Int) {
+    func setBackground(background: PageBackground, for pageIndex: Int) {
         guard let document = document,
               document.pages.indices.contains(pageIndex) else { return }
         
-        document.pages[pageIndex].backgroundImage = image
+        document.pages[pageIndex].background = background
         
         // Reconfigure the specific page view
         if pageViews.indices.contains(pageIndex) {
@@ -289,144 +289,3 @@ extension MultiPageController {
         }
     }
 }
-
-// MARK: - SwiftUI Wrapper
-struct MultiPagePaperKitView: UIViewControllerRepresentable {
-    @Bindable var document: MultiPageDocument
-    var onAddPage: (() -> Void)?
-    
-    func makeUIViewController(context: Context) -> MultiPageController {
-        let vc = MultiPageController()
-        vc.document = document
-        vc.onPageCountChanged = {
-            // Notify SwiftUI of changes
-        }
-        context.coordinator.containerVC = vc
-        return vc
-    }
-    
-    func updateUIViewController(_ uiViewController: MultiPageController, context: Context) {
-        // Check if pages were added externally and rebuild if needed
-        let vcPageCount = uiViewController.document?.pages.count ?? 0
-        if vcPageCount != document.pages.count {
-            uiViewController.document = document
-        }
-    }
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-    
-    class Coordinator: NSObject {
-        var parent: MultiPagePaperKitView
-        weak var containerVC: MultiPageController?
-        
-        init(_ parent: MultiPagePaperKitView) {
-            self.parent = parent
-        }
-        
-        func addPage(with image: UIImage? = nil) {
-            containerVC?.addNewPage(with: image)
-        }
-        
-        func deleteCurrentPage() {
-            containerVC?.deleteCurrentPage()
-        }
-        
-        func setBackgroundForCurrentPage(_ image: UIImage) {
-            guard let index = containerVC?.document?.currentPageIndex else { return }
-            containerVC?.setBackground(image: image, for: index)
-        }
-    }
-}
-
-// MARK: - SwiftUI Wrapper with VC Reference
-struct MultiPageContainer: UIViewControllerRepresentable {
-    @Bindable var document: MultiPageDocument
-    @Binding var containerVC: MultiPageController?
-    
-    func makeUIViewController(context: Context) -> MultiPageController {
-        let vc = MultiPageController()
-        vc.document = document
-        
-        // Store reference for direct access
-        DispatchQueue.main.async {
-            containerVC = vc
-        }
-        
-        return vc
-    }
-    
-    func updateUIViewController(_ uiViewController: MultiPageController, context: Context) {
-        // Don't update/rebuild unless absolutely necessary
-    }
-}
-
-// MARK: - SwiftUI Content View
-struct ContentView: View {
-    @State private var document = MultiPageDocument(
-        pageCount: 2,
-        pageSize: CGSize(width: 768, height: 1024)
-    )
-    @State private var showingImagePicker = false
-    @State private var pageCount = 2
-    
-    // Reference to the container VC for direct method calls
-    @State private var containerVC: MultiPageController?
-    
-    var body: some View {
-        VStack {
-            MultiPageContainer(document: document, containerVC: $containerVC)
-                .navigationTitle("Pages: \(pageCount)")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .topBarLeading) {
-                        Button {
-                            addNewPage()
-                        } label: {
-                            Label("Add Page", systemImage: "plus.rectangle")
-                        }
-                    }
-                    
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Menu {
-                            Button {
-                                showingImagePicker = true
-                            } label: {
-                                Label("Set Background", systemImage: "photo")
-                            }
-                            
-                            Divider()
-                            
-                            Button(role: .destructive) {
-                                deletePage()
-                            } label: {
-                                Label("Delete Page", systemImage: "trash")
-                            }
-                            .disabled(document.pages.count <= 1)
-                            
-                        } label: {
-                            Image(systemName: "ellipsis.circle")
-                        }
-                    }
-                }
-        }
-    }
-    
-    private func addNewPage() {
-        // Call directly on the container VC - no view refresh needed
-        containerVC?.addNewPage()
-        pageCount = document.pages.count
-    }
-    
-    private func deletePage() {
-        containerVC?.deleteCurrentPage()
-        pageCount = document.pages.count
-    }
-    
-    private func setBackgroundForCurrentPage(_ image: UIImage) {
-        guard let index = containerVC?.document?.currentPageIndex else { return }
-        containerVC?.setBackground(image: image, for: index)
-    }
-}
-

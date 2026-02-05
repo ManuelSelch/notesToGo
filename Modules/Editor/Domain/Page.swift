@@ -6,13 +6,11 @@ import PencilKit
 struct Page: Identifiable {
     let id = UUID()
     var markup: PaperMarkup
-    var backgroundImage: UIImage?
-    var backgroundColor: UIColor
+    var background: PageBackground
     
-    init(bounds: CGRect, backgroundImage: UIImage? = nil, backgroundColor: UIColor = .white) {
+    init(bounds: CGRect, background: PageBackground) {
         self.markup = PaperMarkup(bounds: bounds)
-        self.backgroundImage = backgroundImage
-        self.backgroundColor = backgroundColor
+        self.background = background
     }
     
     /// Update markup bounds to match new size

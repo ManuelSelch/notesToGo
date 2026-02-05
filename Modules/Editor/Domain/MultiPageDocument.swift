@@ -14,14 +14,14 @@ class MultiPageDocument {
         return pages[currentPageIndex]
     }
     
-    init(pageCount: Int = 1, pageSize: CGSize) {
+    init(pageCount: Int = 1, pageSize: CGSize, background: PageBackground) {
         for _ in 0..<pageCount {
-            pages.append(Page(bounds: CGRect(origin: .zero, size: pageSize)))
+            pages.append(Page(bounds: CGRect(origin: .zero, size: pageSize), background: background))
         }
     }
     
-    func addPage(with bounds: CGRect, backgroundImage: UIImage? = nil) {
-        let newPage = Page(bounds: bounds, backgroundImage: backgroundImage)
+    func addPage(with bounds: CGRect, background: PageBackground) {
+        let newPage = Page(bounds: bounds, background: background)
         pages.append(newPage)
     }
     
