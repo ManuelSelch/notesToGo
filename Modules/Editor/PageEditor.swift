@@ -4,7 +4,7 @@ import PaperKit
 import PDFKit
 
 @Observable
-class Editor {
+class PageEditor {
     var controller: PaperMarkupViewController?
     let toolPicker = PKToolPicker()
     
