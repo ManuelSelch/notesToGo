@@ -12,7 +12,8 @@ struct AppContainer: View {
                 case let .explorer(route):
                     ExplorerContainer(route: route)
                 case let .editor(note):
-                    EditorContainer(note: note)
+                    // EditorContainer(note: note)
+                    ContentView()
                 }
             }
         })
