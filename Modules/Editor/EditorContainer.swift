@@ -4,7 +4,7 @@ import PDFKit
 import PhotosUI
 
 struct EditorContainer: View {
-    @State var editor = MultiPageEditor()
+    @State var editor = Editor()
     @State var showTools = false
     
     init() {

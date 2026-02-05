@@ -3,7 +3,7 @@ import PaperKit
 import PencilKit
 
 @Observable
-class MultiPageEditor {
+class Editor {
     let controller: MultiPageController
     
     init() {
