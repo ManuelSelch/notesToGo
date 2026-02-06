@@ -36,9 +36,6 @@ class MultiPageController: UIViewController {
         }
     }
     
-    // Callback when page count changes (for SwiftUI binding)
-    var onPageCountChanged: (() -> Void)?
-    
     var onPageChanged: (Int) -> Void
     
     init(
@@ -120,9 +117,7 @@ class MultiPageController: UIViewController {
             pageView.frame = pageFrame
             pageViewsById[page.id] = pageView
             
-           
-            
-           
+            // increase page offset
             yOffset += size.height + pageSpacing
         }
         
@@ -134,6 +129,8 @@ class MultiPageController: UIViewController {
         if let lastNewPage = lastNewPage {
             scrollToPage(lastNewPage)
         }
+        
+        updateToolPickerForCurrentPage()
     }
     
     private func createNewPageView(_ page: Page) -> PageView {
@@ -249,15 +246,8 @@ extension MultiPageController {
     
     /// Updates tool picker for the current page based on isToolPickerVisible
     private func updateToolPickerForCurrentPage() {
-        guard let document = document,
-              pageViews.indices.contains(document.currentPageIndex) else { return }
-        
-        let currentPageView = pageViews[document.currentPageIndex]
-        
-        if isToolPickerVisible {
-            currentPageView.activate(with: toolPicker)
-        } else {
-            currentPageView.deactivate(with: toolPicker)
+        for (_, pageView) in self.pageViewsById {
+            pageView.showToolPicker(isToolPickerVisible, with: toolPicker)
         }
     }
 }

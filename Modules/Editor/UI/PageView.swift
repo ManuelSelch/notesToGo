@@ -36,7 +36,7 @@ class PageView: UIView {
     }
     
     func configure(with page: Page, toolPicker: PKToolPicker) {
-        // Remove existing paper view controller
+        // remove existing paper view controller
         if let existingVC = controller {
             existingVC.willMove(toParent: nil)
             existingVC.view.removeFromSuperview()
@@ -117,20 +117,17 @@ class PageView: UIView {
     }
     
     
-    func activate(with toolPicker: PKToolPicker) {
-        guard let controller = controller else { return }
-        toolPicker.setVisible(true, forFirstResponder: controller)
-        controller.becomeFirstResponder()
-    }
-    
-    func deactivate(with toolPicker: PKToolPicker) {
+    func showToolPicker(_ visible: Bool, with toolPicker: PKToolPicker) {
         guard let controller = controller else { return }
         
-        toolPicker.setVisible(false, forFirstResponder: controller)
-        controller.resignFirstResponder()
+        toolPicker.setVisible(visible, forFirstResponder: controller)
         
+        if(visible) {
+            controller.becomeFirstResponder()
+        } else {
+            controller.resignFirstResponder()
+        }
     }
-       
     
     func cleanup() {
         guard let controller = controller else { return }
