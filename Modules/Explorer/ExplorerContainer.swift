@@ -25,7 +25,7 @@ struct ExplorerContainer: View {
             case .dashboard:
                 ExplorerView(
                     docs: $docs,
-                    noteTapped: { note in router.stack.push(.editor(note)) },
+                    noteTapped: { note in router.stack.push(.editor(.editor(note))) },
                     folderTapped: { folder in router.stack.push(.explorer(.dashboard(path: folder)))}
                 )
                     .onAppear {
@@ -44,7 +44,7 @@ struct ExplorerContainer: View {
                             docs.append(.note(note))
                             
                             router.sheet = nil
-                            router.stack.push(.editor(note))
+                            router.stack.push(.editor(.editor(note)))
                         }
                     }) {
                         Text("Add Note")

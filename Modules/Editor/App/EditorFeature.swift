@@ -26,6 +26,16 @@ nonisolated struct EditorFeature: Feature {
         case toggleEditMode
     }
     
+    enum Route: RouteType {
+        /// main editor screen to read & write
+        case editor(Note)
+        
+        /// page grid to rearrange or delete them
+        case grid
+        
+        var id: Self { self }
+    }
+    
     init() {}
     
     func reduce(_ state: inout State, _ action: Action) {

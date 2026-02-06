@@ -13,8 +13,8 @@ struct AppContainer: View {
                 switch route {
                 case let .explorer(route):
                     ExplorerContainer(route: route)
-                case let .editor(note):
-                    EditorContainer(note: note)
+                case let .editor(route):
+                    EditorContainer(route: route)
                 }
             }
         })

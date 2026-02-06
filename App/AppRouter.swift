@@ -7,7 +7,7 @@ typealias RouteType = Equatable & Hashable & Identifiable & Codable
 
 enum AppRoute: RouteType {
     case explorer(ExplorerRoute)
-    case editor(Note)
+    case editor(EditorFeature.Route)
     
     var id: Self { self }
 }

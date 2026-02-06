@@ -1,6 +1,7 @@
 import SwiftUI
 import Flux
 import Dependencies
+import Router
 
 struct EditorApp {
     @Dependency(\.documentRepository) var repo
@@ -16,13 +17,14 @@ struct EditorApp {
 }
 
 struct EditorContainer: View {
+    @Dependency(\.router) var router
     @ObservedObject var store: FluxStore<EditorFeature>
     @State var controller: MultiPageController
     
-    let note: Note
+    let route: EditorFeature.Route
     
-    init(note: Note) {
-        self.note = note
+    init(route: EditorFeature.Route) {
+        self.route = route
         
         let store = EditorApp().build()
         self.store = store
@@ -35,47 +37,53 @@ struct EditorContainer: View {
     
     var body: some View {
         VStack {
-            Text("pages: \(store.state.document?.pages.count ?? -1)")
+            switch(route) {
+            case let .editor(note):
+                MultiPageView(controller: controller)
+                    .onAppear { store.dispatch(.open(note.markup)) }
+                    .toolbar {
+                        ToolbarItem(placement: .topBarLeading, content: SaveToolbar)
+                        ToolbarItem(placement: .topBarTrailing, content: EditToolbar)
+                    }
             
-            MultiPageView(controller: controller)
+            case .grid:
+                GridView(pages: store.state.document?.pages ?? [])
+            }
+            
         }
-        .onAppear { store.dispatch(.open(note.markup)) }
         .onChange(of: store.state.document) {
             controller.document = store.state.document
         }
         .onChange(of: store.state.mode) {
             controller.updateMode(store.state.mode)
         }
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading, content: SaveToolbar)
-            ToolbarItem(placement: .topBarTrailing, content: EditToolbar)
-        }
         .ignoresSafeArea(.all)
     }
     
     @ViewBuilder
     func EditToolbar() -> some View {
-        HStack {
-            Button("Add Page") {
-                store.dispatch(.addPageTapped)
+        HStack(spacing: 20) {
+            Button(action: { router.stack.push(.editor(.grid)) }) {
+                Image(systemName: "square.grid.2x2")
             }
             
-            Button(store.state.mode.isDrawing ? "Done": "Draw") {
-                store.dispatch(.toggleEditMode)
+            Button(action: { store.dispatch(.addPageTapped) }) {
+                Image(systemName: "plus.rectangle.portrait")
+            }
+            
+            Button(action: { store.dispatch(.toggleEditMode) }) {
+                Image(systemName: store.state.mode.isDrawing ? "pencil.slash": "square.and.pencil")
             }
         }
+        .padding()
     }
     
     @ViewBuilder
     func SaveToolbar() -> some View {
         HStack {
-            Button("Save") {
-                store.dispatch(.save(controller.currentMarkups()))
+            Button(action: { store.dispatch(.save(controller.currentMarkups())) }) {
+                Image(systemName: "square.and.arrow.down")
             }
         }
     }
-}
-
-#Preview {
-    EditorContainer(note: .init(pdf: .applicationDirectory, markup: .applicationDirectory))
 }
