@@ -7,8 +7,6 @@ class PageView: UIView {
     private var backgroundImageView: UIImageView!
     private var controller: PaperMarkupViewController?
     
-    var markup: PaperMarkup? { controller?.markup }
-    
     override init(frame: CGRect) {
         super.init(frame: frame)
         setup()

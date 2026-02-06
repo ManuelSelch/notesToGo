@@ -1,5 +1,6 @@
 import Foundation
 import Flux
+import PaperKit
 
 nonisolated struct EditorFeature: Feature {
     struct State: Equatable, Sendable {
@@ -8,7 +9,6 @@ nonisolated struct EditorFeature: Feature {
         
         var isLoading = false
         var mode: EditMode = .read
-        var currentPage = 0
     }
     
     enum Action: Equatable, Sendable {
@@ -16,7 +16,7 @@ nonisolated struct EditorFeature: Feature {
         case open(URL)
         case documentLoaded(MultiPageDocument)
     
-        case save
+        case save([UUID:PaperMarkup])
         case saved
         case savedFailed
         
@@ -24,8 +24,6 @@ nonisolated struct EditorFeature: Feature {
         
         // MARK: - toggle edit mode
         case toggleEditMode
-        
-        case pageChanged(Int)
     }
     
     init() {}
@@ -41,17 +39,21 @@ nonisolated struct EditorFeature: Feature {
             state.document = doc
             state.isLoading = false
             
-        case .save:
+        case let .save(markups):
             state.isLoading = true
+            
+            // sync markups
+            for (id, markup) in markups {
+                if let index = state.document?.pages.firstIndex(where: { $0.id == id }) {
+                    state.document?.pages[index].markup = markup
+                }
+            }
             
         case .saved:
             state.isLoading = false
             
         case .toggleEditMode:
             state.mode = toggleReadWriteMode(state.mode)
-            
-        case let .pageChanged(page):
-            state.currentPage = page
             
         case .addPageTapped:
             state.document?.addPage(.empty)

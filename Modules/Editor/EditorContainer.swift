@@ -2,27 +2,33 @@ import SwiftUI
 import Flux
 import Dependencies
 
+struct EditorApp {
+    @Dependency(\.documentRepository) var repo
+    
+    func build() -> FluxStore<EditorFeature> {
+         return .init(
+            state: .init(),
+            middlewares: [
+                DocumentMiddleware(repo: repo).handle
+            ]
+        )
+    }
+}
+
 struct EditorContainer: View {
     @ObservedObject var store: FluxStore<EditorFeature>
     @State var controller: MultiPageController
+    @Dependency(\.documentRepository) var repo
     
     let note: Note
     
     init(note: Note) {
         self.note = note
         
-
-        
-        var store: FluxStore<EditorFeature> = .init(
-            state: .init(),
-            middlewares: [
-                DocumentMiddleware(repo: InMemoryDocumentRepository()).handle
-            ]
-        )
-        self.store = store
+        self.store = EditorApp().build()
         
         controller = MultiPageController(
-            onPageChanged: { store.dispatch(.pageChanged($0)) }
+            onPageChanged: { _ in }
         )
         
         controller.document = store.state.document
@@ -31,7 +37,6 @@ struct EditorContainer: View {
     var body: some View {
         VStack {
             Text("pages: \(store.state.document?.pages.count ?? -1)")
-            Text("current: \(store.state.currentPage)")
             
             MultiPageView(controller: controller)
         }
@@ -66,7 +71,7 @@ struct EditorContainer: View {
     func SaveToolbar() -> some View {
         HStack {
             Button("Save") {
-                
+                store.dispatch(.save(controller.currentMarkups()))
             }
         }
     }

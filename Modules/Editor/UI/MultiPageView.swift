@@ -19,10 +19,10 @@ class MultiPageController: UIViewController {
     private var toolPicker = PKToolPicker()
     private var scrollView: UIScrollView!
     private var contentView: UIView!
-    private var pageViews: [PageView] = []
     private var pageViewsById: [UUID:PageView] = [:]
     private var isToolPickerVisible = false
-    private var lastPage: Int = 0
+    /// last visible page (changes when scrolling)
+    private var lastPage: UUID? = nil
     
     // layout constants
     private let pageSpacing: CGFloat = 10
@@ -36,10 +36,10 @@ class MultiPageController: UIViewController {
         }
     }
     
-    var onPageChanged: (Int) -> Void
+    var onPageChanged: (UUID) -> Void
     
     init(
-        onPageChanged: @escaping (Int) -> Void
+        onPageChanged: @escaping (UUID) -> Void
     ) {
         self.onPageChanged = onPageChanged
         
@@ -101,7 +101,7 @@ class MultiPageController: UIViewController {
             }
             
             // scale markup content if screen rotated
-            let oldWidth = pageView.markup?.bounds.width ?? .zero
+            let oldWidth = pageView.currentMarkup()?.bounds.width ?? .zero
             let size = displaySize(for: page)
             if oldWidth > 0 && abs(oldWidth - size.width) > 1 {
                 let scale = size.width / oldWidth
@@ -168,37 +168,18 @@ class MultiPageController: UIViewController {
         }
     }
     
-    private func getCurrentPageIndex() -> Int {
-        // Determine which page is most visible
-        let visibleRect = CGRect(
-            origin: scrollView.contentOffset,
-            size: scrollView.bounds.size
-        )
-        let visibleCenter = CGPoint(
-            x: visibleRect.midX,
-            y: visibleRect.midY
-        )
+    private func getCurrentPage() -> UUID? {
+        // determine which page is most visible
+        let visibleRect = CGRect(origin: scrollView.contentOffset, size: scrollView.bounds.size)
+        let visibleCenter = CGPoint(x: visibleRect.midX, y: visibleRect.midY)
         
-        for (index, pageView) in pageViews.enumerated() {
+        for (id, pageView) in pageViewsById {
             if pageView.frame.contains(visibleCenter) {
-                return index
+                return id
             }
         }
         
-        // Fallback: find page with most overlap
-        var maxOverlap: CGFloat = 0
-        var maxIndex = 0
-        
-        for (index, pageView) in pageViews.enumerated() {
-            let intersection = visibleRect.intersection(pageView.frame)
-            let overlap = intersection.width * intersection.height
-            if overlap > maxOverlap {
-                maxOverlap = overlap
-                maxIndex = index
-            }
-        }
-        
-        return maxIndex
+        return nil
     }
 }
 
@@ -209,13 +190,11 @@ extension MultiPageController: UIScrollViewDelegate {
     }
     
     func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
-        if !decelerate {
-            updateCurrentPage()
-        }
+        updateCurrentPage()
     }
     
     private func updateCurrentPage() {
-        let currentPage = getCurrentPageIndex()
+        guard let currentPage = getCurrentPage() else { return }
         
         if(lastPage == currentPage) { return }
         
@@ -254,14 +233,16 @@ extension MultiPageController {
 
 
 extension MultiPageController {
-    /// Copies the current PaperMarkup from each PageView back into the document model.
-    /// Call this before persisting the document.
-    func syncDrawingsToDocument() {
-        guard var document = document else { return }
+    /// returns current markups edited by user
+    func currentMarkups() -> [UUID: PaperMarkup] {
+        var markups: [UUID: PaperMarkup] = [:]
         
-        for (index, pageView) in pageViews.enumerated() where document.pages.indices.contains(index) {
+        for (id, pageView) in pageViewsById {
             guard let currentMarkup = pageView.currentMarkup() else { continue }
-            document.pages[index].markup = currentMarkup
+            
+            markups[id] = pageView.currentMarkup()
         }
+        
+        return markups
     }
 }

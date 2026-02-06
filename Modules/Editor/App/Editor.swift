@@ -34,9 +34,7 @@ class Editor {
 
 // MARK: - load & save
 extension Editor {
-    func save() async throws {
-        controller.syncDrawingsToDocument()
-        
+    func save() async throws {        
         var markupDataList: [Data] = []
         for page in document.pages {
             markupDataList.append(try await page.markup.dataRepresentation())
