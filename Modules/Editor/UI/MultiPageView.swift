@@ -21,8 +21,9 @@ class MultiPageController: UIViewController {
     private var contentView: UIView!
     private var pageViews: [PageView] = []
     private var isToolPickerVisible = false
+    private var lastPage: Int = 0
     
-    // Layout constants
+    // layout constants
     private let pageSpacing: CGFloat = 10
     private let horizontalPadding: CGFloat = 0
     
@@ -36,6 +37,20 @@ class MultiPageController: UIViewController {
     
     // Callback when page count changes (for SwiftUI binding)
     var onPageCountChanged: (() -> Void)?
+    
+    var onPageChanged: (Int) -> Void
+    
+    init(
+        onPageChanged: @escaping (Int) -> Void
+    ) {
+        self.onPageChanged = onPageChanged
+        
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -274,14 +289,14 @@ extension MultiPageController: UIScrollViewDelegate {
     }
     
     private func updateCurrentPage() {
-        let newIndex = getCurrentPageIndex()
+        let currentPage = getCurrentPageIndex()
         
-        if document?.currentPageIndex != newIndex {
-            document?.currentPageIndex = newIndex
-            
-            // Switch tool picker to new page if visible
-            updateToolPickerForCurrentPage()
-        }
+        if(lastPage == currentPage) { return }
+        
+        onPageChanged(currentPage)
+        lastPage = currentPage
+        
+        updateToolPickerForCurrentPage()
     }
 }
 

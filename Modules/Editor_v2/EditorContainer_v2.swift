@@ -4,18 +4,25 @@ import Dependencies
 
 struct EditorContainer_v2: View {
     @ObservedObject var store: FluxStore<EditorFeature>
-    @State var controller = MultiPageController()
+    @State var controller: MultiPageController
     
     let note: Note
     
     init(note: Note) {
         self.note = note
         
-        store = .init(
+
+        
+        var store: FluxStore<EditorFeature> = .init(
             state: .init(),
             middlewares: [
                 DocumentMiddleware(repo: InMemoryDocumentRepository()).handle
             ]
+        )
+        self.store = store
+        
+        controller = MultiPageController(
+            onPageChanged: { store.dispatch(.pageChanged($0)) }
         )
         
         controller.document = store.state.document
@@ -23,7 +30,8 @@ struct EditorContainer_v2: View {
     
     var body: some View {
         VStack {
-            Text("\(store.state.document?.pages.count ?? -1)")
+            Text("pages: \(store.state.document?.pages.count ?? -1)")
+            Text("current: \(store.state.currentPage)")
             
             MultiPageView(controller: controller)
         }

@@ -8,6 +8,7 @@ nonisolated struct EditorFeature: Feature {
         
         var isLoading = false
         var mode: EditMode = .read
+        var currentPage = 0
     }
     
     enum Action: Equatable, Sendable {
@@ -21,6 +22,8 @@ nonisolated struct EditorFeature: Feature {
         
         // MARK: - toggle edit mode
         case toggleEditMode
+        
+        case pageChanged(Int)
     }
     
     init() {}
@@ -44,6 +47,9 @@ nonisolated struct EditorFeature: Feature {
             
         case .toggleEditMode:
             state.mode = toggleReadWriteMode(state.mode)
+            
+        case let .pageChanged(page):
+            state.currentPage = page
             
         default: break
         }

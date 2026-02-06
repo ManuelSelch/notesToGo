@@ -9,7 +9,9 @@ class Editor {
     let fileURL: URL
     
     init(_ document: MultiPageDocument, fileURL: URL) {
-        controller = MultiPageController()
+        controller = MultiPageController(
+            onPageChanged: { _ in }
+        )
         self.document = document
         self.fileURL = fileURL
         

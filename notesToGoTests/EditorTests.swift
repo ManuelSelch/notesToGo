@@ -70,10 +70,14 @@ class EditorTests {
     }
  
     // MARK: - editor mode
-    
     @Test
     func toggleEditMode_togglesBetweenReadAndWriteMode() {
         store.dispatch(.toggleEditMode) { $0.mode = .write }
         store.dispatch(.toggleEditMode) { $0.mode = .read }
+    }
+    
+    @Test
+    func pageChanged_updatesCurrentPage() {
+        store.dispatch(.pageChanged(1)) { $0.currentPage = 1 }
     }
 }
