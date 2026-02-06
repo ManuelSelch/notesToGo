@@ -136,4 +136,8 @@ class PageView: UIView {
         
         self.controller = nil
     }
+    
+    func currentMarkup() -> PaperMarkup? {
+        return controller?.markup
+    }
 }

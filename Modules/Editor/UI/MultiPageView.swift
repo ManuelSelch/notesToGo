@@ -291,3 +291,17 @@ extension MultiPageController {
         }
     }
 }
+
+
+extension MultiPageController {
+    /// Copies the current PaperMarkup from each PageView back into the document model.
+    /// Call this before persisting the document.
+    func syncDrawingsToDocument() {
+        guard let document = document else { return }
+        
+        for (index, pageView) in pageViews.enumerated() where document.pages.indices.contains(index) {
+            guard let currentMarkup = pageView.currentMarkup() else { continue }
+            document.pages[index].markup = currentMarkup
+        }
+    }
+}

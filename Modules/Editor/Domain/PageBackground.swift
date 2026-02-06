@@ -1,12 +1,11 @@
 import Foundation
 import SwiftUI
 
-enum PageBackground {
-    case plain(UIColor)
-    case dotted(dotColor: UIColor, backgroundColor: UIColor, spacing: CGFloat, dotSize: CGFloat)
-    case grid(lineColor: UIColor, backgroundColor: UIColor, spacing: CGFloat, lineWidth: CGFloat)
-    case lined(lineColor: UIColor, backgroundColor: UIColor, spacing: CGFloat, lineWidth: CGFloat)
-    case custom(UIImage)
+enum PageBackground: Codable {
+    case plain(CodableColor)
+    case dotted(dotColor: CodableColor, backgroundColor: CodableColor, spacing: CGFloat, dotSize: CGFloat)
+    case grid(lineColor: CodableColor, backgroundColor: CodableColor, spacing: CGFloat, lineWidth: CGFloat)
+    case lined(lineColor: CodableColor, backgroundColor: CodableColor, spacing: CGFloat, lineWidth: CGFloat)
     
     /// Generate a tiled pattern image for this background
     func patternImage() -> UIImage? {
@@ -16,50 +15,44 @@ enum PageBackground {
             
         case .dotted(let dotColor, let backgroundColor, let spacing, let dotSize):
             return Self.createDottedPattern(
-                dotColor: dotColor,
-                backgroundColor: backgroundColor,
+                dotColor: dotColor.uiColor,
+                backgroundColor: backgroundColor.uiColor,
                 spacing: spacing,
                 dotSize: dotSize
             )
             
         case .grid(let lineColor, let backgroundColor, let spacing, let lineWidth):
             return Self.createGridPattern(
-                lineColor: lineColor,
-                backgroundColor: backgroundColor,
+                lineColor: lineColor.uiColor,
+                backgroundColor: backgroundColor.uiColor,
                 spacing: spacing,
                 lineWidth: lineWidth
             )
             
         case .lined(let lineColor, let backgroundColor, let spacing, let lineWidth):
             return Self.createLinedPattern(
-                lineColor: lineColor,
-                backgroundColor: backgroundColor,
+                lineColor: lineColor.uiColor,
+                backgroundColor: backgroundColor.uiColor,
                 spacing: spacing,
                 lineWidth: lineWidth
             )
-            
-        case .custom(let image):
-            return image
         }
     }
     
     var backgroundColor: UIColor {
         switch self {
         case .plain(let color):
-            return color
+            return color.uiColor
         case .dotted(_, let bg, _, _):
-            return bg
+            return bg.uiColor
         case .grid(_, let bg, _, _):
-            return bg
+            return bg.uiColor
         case .lined(_, let bg, _, _):
-            return bg
-        case .custom:
-            return .white
+            return bg.uiColor
         }
     }
     
     // MARK: - Pattern Generation
-    
     static func createDottedPattern(
         dotColor: UIColor,
         backgroundColor: UIColor,
