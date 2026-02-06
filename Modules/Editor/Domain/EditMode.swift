@@ -5,7 +5,7 @@ enum EditMode {
     case write
     case focus
     
-    var isEditing: Bool {
+    var isDrawing: Bool {
         return self != .read
     }
     

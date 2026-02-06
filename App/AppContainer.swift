@@ -5,9 +5,7 @@ import Dependencies
 struct AppContainer: View {
     @Dependency(\.router) var router
     
-    init() {
-        DependencyValues.setMode(.mock) // TODO: infra not implemented yet
-    }
+    init() {}
     
     var body: some View {
         StackWithSheetRouterView(router, content: { route in

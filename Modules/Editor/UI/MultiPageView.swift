@@ -21,6 +21,8 @@ class MultiPageController: UIViewController {
     private var contentView: UIView!
     private var pageViewsById: [UUID:PageView] = [:]
     private var isToolPickerVisible = false
+    private var mode: EditMode = .read
+    
     /// last visible page (changes when scrolling)
     private var lastPage: UUID? = nil
     
@@ -130,7 +132,7 @@ class MultiPageController: UIViewController {
             scrollToPage(lastNewPage)
         }
         
-        updateToolPickerForCurrentPage()
+        refreshModeOfPages()
     }
     
     private func createNewPageView(_ page: Page) -> PageView {
@@ -200,8 +202,6 @@ extension MultiPageController: UIScrollViewDelegate {
         
         onPageChanged(currentPage)
         lastPage = currentPage
-        
-        updateToolPickerForCurrentPage()
     }
     
     private func scrollToPage(_ pageView: PageView, animated: Bool = true) {
@@ -218,15 +218,16 @@ extension MultiPageController: UIScrollViewDelegate {
 
 
 extension MultiPageController {
-    func showPencilTools(_ visible: Bool) {
-        isToolPickerVisible = visible
-        updateToolPickerForCurrentPage()
+    func updateMode(_ mode: EditMode) {
+        self.mode = mode
+        refreshModeOfPages()
     }
     
-    /// Updates tool picker for the current page based on isToolPickerVisible
-    private func updateToolPickerForCurrentPage() {
+    /// Updates tool picker visibility and draw flag for every page
+    private func refreshModeOfPages() {
         for (_, pageView) in self.pageViewsById {
-            pageView.showToolPicker(isToolPickerVisible, with: toolPicker)
+            pageView.showToolPicker(mode.isToolbarVisible, with: toolPicker)
+            pageView.enableDrawing(mode.isDrawing)
         }
     }
 }
@@ -238,9 +239,8 @@ extension MultiPageController {
         var markups: [UUID: PaperMarkup] = [:]
         
         for (id, pageView) in pageViewsById {
-            guard let currentMarkup = pageView.currentMarkup() else { continue }
-            
-            markups[id] = pageView.currentMarkup()
+            guard let pageMarkup = pageView.currentMarkup() else { continue }
+            markups[id] = pageMarkup
         }
         
         return markups

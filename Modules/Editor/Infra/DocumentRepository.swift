@@ -1,5 +1,6 @@
 import Foundation
 import Dependencies
+import PaperKit
 
 /// repository to load and save documents
 protocol DocumentRepositoryProtocol {
@@ -7,13 +8,22 @@ protocol DocumentRepositoryProtocol {
     func load(_ path: URL) async throws -> MultiPageDocument
 }
 
-actor DocumentRepository: DocumentRepositoryProtocol {
-    func save(_ document: MultiPageDocument, at path: URL) throws {
-        fatalError("not implemented yet")
+class DocumentRepository: DocumentRepositoryProtocol {
+    func save(_ document: MultiPageDocument, at path: URL) async throws {
+        var markupDataList: [Data] = []
+        for page in document.pages {
+            markupDataList.append(try await page.markup.dataRepresentation())
+        }
+        
+        let encoder = JSONEncoder()
+        encoder.userInfo[.markupDataKey] = markupDataList
+        let data = try encoder.encode(document)
+        try data.write(to: path, options: .atomic)
     }
     
     func load(_ path: URL) throws -> MultiPageDocument {
-        fatalError("not implemented yet")
+        let data = try Data(contentsOf: path)
+        return try JSONDecoder().decode(MultiPageDocument.self, from: data)
     }
 }
 
@@ -39,4 +49,8 @@ struct DocumentRepositoryKey: DependencyKey {
 
 extension DependencyValues {
     var documentRepository: DocumentRepositoryProtocol { Self[DocumentRepositoryKey.self] }
+}
+
+extension CodingUserInfoKey {
+    static let markupDataKey = CodingUserInfoKey(rawValue: "markupData")!
 }

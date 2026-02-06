@@ -127,6 +127,12 @@ class PageView: UIView {
         }
     }
     
+    func enableDrawing(_ enabled: Bool) {
+        guard let controller = controller else { return }
+        
+        controller.view.isUserInteractionEnabled = enabled
+    }
+    
     func cleanup() {
         guard let controller = controller else { return }
         

@@ -18,19 +18,18 @@ struct EditorApp {
 struct EditorContainer: View {
     @ObservedObject var store: FluxStore<EditorFeature>
     @State var controller: MultiPageController
-    @Dependency(\.documentRepository) var repo
     
     let note: Note
     
     init(note: Note) {
         self.note = note
         
-        self.store = EditorApp().build()
+        let store = EditorApp().build()
+        self.store = store
         
         controller = MultiPageController(
             onPageChanged: { _ in }
         )
-        
         controller.document = store.state.document
     }
     
@@ -45,7 +44,7 @@ struct EditorContainer: View {
             controller.document = store.state.document
         }
         .onChange(of: store.state.mode) {
-            controller.showPencilTools(store.state.mode.isToolbarVisible)
+            controller.updateMode(store.state.mode)
         }
         .toolbar {
             ToolbarItem(placement: .topBarLeading, content: SaveToolbar)
@@ -61,7 +60,7 @@ struct EditorContainer: View {
                 store.dispatch(.addPageTapped)
             }
             
-            Button(store.state.mode.isEditing ? "Done": "Draw") {
+            Button(store.state.mode.isDrawing ? "Done": "Draw") {
                 store.dispatch(.toggleEditMode)
             }
         }
