@@ -85,15 +85,6 @@ class MultiPageController: UIViewController {
         scrollView.addSubview(contentView)
     }
     
-    /// Calculates the display size for a page, stretching to full available width
-    /// and deriving height from the page's own aspect ratio.
-    private func displaySize(for page: Page) -> CGSize {
-        let availableWidth = view.bounds.width - (horizontalPadding * 2)
-        let aspectRatio = page.height / page.width
-        let displayHeight = availableWidth * aspectRatio
-        return CGSize(width: availableWidth, height: displayHeight)
-    }
-    
     /// refreshes existing page views with updated data
     private func refreshPages() {
         guard let document = document else { return }
@@ -161,147 +152,23 @@ class MultiPageController: UIViewController {
         
         return view
     }
-    
-    /// deleates and recreates every page view
-    private func rebuildPages() {
-        syncDrawingsToDocument()
-        
-        // Clean up existing page views
-        for pageView in pageViews {
-            pageView.cleanup()
-            pageView.removeFromSuperview()
-        }
-        pageViews.removeAll()
-        
-        guard var document = document else {
-            contentView.frame = .zero
-            scrollView.contentSize = .zero
-            return
-        }
-        
-        var yOffset: CGFloat = pageSpacing
 
-        for (index, page) in document.pages.enumerated() {
-            let size = displaySize(for: page)
-            // Scale markup content if display size changed
-            let oldWidth = page.markup.bounds.width
-            
-            if oldWidth > 0 && abs(oldWidth - size.width) > 1 {
-                let scale = size.width / oldWidth
-                document.pages[index].markup.transformContent(CGAffineTransform(scaleX: scale, y: scale))
-                document.pages[index].markup.bounds = CGRect(origin: .zero, size: size)
-            }
-            
-           
-            let pageFrame = CGRect(
-                x: horizontalPadding,
-                y: yOffset,
-                width: size.width,
-                height: size.height
-            )
-
-            let pageView = PageView(frame: pageFrame)
-            pageView.configure(with: document.pages[index], toolPicker: toolPicker)
-
-            contentView.addSubview(pageView)
-            pageViews.append(pageView)
-
-            yOffset += size.height + pageSpacing
-        }
-
-        
-        // Update content view and scroll view content size
-        let contentWidth = view.bounds.width
-        contentView.frame = CGRect(x: 0, y: 0, width: contentWidth, height: yOffset)
-        scrollView.contentSize = CGSize(width: contentWidth, height: yOffset)
+    /// Calculates the display size for a page, stretching to full available width
+    /// and deriving height from the page's own aspect ratio.
+    private func displaySize(for page: Page) -> CGSize {
+        let availableWidth = view.bounds.width - (horizontalPadding * 2)
+        let aspectRatio = page.height / page.width
+        let displayHeight = availableWidth * aspectRatio
+        return CGSize(width: availableWidth, height: displayHeight)
     }
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         
-        // Rebuild on width change (rotation, multitasking resize)
+        // rebuild on width change
         if abs(contentView.bounds.width - view.bounds.width) > 1 {
             refreshPages()
         }
-    }
-    
-    @objc private func plusButtonPressed(_ button: UIBarButtonItem) {
-        guard let currentIndex = document?.currentPageIndex,
-              pageViews.indices.contains(currentIndex) else { return }
-        
-        let insertionVC = MarkupEditViewController(supportedFeatureSet: .latest)
-        insertionVC.modalPresentationStyle = .popover
-        insertionVC.popoverPresentationController?.barButtonItem = button
-        present(insertionVC, animated: true)
-    }
-    
-    // MARK: - Public Methods
-    
-    func pageAdded() {
-        guard let document = document else { return }
-        
-        // calculate page size
-        let newIndex = document.pages.count - 1
-        let page = document.pages[newIndex]
-        let size = displaySize(for: page)
-        
-        // yOffset = last page view bottom + spacing, or just spacing if first
-        let yOffset: CGFloat
-        if let lastPageView = pageViews.last {
-            yOffset = lastPageView.frame.maxY + pageSpacing
-        } else {
-            yOffset = pageSpacing
-        }
-        
-        let pageFrame = CGRect(
-            x: horizontalPadding,
-            y: yOffset,
-            width: size.width,
-            height: size.height
-        )
-        
-        // Create and configure new page view
-        let pageView = PageView(frame: pageFrame)
-        pageView.configure(with: document.pages[newIndex], toolPicker: toolPicker)
-        
-        contentView.addSubview(pageView)
-        pageViews.append(pageView)
-        
-        // Update content size
-        let newContentHeight = yOffset + size.height + pageSpacing
-        contentView.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: newContentHeight)
-        scrollView.contentSize = CGSize(width: view.bounds.width, height: newContentHeight)
-
-        onPageCountChanged?()
-    }
-    
-    func deleteCurrentPage() {
-        guard var document = document else { return }
-        document.removePage(at: document.currentPageIndex)
-        refreshPages()
-        onPageCountChanged?()
-    }
-    
-    func setBackground(background: PageBackground, for pageIndex: Int) {
-        guard var document = document,
-              document.pages.indices.contains(pageIndex) else { return }
-        
-        document.pages[pageIndex].background = background
-        
-        // Reconfigure the specific page view
-        if pageViews.indices.contains(pageIndex) {
-            pageViews[pageIndex].configure(with: document.pages[pageIndex], toolPicker: toolPicker)
-        }
-    }
-    
-    private func scrollToPage(_ pageView: PageView, animated: Bool = true) {
-        // Scroll to the top of the page (with some spacing above)
-        let targetY = max(0, pageView.frame.origin.y - pageSpacing)
-        let maxY = max(0, scrollView.contentSize.height - scrollView.bounds.height)
-        let clampedY = min(targetY, maxY)
-        let targetOffset = CGPoint(x: 0, y: clampedY)
-        
-        scrollView.setContentOffset(targetOffset, animated: animated)
     }
     
     private func getCurrentPageIndex() -> Int {
@@ -340,7 +207,6 @@ class MultiPageController: UIViewController {
 
 // MARK: - UIScrollViewDelegate
 extension MultiPageController: UIScrollViewDelegate {
-    
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
         updateCurrentPage()
     }
@@ -361,6 +227,17 @@ extension MultiPageController: UIScrollViewDelegate {
         
         updateToolPickerForCurrentPage()
     }
+    
+    private func scrollToPage(_ pageView: PageView, animated: Bool = true) {
+        // Scroll to the top of the page (with some spacing above)
+        let targetY = max(0, pageView.frame.origin.y - pageSpacing)
+        let maxY = max(0, scrollView.contentSize.height - scrollView.bounds.height)
+        let clampedY = min(targetY, maxY)
+        let targetOffset = CGPoint(x: 0, y: clampedY)
+        
+        scrollView.setContentOffset(targetOffset, animated: animated)
+    }
+    
 }
 
 
