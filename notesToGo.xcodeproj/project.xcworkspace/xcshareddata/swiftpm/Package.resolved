@@ -1,5 +1,5 @@
 {
-  "originHash" : "5277dbec3dfa260247c6a3f51f63d2d8050d51c31fef25a5720409b4c12d62e8",
+  "originHash" : "6ac447980446a827f573c02f673f1aeb726ab6869d1755de6255f3d65386342e",
   "pins" : [
     {
       "identity" : "dependencies",
@@ -8,6 +8,15 @@
       "state" : {
         "revision" : "05e83fce3f0d99224533d74499d09b2632884122",
         "version" : "2.0.0"
+      }
+    },
+    {
+      "identity" : "flux",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ManuelSelch/Flux",
+      "state" : {
+        "revision" : "a387744ee58e35cd2fde786cd1c8248302dc97af",
+        "version" : "1.0.10"
       }
     },
     {

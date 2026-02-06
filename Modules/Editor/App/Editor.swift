@@ -5,7 +5,7 @@ import PencilKit
 @Observable
 class Editor {
     let controller: MultiPageController
-    let document: MultiPageDocument
+    var document: MultiPageDocument
     let fileURL: URL
     
     init(_ document: MultiPageDocument, fileURL: URL) {

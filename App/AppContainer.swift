@@ -5,6 +5,10 @@ import Dependencies
 struct AppContainer: View {
     @Dependency(\.router) var router
     
+    init() {
+        DependencyValues.setMode(.mock) // TODO: infra not implemented yet
+    }
+    
     var body: some View {
         StackWithSheetRouterView(router, content: { route in
             VStack {
@@ -12,7 +16,7 @@ struct AppContainer: View {
                 case let .explorer(route):
                     ExplorerContainer(route: route)
                 case let .editor(note):
-                    EditorContainer(note)
+                    EditorContainer_v2(note: note)
                 }
             }
         })

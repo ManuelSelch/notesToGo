@@ -2,6 +2,18 @@ import SwiftUI
 import PaperKit
 import PencilKit
 
+// MARK: - SwiftUI Wrapper with VC Reference
+struct MultiPageView: UIViewControllerRepresentable {
+    let controller: MultiPageController
+    
+    func makeUIViewController(context: Context) -> MultiPageController {
+        return controller
+    }
+    
+    func updateUIViewController(_ uiViewController: MultiPageController, context: Context) { }
+}
+
+
 // MARK: - Multi-Page Container View Controller
 class MultiPageController: UIViewController {
     private var toolPicker = PKToolPicker()
@@ -76,7 +88,7 @@ class MultiPageController: UIViewController {
         }
         pageViews.removeAll()
         
-        guard let document = document else {
+        guard var document = document else {
             contentView.frame = .zero
             scrollView.contentSize = .zero
             return
@@ -180,14 +192,14 @@ class MultiPageController: UIViewController {
     }
     
     func deleteCurrentPage() {
-        guard let document = document else { return }
+        guard var document = document else { return }
         document.removePage(at: document.currentPageIndex)
         rebuildPages()
         onPageCountChanged?()
     }
     
     func setBackground(background: PageBackground, for pageIndex: Int) {
-        guard let document = document,
+        guard var document = document,
               document.pages.indices.contains(pageIndex) else { return }
         
         document.pages[pageIndex].background = background
@@ -300,7 +312,7 @@ extension MultiPageController {
     /// Copies the current PaperMarkup from each PageView back into the document model.
     /// Call this before persisting the document.
     func syncDrawingsToDocument() {
-        guard let document = document else { return }
+        guard var document = document else { return }
         
         for (index, pageView) in pageViews.enumerated() where document.pages.indices.contains(index) {
             guard let currentMarkup = pageView.currentMarkup() else { continue }

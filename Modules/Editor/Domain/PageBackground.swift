@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-enum PageBackground: Codable {
+enum PageBackground: Codable, Equatable {
     case plain(CodableColor)
     case dotted(dotColor: CodableColor, backgroundColor: CodableColor, spacing: CGFloat, dotSize: CGFloat)
     case grid(lineColor: CodableColor, backgroundColor: CodableColor, spacing: CGFloat, lineWidth: CGFloat)

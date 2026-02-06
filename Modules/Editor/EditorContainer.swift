@@ -17,7 +17,8 @@ struct EditorContainer: View {
     
     var body: some View {
         VStack {
-            MultiPageView(controller: editor.controller)
+            VStack {}
+            //MultiPageView(controller: editor.controller)
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading, content: SaveToolbar)
                     ToolbarItem(placement: .topBarTrailing, content: EditToolbar)
@@ -51,16 +52,4 @@ struct EditorContainer: View {
         }
     }
 
-}
-
-
-// MARK: - SwiftUI Wrapper with VC Reference
-struct MultiPageView: UIViewControllerRepresentable {
-    let controller: MultiPageController
-    
-    func makeUIViewController(context: Context) -> MultiPageController {
-        return controller
-    }
-    
-    func updateUIViewController(_ uiViewController: MultiPageController, context: Context) { }
 }

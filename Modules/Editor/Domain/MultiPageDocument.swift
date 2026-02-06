@@ -2,14 +2,8 @@ import SwiftUI
 import PaperKit
 import PencilKit
 
-
-struct PageDTO: Codable {
-    let markupData: Data
-    let background: PageBackground
-}
-
 /// document that stores multiple pages
-class MultiPageDocument: Codable {
+struct MultiPageDocument: Equatable {
     var pages: [Page] = []
     var currentPageIndex: Int = 0
     
@@ -24,11 +18,11 @@ class MultiPageDocument: Codable {
         }
     }
     
-    func addPage(_ page: Page) {
+    mutating func addPage(_ page: Page) {
         pages.append(page)
     }
     
-    func removePage(at index: Int) {
+    mutating func removePage(at index: Int) {
         guard pages.count > 1, pages.indices.contains(index) else { return }
         pages.remove(at: index)
         if currentPageIndex >= pages.count {
@@ -36,11 +30,25 @@ class MultiPageDocument: Codable {
         }
     }
     
+    static var empty = MultiPageDocument(
+        pageCount: 1,
+        pageSize: .init(width: 300, height: 500),
+        background: .dotted(dotColor: .black, backgroundColor: .white, spacing: 50, dotSize: 2)
+    )
+}
+
+// MARK: - encode & decode
+extension MultiPageDocument: Codable {
+    struct PageDTO: Codable {
+        let markupData: Data
+        let background: PageBackground
+    }
+    
     private enum CodingKeys: String, CodingKey {
         case pages, currentPageIndex
     }
-
-    required init(from decoder: Decoder) throws {
+    
+    init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let dtos = try container.decode([PageDTO].self, forKey: .pages)
         pages = try dtos.map { dto in
