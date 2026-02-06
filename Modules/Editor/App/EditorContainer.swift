@@ -42,7 +42,10 @@ struct EditorContainer: View {
                 MultiPageView(controller: controller)
                     .onAppear { store.dispatch(.open(note.markup)) }
                     .toolbar {
-                        ToolbarItem(placement: .topBarLeading, content: SaveToolbar)
+                        if(store.state.mode != .focus) {
+                            ToolbarItem(placement: .topBarLeading, content: SaveToolbar)
+                        }
+                        
                         ToolbarItem(placement: .topBarTrailing, content: EditToolbar)
                     }
             
@@ -63,16 +66,23 @@ struct EditorContainer: View {
     @ViewBuilder
     func EditToolbar() -> some View {
         HStack(spacing: 20) {
-            Button(action: { router.stack.push(.editor(.grid)) }) {
-                Image(systemName: "square.grid.2x2")
+            if(store.state.mode != .focus) {
+                Button(action: { router.stack.push(.editor(.grid)) }) {
+                    Image(systemName: "square.grid.2x2")
+                }
+                
+                
+                Button(action: { store.dispatch(.addPageTapped) }) {
+                    Image(systemName: "plus.rectangle.portrait")
+                }
+                
+                Button(action: { store.dispatch(.toggleEditMode) }) {
+                    Image(systemName: store.state.mode.isDrawing ? "pencil.slash": "square.and.pencil")
+                }
             }
             
-            Button(action: { store.dispatch(.addPageTapped) }) {
-                Image(systemName: "plus.rectangle.portrait")
-            }
-            
-            Button(action: { store.dispatch(.toggleEditMode) }) {
-                Image(systemName: store.state.mode.isDrawing ? "pencil.slash": "square.and.pencil")
+            Button(action: { store.dispatch(.toggleFocusMode) }) {
+                Image(systemName: "circle")
             }
         }
         .padding()

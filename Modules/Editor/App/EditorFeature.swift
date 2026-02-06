@@ -24,6 +24,7 @@ nonisolated struct EditorFeature: Feature {
         
         // MARK: - toggle edit mode
         case toggleEditMode
+        case toggleFocusMode
     }
     
     enum Route: RouteType {
@@ -64,6 +65,8 @@ nonisolated struct EditorFeature: Feature {
             
         case .toggleEditMode:
             state.mode = toggleReadWriteMode(state.mode)
+        case .toggleFocusMode:
+            state.mode = toggleFocusMode(state.mode)
             
         case .addPageTapped:
             state.document?.addPage(.empty)
@@ -77,6 +80,14 @@ nonisolated struct EditorFeature: Feature {
         case .read:  .write
         case .write: .read
         case .focus: .focus
+        }
+    }
+    
+    func toggleFocusMode(_ mode: EditMode) -> EditMode {
+        return switch(mode) {
+        case .read:  .focus
+        case .write: .focus
+        case .focus: .write
         }
     }
 }
