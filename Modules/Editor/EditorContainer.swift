@@ -1,38 +1,63 @@
 import SwiftUI
-import PencilKit
-import PDFKit
-import PhotosUI
+import Flux
+import Dependencies
 
 struct EditorContainer: View {
-    @State var editor: Editor
-    @State var showTools = false
+    @ObservedObject var store: FluxStore<EditorFeature>
+    @State var controller: MultiPageController
     
-    init(_ note: Note) {
-        editor = (try? Editor.load(from: note.markup)) ?? Editor(.empty, fileURL: note.markup)
+    let note: Note
+    
+    init(note: Note) {
+        self.note = note
+        
+
+        
+        var store: FluxStore<EditorFeature> = .init(
+            state: .init(),
+            middlewares: [
+                DocumentMiddleware(repo: InMemoryDocumentRepository()).handle
+            ]
+        )
+        self.store = store
+        
+        controller = MultiPageController(
+            onPageChanged: { store.dispatch(.pageChanged($0)) }
+        )
+        
+        controller.document = store.state.document
     }
     
     var body: some View {
         VStack {
-            VStack {}
-            //MultiPageView(controller: editor.controller)
-                .toolbar {
-                    ToolbarItem(placement: .topBarLeading, content: SaveToolbar)
-                    ToolbarItem(placement: .topBarTrailing, content: EditToolbar)
-                }
-                .ignoresSafeArea(.all)
+            Text("pages: \(store.state.document?.pages.count ?? -1)")
+            Text("current: \(store.state.currentPage)")
+            
+            MultiPageView(controller: controller)
         }
+        .onAppear { store.dispatch(.open(note.markup)) }
+        .onChange(of: store.state.document) {
+            controller.document = store.state.document
+        }
+        .onChange(of: store.state.mode) {
+            controller.showPencilTools(store.state.mode.isToolbarVisible)
+        }
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading, content: SaveToolbar)
+            ToolbarItem(placement: .topBarTrailing, content: EditToolbar)
+        }
+        .ignoresSafeArea(.all)
     }
     
     @ViewBuilder
     func EditToolbar() -> some View {
         HStack {
             Button("Add Page") {
-                editor.addPage()
+                store.dispatch(.addPageTapped)
             }
             
-            Button(showTools ? "Done": "Draw") {
-                showTools.toggle()
-                editor.showPencilTools(showTools)
+            Button(store.state.mode.isEditing ? "Done": "Draw") {
+                store.dispatch(.toggleEditMode)
             }
         }
     }
@@ -41,11 +66,12 @@ struct EditorContainer: View {
     func SaveToolbar() -> some View {
         HStack {
             Button("Save") {
-                Task {
-                    try await editor.save()
-                }
+                
             }
         }
     }
+}
 
+#Preview {
+    EditorContainer(note: .init(pdf: .applicationDirectory, markup: .applicationDirectory))
 }
