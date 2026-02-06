@@ -202,7 +202,9 @@ class MultiPageController: UIViewController {
         
         // Scroll to the top of the page (with some spacing above)
         let targetY = max(0, pageView.frame.origin.y - pageSpacing)
-        let targetOffset = CGPoint(x: 0, y: targetY)
+        let maxY = max(0, scrollView.contentSize.height - scrollView.bounds.height)
+        let clampedY = min(targetY, maxY)
+        let targetOffset = CGPoint(x: 0, y: clampedY)
         
         scrollView.setContentOffset(targetOffset, animated: animated)
         
