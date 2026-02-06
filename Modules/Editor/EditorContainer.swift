@@ -4,11 +4,11 @@ import PDFKit
 import PhotosUI
 
 struct EditorContainer: View {
-    @State var editor = Editor()
+    @State var editor: Editor
     @State var showTools = false
     
     init() {
-        editor.initialize(MultiPageDocument(
+        editor = Editor(MultiPageDocument(
             pageCount: 2,
             pageSize: .init(width: 300, height: 500),
             background: .dotted(dotColor: .black, backgroundColor: .white, spacing: 50, dotSize: 2)

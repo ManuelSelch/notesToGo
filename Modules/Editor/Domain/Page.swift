@@ -8,9 +8,15 @@ struct Page: Identifiable {
     var markup: PaperMarkup
     var background: PageBackground
     
+    let width: CGFloat
+    let height: CGFloat
+    
     init(bounds: CGRect, background: PageBackground) {
         self.markup = PaperMarkup(bounds: bounds)
         self.background = background
+        
+        self.width = bounds.width
+        self.height = bounds.height
     }
     
     /// Update markup bounds to match new size

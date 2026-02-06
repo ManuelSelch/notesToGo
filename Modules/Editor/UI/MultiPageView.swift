@@ -57,6 +57,15 @@ class MultiPageController: UIViewController {
         scrollView.addSubview(contentView)
     }
     
+    /// Calculates the display size for a page, stretching to full available width
+    /// and deriving height from the page's own aspect ratio.
+    private func displaySize(for page: Page) -> CGSize {
+        let availableWidth = view.bounds.width - (horizontalPadding * 2)
+        let aspectRatio = page.height / page.width
+        let displayHeight = availableWidth * aspectRatio
+        return CGSize(width: availableWidth, height: displayHeight)
+    }
+    
     private func rebuildPages() {
         // Clean up existing page views
         for pageView in pageViews {
@@ -71,54 +80,47 @@ class MultiPageController: UIViewController {
             return
         }
         
-        // Calculate page size (fit width with padding)
-        let availableWidth = view.bounds.width - (horizontalPadding * 2)
-        let pageWidth = availableWidth
-        let pageHeight = pageWidth * 1.414 // A4 aspect ratio
-        let pageSize = CGSize(width: pageWidth, height: pageHeight)
-        
         var yOffset: CGFloat = pageSpacing
-        
-        // Create page views
-        for (index, var page) in document.pages.enumerated() {
+
+        for (index, page) in document.pages.enumerated() {
+            let size = displaySize(for: page)
             let pageFrame = CGRect(
                 x: horizontalPadding,
                 y: yOffset,
-                width: pageSize.width,
-                height: pageSize.height
+                width: size.width,
+                height: size.height
             )
-            
-            // Ensure page markup has correct bounds
-            let pageBounds = CGRect(origin: .zero, size: pageSize)
-            if abs(page.markup.bounds.width - pageBounds.width) > 1 || abs(page.markup.bounds.height - pageBounds.height) > 1 {
-                // Update the page's markup with correct bounds
-                page.markup = PaperMarkup(bounds: pageBounds)
-                document.pages[index] = page
+
+            // Ensure markup bounds match the display size
+            var updatedPage = page
+            let displayBounds = CGRect(origin: .zero, size: size)
+            if abs(updatedPage.markup.bounds.width - size.width) > 1
+                || abs(updatedPage.markup.bounds.height - size.height) > 1 {
+                updatedPage.markup = PaperMarkup(bounds: displayBounds)
+                document.pages[index] = updatedPage
             }
-            
+
             let pageView = PageView(frame: pageFrame)
-            pageView.configure(with: page, toolPicker: toolPicker)
-            
+            pageView.configure(with: document.pages[index], toolPicker: toolPicker)
+
             contentView.addSubview(pageView)
             pageViews.append(pageView)
-            
-            yOffset += pageSize.height + pageSpacing
+
+            yOffset += size.height + pageSpacing
         }
+
         
         // Update content view and scroll view content size
-        let contentHeight = yOffset
         let contentWidth = view.bounds.width
-        
-        contentView.frame = CGRect(x: 0, y: 0, width: contentWidth, height: contentHeight)
-        scrollView.contentSize = CGSize(width: contentWidth, height: contentHeight)
+        contentView.frame = CGRect(x: 0, y: 0, width: contentWidth, height: yOffset)
+        scrollView.contentSize = CGSize(width: contentWidth, height: yOffset)
     }
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         
-        // Only rebuild if width changed significantly (orientation change)
-        let currentWidth = view.bounds.width
-        if abs(contentView.bounds.width - currentWidth) > 1 {
+        // Rebuild on width change (rotation, multitasking resize)
+        if abs(contentView.bounds.width - view.bounds.width) > 1 {
             rebuildPages()
         }
     }
@@ -135,27 +137,27 @@ class MultiPageController: UIViewController {
     
     // MARK: - Public Methods
     
-    func addNewPage(with background: PageBackground = .plain(.white)) {
+    func pageAdded() {
         guard let document = document else { return }
         
-        // Calculate page size
-        let pageWidth = view.bounds.width - (horizontalPadding * 2)
-        let pageHeight = pageWidth * 1.414
-        let pageSize = CGSize(width: pageWidth, height: pageHeight)
-        let bounds = CGRect(origin: .zero, size: pageSize)
-        
-        // Add page to document
-        document.addPage(with: bounds, background: background)
-        
-        // Calculate position for new page
+        // calculate page size
         let newIndex = document.pages.count - 1
-        let yOffset: CGFloat = pageSpacing + CGFloat(newIndex) * (pageSize.height + pageSpacing)
+        let page = document.pages[newIndex]
+        let size = displaySize(for: page)
+        
+        // yOffset = last page view bottom + spacing, or just spacing if first
+        let yOffset: CGFloat
+        if let lastPageView = pageViews.last {
+            yOffset = lastPageView.frame.maxY + pageSpacing
+        } else {
+            yOffset = pageSpacing
+        }
         
         let pageFrame = CGRect(
             x: horizontalPadding,
             y: yOffset,
-            width: pageSize.width,
-            height: pageSize.height
+            width: size.width,
+            height: size.height
         )
         
         // Create and configure new page view
@@ -166,13 +168,11 @@ class MultiPageController: UIViewController {
         pageViews.append(pageView)
         
         // Update content size
-        let newContentHeight = yOffset + pageSize.height + pageSpacing
+        let newContentHeight = yOffset + size.height + pageSpacing
         contentView.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: newContentHeight)
         scrollView.contentSize = CGSize(width: view.bounds.width, height: newContentHeight)
-        
-        // Scroll to the new page
+
         scrollToPage(newIndex, animated: true)
-        
         onPageCountChanged?()
     }
     

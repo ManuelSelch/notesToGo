@@ -20,9 +20,8 @@ class MultiPageDocument {
         }
     }
     
-    func addPage(with bounds: CGRect, background: PageBackground) {
-        let newPage = Page(bounds: bounds, background: background)
-        pages.append(newPage)
+    func addPage(_ page: Page) {
+        pages.append(page)
     }
     
     func removePage(at index: Int) {
