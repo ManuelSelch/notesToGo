@@ -20,18 +20,7 @@ struct Page: Identifiable, Equatable {
         self.markup = markup
         self.background = background
     }
-    
-    /// Update markup bounds to match new size
-    mutating func updateBounds(_ newBounds: CGRect) {
-        // Only recreate if bounds actually changed significantly
-        let currentBounds = markup.bounds
-        if abs(currentBounds.width - newBounds.width) > 1 || abs(currentBounds.height - newBounds.height) > 1 {
-            // Note: This creates a new PaperMarkup - existing drawings would be lost
-            // In production, you'd want to transfer the markup data
-            markup = PaperMarkup(bounds: newBounds)
-        }
-    }
-    
+
     static var empty: Page {
         return Page(
            bounds: .init(x: 0, y: 0, width: 300, height: 500),

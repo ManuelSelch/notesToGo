@@ -101,9 +101,16 @@ class MultiPageController: UIViewController {
         // --- 1. TODO: remove deleted pages
         
         // --- 2. update existing & add new pages
+        var lastNewPage: PageView? = nil
         var yOffset: CGFloat = pageSpacing
         for page in document.pages {
-            let pageView = pageViewsById[page.id] ?? createNewPageView(page)
+            let existingPageView = pageViewsById[page.id]
+            let pageView = existingPageView ?? createNewPageView(page)
+            
+            // track last added page to scroll to this page
+            if existingPageView == nil {
+                lastNewPage = pageView
+            }
             
             let size = displaySize(for: page)
             let pageFrame = CGRect(
@@ -117,6 +124,10 @@ class MultiPageController: UIViewController {
             pageViewsById[page.id] = pageView
            
             yOffset += size.height + pageSpacing
+        }
+        
+        if let lastNewPage = lastNewPage {
+            scrollToPage(lastNewPage)
         }
         
         // 3. update scroll view size
@@ -289,6 +300,16 @@ class MultiPageController: UIViewController {
         scrollView.setContentOffset(targetOffset, animated: animated)
         
         document?.currentPageIndex = index
+    }
+    
+    func scrollToPage(_ pageView: PageView, animated: Bool = true) {
+        // Scroll to the top of the page (with some spacing above)
+        let targetY = max(0, pageView.frame.origin.y - pageSpacing)
+        let maxY = max(0, scrollView.contentSize.height - scrollView.bounds.height)
+        let clampedY = min(targetY, maxY)
+        let targetOffset = CGPoint(x: 0, y: clampedY)
+        
+        scrollView.setContentOffset(targetOffset, animated: animated)
     }
     
     func getCurrentPageIndex() -> Int {
