@@ -67,6 +67,8 @@ class MultiPageController: UIViewController {
     }
     
     private func rebuildPages() {
+        syncDrawingsToDocument()
+        
         // Clean up existing page views
         for pageView in pageViews {
             pageView.cleanup()
@@ -84,21 +86,22 @@ class MultiPageController: UIViewController {
 
         for (index, page) in document.pages.enumerated() {
             let size = displaySize(for: page)
+            // Scale markup content if display size changed
+            let oldWidth = page.markup.bounds.width
+            
+            if oldWidth > 0 && abs(oldWidth - size.width) > 1 {
+                let scale = size.width / oldWidth
+                document.pages[index].markup.transformContent(CGAffineTransform(scaleX: scale, y: scale))
+                document.pages[index].markup.bounds = CGRect(origin: .zero, size: size)
+            }
+            
+           
             let pageFrame = CGRect(
                 x: horizontalPadding,
                 y: yOffset,
                 width: size.width,
                 height: size.height
             )
-
-            // Ensure markup bounds match the display size
-            var updatedPage = page
-            let displayBounds = CGRect(origin: .zero, size: size)
-            if abs(updatedPage.markup.bounds.width - size.width) > 1
-                || abs(updatedPage.markup.bounds.height - size.height) > 1 {
-                updatedPage.markup = PaperMarkup(bounds: displayBounds)
-                document.pages[index] = updatedPage
-            }
 
             let pageView = PageView(frame: pageFrame)
             pageView.configure(with: document.pages[index], toolPicker: toolPicker)
