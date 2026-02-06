@@ -48,6 +48,7 @@ struct EditorContainer: View {
                         
                         ToolbarItem(placement: .topBarTrailing, content: EditToolbar)
                     }
+                    .navigationBarBackButtonHidden(store.state.mode == .focus)
             
             case .grid:
                 GridView(pages: store.state.document?.pages ?? [])
