@@ -112,16 +112,25 @@ class MultiPageController: UIViewController {
                 lastNewPage = pageView
             }
             
+            // scale markup content if screen rotated
+            let oldWidth = pageView.markup?.bounds.width ?? .zero
             let size = displaySize(for: page)
+            if oldWidth > 0 && abs(oldWidth - size.width) > 1 {
+                let scale = size.width / oldWidth
+                pageView.transform(scale, to: size)
+            }
+
             let pageFrame = CGRect(
                 x: horizontalPadding,
                 y: yOffset,
                 width: size.width,
                 height: size.height
             )
-            
             pageView.frame = pageFrame
             pageViewsById[page.id] = pageView
+            
+           
+            
            
             yOffset += size.height + pageSpacing
         }

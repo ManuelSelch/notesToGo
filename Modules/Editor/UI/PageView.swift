@@ -7,7 +7,7 @@ class PageView: UIView {
     private var backgroundImageView: UIImageView!
     private var controller: PaperMarkupViewController?
     
-    var page: Page?
+    var markup: PaperMarkup? { controller?.markup }
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -36,8 +36,6 @@ class PageView: UIView {
     }
     
     func configure(with page: Page, toolPicker: PKToolPicker) {
-        self.page = page
-        
         // Remove existing paper view controller
         if let existingVC = controller {
             existingVC.willMove(toParent: nil)
@@ -90,6 +88,13 @@ class PageView: UIView {
         controller = paperVC
         
         toolPicker.addObserver(paperVC)
+    }
+    
+    public func transform(_ scale: CGFloat, to size: CGSize) {
+        // controller?.markup?.transformContent(.identity) // reset to transform relativly to original content
+        
+        controller?.markup?.transformContent(CGAffineTransform(scaleX: scale, y: scale))
+        controller?.markup?.bounds = CGRect(origin: .zero, size: size)
     }
     
     /// Recursively find and disable scroll views within the PaperMarkupViewController
