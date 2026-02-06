@@ -263,7 +263,6 @@ class MultiPageController: UIViewController {
         contentView.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: newContentHeight)
         scrollView.contentSize = CGSize(width: view.bounds.width, height: newContentHeight)
 
-        scrollToPage(newIndex, animated: true)
         onPageCountChanged?()
     }
     
@@ -286,23 +285,7 @@ class MultiPageController: UIViewController {
         }
     }
     
-    func scrollToPage(_ index: Int, animated: Bool = true) {
-        guard pageViews.indices.contains(index) else { return }
-        
-        let pageView = pageViews[index]
-        
-        // Scroll to the top of the page (with some spacing above)
-        let targetY = max(0, pageView.frame.origin.y - pageSpacing)
-        let maxY = max(0, scrollView.contentSize.height - scrollView.bounds.height)
-        let clampedY = min(targetY, maxY)
-        let targetOffset = CGPoint(x: 0, y: clampedY)
-        
-        scrollView.setContentOffset(targetOffset, animated: animated)
-        
-        document?.currentPageIndex = index
-    }
-    
-    func scrollToPage(_ pageView: PageView, animated: Bool = true) {
+    private func scrollToPage(_ pageView: PageView, animated: Bool = true) {
         // Scroll to the top of the page (with some spacing above)
         let targetY = max(0, pageView.frame.origin.y - pageSpacing)
         let maxY = max(0, scrollView.contentSize.height - scrollView.bounds.height)
@@ -312,7 +295,7 @@ class MultiPageController: UIViewController {
         scrollView.setContentOffset(targetOffset, animated: animated)
     }
     
-    func getCurrentPageIndex() -> Int {
+    private func getCurrentPageIndex() -> Int {
         // Determine which page is most visible
         let visibleRect = CGRect(
             origin: scrollView.contentOffset,
