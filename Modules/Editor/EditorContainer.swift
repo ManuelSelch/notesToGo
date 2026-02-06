@@ -8,11 +8,7 @@ struct EditorContainer: View {
     @State var showTools = false
     
     init(_ note: Note) {
-        editor = (try? Editor.load(from: note.markup)) ?? Editor(MultiPageDocument(
-            pageCount: 2,
-            pageSize: .init(width: 300, height: 500),
-            background: .dotted(dotColor: .black, backgroundColor: .white, spacing: 50, dotSize: 2)
-        ), fileURL: note.markup)
+        editor = (try? Editor.load(from: note.markup)) ?? Editor(.empty, fileURL: note.markup)
     }
     
     var body: some View {

@@ -12,9 +12,9 @@ struct MultiPageDocument: Equatable {
         return pages[currentPageIndex]
     }
     
-    init(pageCount: Int = 1, pageSize: CGSize, background: PageBackground) {
+    init(pageCount: Int = 1, template: Page) {
         for _ in 0..<pageCount {
-            pages.append(Page(bounds: CGRect(origin: .zero, size: pageSize), background: background))
+            pages.append(template)
         }
     }
     
@@ -32,8 +32,7 @@ struct MultiPageDocument: Equatable {
     
     static var empty = MultiPageDocument(
         pageCount: 1,
-        pageSize: .init(width: 300, height: 500),
-        background: .dotted(dotColor: .black, backgroundColor: .white, spacing: 50, dotSize: 2)
+        template: .empty
     )
 }
 

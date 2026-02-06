@@ -20,6 +20,8 @@ nonisolated struct EditorFeature: Feature {
         case saved
         case savedFailed
         
+        case addPageTapped
+        
         // MARK: - toggle edit mode
         case toggleEditMode
         
@@ -50,6 +52,9 @@ nonisolated struct EditorFeature: Feature {
             
         case let .pageChanged(page):
             state.currentPage = page
+            
+        case .addPageTapped:
+            state.document?.addPage(.empty)
             
         default: break
         }

@@ -31,4 +31,9 @@ struct Page: Identifiable, Equatable {
             markup = PaperMarkup(bounds: newBounds)
         }
     }
+    
+    static var empty = Page(
+        bounds: .init(x: 0, y: 0, width: 300, height: 500),
+        background: .dotted(dotColor: .black, backgroundColor: .white, spacing: 50, dotSize: 2)
+    )
 }

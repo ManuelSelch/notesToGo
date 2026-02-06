@@ -50,7 +50,7 @@ struct EditorContainer_v2: View {
     func EditToolbar() -> some View {
         HStack {
             Button("Add Page") {
-                
+                store.dispatch(.addPageTapped)
             }
             
             Button(store.state.mode.isEditing ? "Done": "Draw") {

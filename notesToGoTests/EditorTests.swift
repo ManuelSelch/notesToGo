@@ -9,10 +9,7 @@ import FluxTestStore
 class EditorTests {
     // MARK: - setup
     let ANY_PATH = URL(string: "MyFile")!
-    let ANY_DOCUMENT = MultiPageDocument(
-        pageSize: .init(width: 100, height: 100),
-        background: .plain(.white)
-    )
+    let ANY_DOCUMENT = MultiPageDocument(template: .empty)
     
     var repo: DocumentRepositoryProtocol
     
@@ -53,6 +50,15 @@ class EditorTests {
         store.dispatch(.save) { $0.isLoading = true }
         
         await store.receive(.saved) { $0.isLoading = false }
+    }
+    
+    @Test
+    func addPageTapped_addsNewPageToDoc() async throws {
+        try await givenDocumentWasLoaded(ANY_DOCUMENT, at: ANY_PATH)
+        
+        store.dispatch(.addPageTapped) {
+            $0.document?.pages.append(.empty)
+        }
     }
     
     func givenDocumentWasLoaded(_ doc: MultiPageDocument, at path: URL) async throws {
