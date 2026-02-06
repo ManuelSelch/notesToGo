@@ -126,14 +126,14 @@ class MultiPageController: UIViewController {
             yOffset += size.height + pageSpacing
         }
         
-        if let lastNewPage = lastNewPage {
-            scrollToPage(lastNewPage)
-        }
-        
         // 3. update scroll view size
         let contentWidth = view.bounds.width
         contentView.frame = CGRect(x: 0, y: 0, width: contentWidth, height: yOffset)
         scrollView.contentSize = CGSize(width: contentWidth, height: yOffset)
+        
+        if let lastNewPage = lastNewPage {
+            scrollToPage(lastNewPage)
+        }
     }
     
     private func createNewPageView(_ page: Page) -> PageView {

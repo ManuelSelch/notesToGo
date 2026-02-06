@@ -24,7 +24,6 @@ class Editor {
         let page = Page(bounds: bounds, background: background)
         
         document.addPage(page)
-        controller.pageAdded()
     }
     
     /// show or hide native pencil tools
