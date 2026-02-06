@@ -7,16 +7,16 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "9BFF4420-B9B6-4491-8B6B-50D47FB4DCAE"
+            uuid = "315A4B97-EAE8-497C-B640-5B2BCD77AEEB"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Modules/Editor/UI/MultiPageView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "106"
-            endingLineNumber = "106"
-            landmarkName = "rebuildPages()"
+            startingLineNumber = "116"
+            endingLineNumber = "116"
+            landmarkName = "refreshPages()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

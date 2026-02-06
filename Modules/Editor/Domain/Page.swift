@@ -32,8 +32,10 @@ struct Page: Identifiable, Equatable {
         }
     }
     
-    static var empty = Page(
-        bounds: .init(x: 0, y: 0, width: 300, height: 500),
-        background: .dotted(dotColor: .black, backgroundColor: .white, spacing: 50, dotSize: 2)
-    )
+    static var empty: Page {
+        return Page(
+           bounds: .init(x: 0, y: 0, width: 300, height: 500),
+           background: .dotted(dotColor: .black, backgroundColor: .white, spacing: 50, dotSize: 2)
+       )
+    }
 }

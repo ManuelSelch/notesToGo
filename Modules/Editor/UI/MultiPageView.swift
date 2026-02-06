@@ -20,6 +20,7 @@ class MultiPageController: UIViewController {
     private var scrollView: UIScrollView!
     private var contentView: UIView!
     private var pageViews: [PageView] = []
+    private var pageViewsById: [UUID:PageView] = [:]
     private var isToolPickerVisible = false
     private var lastPage: Int = 0
     
@@ -30,7 +31,7 @@ class MultiPageController: UIViewController {
     var document: MultiPageDocument? {
         didSet {
             if isViewLoaded {
-                rebuildPages()
+                refreshPages()
             }
         }
     }
@@ -57,7 +58,7 @@ class MultiPageController: UIViewController {
         view.backgroundColor = .systemGray5
         
         setupScrollView()
-        rebuildPages()
+        refreshPages()
     }
     
     private func setupScrollView() {
@@ -93,6 +94,55 @@ class MultiPageController: UIViewController {
         return CGSize(width: availableWidth, height: displayHeight)
     }
     
+    /// refreshes existing page views with updated data
+    private func refreshPages() {
+        guard let document = document else { return }
+    
+        // --- 1. TODO: remove deleted pages
+        
+        // --- 2. update existing & add new pages
+        var yOffset: CGFloat = pageSpacing
+        for page in document.pages {
+            let pageView = pageViewsById[page.id] ?? createNewPageView(page)
+            
+            let size = displaySize(for: page)
+            let pageFrame = CGRect(
+                x: horizontalPadding,
+                y: yOffset,
+                width: size.width,
+                height: size.height
+            )
+            
+            pageView.frame = pageFrame
+            pageViewsById[page.id] = pageView
+           
+            yOffset += size.height + pageSpacing
+        }
+        
+        // 3. update scroll view size
+        let contentWidth = view.bounds.width
+        contentView.frame = CGRect(x: 0, y: 0, width: contentWidth, height: yOffset)
+        scrollView.contentSize = CGSize(width: contentWidth, height: yOffset)
+    }
+    
+    private func createNewPageView(_ page: Page) -> PageView {
+        let size = displaySize(for: page)
+        
+        let pageFrame = CGRect(
+            x: 0, // layout is done in parent method
+            y: 0,
+            width: size.width,
+            height: size.height
+        )
+       
+        let view = PageView(frame: pageFrame)
+        view.configure(with: page, toolPicker: toolPicker)
+        contentView.addSubview(view)
+        
+        return view
+    }
+    
+    /// deleates and recreates every page view
     private func rebuildPages() {
         syncDrawingsToDocument()
         
@@ -151,7 +201,7 @@ class MultiPageController: UIViewController {
         
         // Rebuild on width change (rotation, multitasking resize)
         if abs(contentView.bounds.width - view.bounds.width) > 1 {
-            rebuildPages()
+            refreshPages()
         }
     }
     
@@ -209,7 +259,7 @@ class MultiPageController: UIViewController {
     func deleteCurrentPage() {
         guard var document = document else { return }
         document.removePage(at: document.currentPageIndex)
-        rebuildPages()
+        refreshPages()
         onPageCountChanged?()
     }
     
