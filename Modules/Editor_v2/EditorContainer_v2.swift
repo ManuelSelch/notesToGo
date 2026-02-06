@@ -35,10 +35,13 @@ struct EditorContainer_v2: View {
             
             MultiPageView(controller: controller)
         }
+        .onAppear { store.dispatch(.open(note.markup)) }
         .onChange(of: store.state.document) {
             controller.document = store.state.document
         }
-        .onAppear { store.dispatch(.open(note.markup)) }
+        .onChange(of: store.state.mode) {
+            controller.showPencilTools(store.state.mode.isToolbarVisible)
+        }
         .toolbar {
             ToolbarItem(placement: .topBarLeading, content: SaveToolbar)
             ToolbarItem(placement: .topBarTrailing, content: EditToolbar)
