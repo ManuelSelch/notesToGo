@@ -27,8 +27,7 @@ struct ExplorerView: View {
             Button(action: { noteTapped(note) }) {
                 CardContent(
                     title: note.pdf.deletingPathExtension().lastPathComponent,
-                    icon: "doc.text",
-                    iconBackground: Color(uiColor: .tertiarySystemFill)
+                    icon: "text.document.fill"
                 )
             }
             .buttonStyle(.plain)
@@ -37,8 +36,7 @@ struct ExplorerView: View {
             Button(action: { folderTapped(folder) }) {
                 CardContent(
                     title: folder.lastPathComponent,
-                    icon: "folder",
-                    iconBackground: Color(uiColor: .tertiarySystemFill)
+                    icon: "folder.fill"
                 )
             }
             .buttonStyle(.plain)
@@ -49,36 +47,20 @@ struct ExplorerView: View {
 private struct CardContent: View {
     let title: String
     let icon: String
-    let iconBackground: Color
     
     var body: some View {
         VStack(spacing: 12) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(iconBackground)
-                    .frame(width: 60, height: 60)
-                
-                Image(systemName: icon)
-                    .font(.system(size: 26, weight: .medium))
-                    .foregroundStyle(.primary)
-            }
+            Image(systemName: icon)
+                .font(.system(size: 50, weight: .regular))
+                .foregroundStyle(Color(uiColor: .systemBlue))
             
             VStack(spacing: 2) {
                 Text(title)
-                    .font(.headline)
                     .foregroundStyle(.primary)
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
             }
         }
-        .frame(maxWidth: .infinity, minHeight: 132)
-        .background(Color(uiColor: .secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 18))
-        .overlay {
-            RoundedRectangle(cornerRadius: 18)
-                .stroke(Color.black.opacity(0.06), lineWidth: 1)
-        }
-        .shadow(color: .black.opacity(0.05), radius: 8, y: 2)
     }
 }
 
