@@ -85,6 +85,7 @@ struct EditorContainer: View {
                         }
                     }
                     .navigationBarBackButtonHidden(store.state.mode == .focus)
+                    .ignoresSafeArea(.all)
             
             case .grid:
                 GridView(
@@ -112,7 +113,7 @@ struct EditorContainer: View {
         .onChange(of: store.state.selectedTool) {
             controller.selectTool(store.state.selectedTool)
         }
-        .ignoresSafeArea(.all)
+        
     }
     
     func openIfNeeded() {
