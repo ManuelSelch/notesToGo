@@ -100,7 +100,7 @@ struct ExplorerContainer: View {
                 router.stack.push(.editor(.quickNote(note)))
             }
         }) {
-            Image(systemName: "bolt.badge.plus")
+            Image(systemName: "square.and.pencil")
         }
     }
     
