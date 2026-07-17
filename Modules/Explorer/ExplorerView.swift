@@ -6,50 +6,79 @@ struct ExplorerView: View {
     let noteTapped: (Note) -> ()
     let folderTapped: (URL) -> ()
     
-    let columns = [GridItem(.adaptive(minimum: 150), spacing: 16)]
+    let columns = [GridItem(.adaptive(minimum: 160), spacing: 18)]
     
     var body: some View {
         ScrollView {
-            LazyVGrid(columns: columns, spacing: 16) {
+            LazyVGrid(columns: columns, spacing: 18) {
                 ForEach(docs) { doc in
                     DocumentCard(doc)
                 }
             }
-            .padding()
+            .padding(20)
         }
+        .background(Color(uiColor: .systemGroupedBackground))
     }
         
     @ViewBuilder
     func DocumentCard(_ doc: Document) -> some View {
-        VStack(spacing: 8) {
-                switch doc {
-                case .note(let note):
-                    Button(action: { noteTapped(note) }) {
-                        Image(systemName: "doc.text")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(height: 40)
-                        Text(note.pdf.deletingPathExtension().lastPathComponent)
-                            .font(.headline)
-                            .multilineTextAlignment(.center)
-                    }
-                case .folder(let folder):
-                    Button(action: { folderTapped(folder) }) {
-                        Image(systemName: "folder")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(height: 40)
-                        Text(folder.lastPathComponent)
-                            .font(.headline)
-                            .multilineTextAlignment(.center)
-                    }
-                }
+        switch doc {
+        case .note(let note):
+            Button(action: { noteTapped(note) }) {
+                CardContent(
+                    title: note.pdf.deletingPathExtension().lastPathComponent,
+                    icon: "doc.text",
+                    iconBackground: Color(uiColor: .tertiarySystemFill)
+                )
             }
-            .padding()
-            .frame(minWidth: 120, minHeight: 120)
-            .background(Color.white)
-            .cornerRadius(12)
-            .shadow(color: Color.black.opacity(0.15), radius: 4, x: 0, y: 2)
+            .buttonStyle(.plain)
+            
+        case .folder(let folder):
+            Button(action: { folderTapped(folder) }) {
+                CardContent(
+                    title: folder.lastPathComponent,
+                    icon: "folder",
+                    iconBackground: Color(uiColor: .tertiarySystemFill)
+                )
+            }
+            .buttonStyle(.plain)
+        }
+    }
+}
+
+private struct CardContent: View {
+    let title: String
+    let icon: String
+    let iconBackground: Color
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(iconBackground)
+                    .frame(width: 60, height: 60)
+                
+                Image(systemName: icon)
+                    .font(.system(size: 26, weight: .medium))
+                    .foregroundStyle(.primary)
+            }
+            
+            VStack(spacing: 2) {
+                Text(title)
+                    .font(.headline)
+                    .foregroundStyle(.primary)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .frame(maxWidth: .infinity, minHeight: 132)
+        .background(Color(uiColor: .secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 18))
+        .overlay {
+            RoundedRectangle(cornerRadius: 18)
+                .stroke(Color.black.opacity(0.06), lineWidth: 1)
+        }
+        .shadow(color: .black.opacity(0.05), radius: 8, y: 2)
     }
 }
 
@@ -66,7 +95,6 @@ struct ExplorerView: View {
         folderTapped: { _ in }
     )
 }
-
 
 extension URL {
     static func dummy(_ name: String) -> URL {
