@@ -1,6 +1,7 @@
 import SwiftUI
 import PaperKit
 import PencilKit
+import PDFKit
 
 /// UIView that displays background + paper markup for one page
 class PageView: UIView {
@@ -27,13 +28,13 @@ class PageView: UIView {
         
         // Background image view
         backgroundImageView = UIImageView(frame: bounds)
-        backgroundImageView.contentMode = .scaleAspectFill
+        backgroundImageView.contentMode = .scaleToFill
         backgroundImageView.clipsToBounds = true
         backgroundImageView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         addSubview(backgroundImageView)
     }
     
-    func configure(with page: Page) {
+    func configure(with page: Page, pdfPage: PDFPage?) {
         // remove existing paper view controller
         if let existingVC = controller {
             existingVC.willMove(toParent: nil)
@@ -53,6 +54,8 @@ class PageView: UIView {
             markup = page.markup
         }
         
+        backgroundImageView.image = pdfPage.map { renderPDFPage($0, size: bounds.size) }
+        
         // create new paper markup view controller with correct bounds
         let paperVC = PaperMarkupViewController(
             markup: markup,
@@ -70,8 +73,11 @@ class PageView: UIView {
         
         // Set content view for PaperKit - this is what shows behind the drawing
         let contentBackgroundView: UIView
-        if let patternImage = page.background.patternImage() {
-            // Create a view with tiled pattern using
+        if pdfPage != nil {
+            let clearView = UIView(frame: bounds)
+            clearView.backgroundColor = .clear
+            contentBackgroundView = clearView
+        } else if let patternImage = page.background.patternImage() {
             let tiledView = UIView(frame: bounds)
             tiledView.backgroundColor = UIColor(patternImage: patternImage)
             contentBackgroundView = tiledView
@@ -84,6 +90,27 @@ class PageView: UIView {
         paperVC.contentView = contentBackgroundView
         
         controller = paperVC
+    }
+    
+    private func renderPDFPage(_ page: PDFPage, size: CGSize) -> UIImage {
+        let renderer = UIGraphicsImageRenderer(size: size)
+        
+        return renderer.image { context in
+            UIColor.white.setFill()
+            context.fill(CGRect(origin: .zero, size: size))
+            
+            let pdfBounds = page.bounds(for: .mediaBox)
+            let scale = min(size.width / pdfBounds.width, size.height / pdfBounds.height)
+            let drawSize = CGSize(width: pdfBounds.width * scale, height: pdfBounds.height * scale)
+            let origin = CGPoint(x: (size.width - drawSize.width) / 2, y: (size.height - drawSize.height) / 2)
+            
+            let cg = context.cgContext
+            cg.saveGState()
+            cg.translateBy(x: origin.x, y: origin.y + drawSize.height)
+            cg.scaleBy(x: scale, y: -scale)
+            page.draw(with: .mediaBox, to: cg)
+            cg.restoreGState()
+        }
     }
     
     public func transform(_ scale: CGFloat, to size: CGSize) {

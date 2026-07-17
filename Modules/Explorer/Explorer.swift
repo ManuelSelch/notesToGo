@@ -40,16 +40,12 @@ class Explorer {
         
         guard let files = try? fm.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil) else { return [] }
 
-        var results: [Note] = []
-
-        for pdfFile in files where pdfFile.pathExtension == "pdf" {
-            let markupFile = folder.appendingPathComponent(".\(pdfFile.deletingPathExtension().lastPathComponent).markup")
-            if fm.fileExists(atPath: markupFile.path) {
-                results.append(.init(pdf: pdfFile, markup: markupFile))
+        return files
+            .filter { $0.pathExtension.lowercased() == "pdf" }
+            .map { pdfFile in
+                let markupFile = folder.appendingPathComponent(".\(pdfFile.deletingPathExtension().lastPathComponent).markup")
+                return Note(pdf: pdfFile, markup: markupFile)
             }
-        }
-
-        return results
     }
     
     func loadFolders(in folder: URL? = nil) -> [URL] {

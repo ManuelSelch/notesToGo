@@ -2,6 +2,7 @@ import SwiftUI
 import Flux
 import Dependencies
 import Router
+import PDFKit
 
 struct EditorApp {
     @Dependency(\.documentRepository) var repo
@@ -56,6 +57,7 @@ struct EditorContainer: View {
         controller = MultiPageController(
             onPageChanged: { _ in }
         )
+        controller.pdfDocument = PDFDocument(url: note.pdf)
         controller.onPencilDoubleTap = {
             guard store.state.mode.isDrawing else { return }
             store.dispatch(.pencilDoubleTap)
@@ -118,6 +120,8 @@ struct EditorContainer: View {
     }
     
     func openIfNeeded() {
+        controller.pdfDocument = PDFDocument(url: note.pdf)
+        
         if store.state.path != note.markup || store.state.document == nil {
             store.dispatch(.open(note.markup))
         }

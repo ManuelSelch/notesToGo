@@ -1,6 +1,7 @@
 import SwiftUI
 import PaperKit
 import PencilKit
+import PDFKit
 
 // MARK: - SwiftUI Wrapper with VC Reference
 struct MultiPageView: UIViewControllerRepresentable {
@@ -39,6 +40,8 @@ class MultiPageController: UIViewController {
             }
         }
     }
+    
+    var pdfDocument: PDFDocument?
     
     var onPageChanged: (UUID) -> Void
     
@@ -96,9 +99,9 @@ class MultiPageController: UIViewController {
         // --- 2. update existing & add new pages
         var lastNewPage: PageView? = nil
         var yOffset: CGFloat = pageSpacing
-        for page in document.pages {
+        for (index, page) in document.pages.enumerated() {
             let existingPageView = pageViewsById[page.id]
-            let pageView = existingPageView ?? createNewPageView(page)
+            let pageView = existingPageView ?? createNewPageView(page, pageIndex: index)
             
             // track last added page to scroll to this page
             if existingPageView == nil {
@@ -140,7 +143,7 @@ class MultiPageController: UIViewController {
         applyCurrentToolToCurrentPage()
     }
     
-    private func createNewPageView(_ page: Page) -> PageView {
+    private func createNewPageView(_ page: Page, pageIndex: Int) -> PageView {
         let size = displaySize(for: page)
         
         let pageFrame = CGRect(
@@ -151,7 +154,7 @@ class MultiPageController: UIViewController {
         )
        
         let view = PageView(frame: pageFrame)
-        view.configure(with: page)
+        view.configure(with: page, pdfPage: pdfDocument?.page(at: pageIndex))
         contentView.addSubview(view)
         
         return view
