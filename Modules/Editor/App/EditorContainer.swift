@@ -68,30 +68,37 @@ struct EditorContainer: View {
     @ViewBuilder
     func EditToolbar() -> some View {
         HStack(spacing: 20) {
-            if(store.state.mode != .focus) {
-                Button(action: { router.stack.push(.editor(.grid)) }) {
-                    Image(systemName: "square.grid.2x2")
-                }
-                
-                
-                Button(action: { store.dispatch(.addPageTapped) }) {
-                    Image(systemName: "plus.rectangle.portrait")
-                }
-                
-                if(store.state.selectedTool == .eraser) {
-                    Button(action: { store.dispatch(.toggleEditMode) }) {
-                        Image(systemName: store.state.mode.isDrawing ? "eraser.slash": "eraser")
-                    }
-                } else {
-                    Button(action: { store.dispatch(.toggleEditMode) }) {
-                        Image(systemName: store.state.mode.isDrawing ? "pencil.slash": "pencil")
-                    }
-                }
-               
-            }
-            
-            Button(action: { store.dispatch(.toggleFocusMode) }) {
-                Image(systemName: "circle")
+            switch store.state.mode {
+               case .read:
+                   Button(action: { store.dispatch(.toggleEditMode) }) {
+                       Image(systemName: "square.and.pencil")
+                   }
+                                                                                                                                                                         
+               case .write:
+                   Button(action: { router.stack.push(.editor(.grid)) }) {
+                       Image(systemName: "square.grid.2x2")
+                   }
+                                                                                                                                                                         
+                   Button(action: { store.dispatch(.addPageTapped) }) {
+                       Image(systemName: "plus.rectangle.portrait")
+                   }
+                                                                                                                                                                         
+                   Button(action: { store.dispatch(.toggleFocusMode) }) {
+                       Image(systemName: "viewfinder")
+                   }
+                                                                                                                                                                         
+                   Button(action: { store.dispatch(.toggleEditMode) }) {
+                       Image(systemName: "checkmark")
+                   }
+                                                                                                                                                                         
+               case .focus:
+                   Image(systemName:
+                       store.state.selectedTool == .eraser ? "eraser" : "pencil"
+                   )
+                                                                                                                                                                         
+                   Button(action: { store.dispatch(.toggleFocusMode) }) {
+                       Image(systemName: "arrow.down.right.and.arrow.up.left")
+                   }
             }
         }
         .padding()
