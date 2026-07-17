@@ -16,15 +16,18 @@ struct MultiPageView: UIViewControllerRepresentable {
 
 // MARK: - Multi-Page Container View Controller
 class MultiPageController: UIViewController {
-    private var toolPicker = PKToolPicker()
     private var scrollView: UIScrollView!
     private var contentView: UIView!
     private var pageViewsById: [UUID:PageView] = [:]
-    private var isToolPickerVisible = false
-    private var mode: EditMode = .read
-    
     /// last visible page (changes when scrolling)
     private var currentPage: UUID? = nil
+    
+    private var toolPicker = PKToolPicker()
+    private var isToolPickerVisible = false
+    private var onToolChanged: (PencilTool) -> Void
+    
+    private var mode: EditMode = .read
+    
     
     // layout constants
     private let pageSpacing: CGFloat = 10
@@ -41,9 +44,11 @@ class MultiPageController: UIViewController {
     var onPageChanged: (UUID) -> Void
     
     init(
-        onPageChanged: @escaping (UUID) -> Void
+        onPageChanged: @escaping (UUID) -> Void,
+        onToolChanged: @escaping (PencilTool) -> Void
     ) {
         self.onPageChanged = onPageChanged
+        self.onToolChanged = onToolChanged
         
         super.init(nibName: nil, bundle: nil)
     }
@@ -56,8 +61,13 @@ class MultiPageController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = .systemGray5
         
+        toolPicker.addObserver(self)
         setupScrollView()
         refreshPages()
+    }
+    
+    deinit {
+      toolPicker.removeObserver(self)
     }
     
     private func setupScrollView() {
@@ -245,4 +255,15 @@ extension MultiPageController {
         
         return markups
     }
+}
+
+extension MultiPageController: PKToolPickerObserver {
+    func toolPickerSelectedToolItemDidChange(_ toolPicker: PKToolPicker) {
+       let tool: PencilTool =
+           toolPicker.selectedToolItem is PKToolPickerEraserItem
+               ? .eraser
+               : .pen
+                                                                                                                                                             
+       onToolChanged(tool)
+   }
 }

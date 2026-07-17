@@ -9,22 +9,27 @@ nonisolated struct EditorFeature: Feature {
         
         var isLoading = false
         var mode: EditMode = .read
+        
+        var selectedTool: PencilTool = .pen
     }
     
     enum Action: Equatable, Sendable {
         // MARK: - document
         case open(URL)
         case documentLoaded(MultiPageDocument)
-    
+        case addPageTapped
+        
+        // MARK: - save
         case save([UUID:PaperMarkup])
         case saved
         case savedFailed
         
-        case addPageTapped
-        
-        // MARK: - toggle edit mode
+        // MARK: - mode
         case toggleEditMode
         case toggleFocusMode
+        
+        // MARK: - tool
+        case toolSelected(PencilTool)
     }
     
     enum Route: RouteType {
@@ -45,11 +50,13 @@ nonisolated struct EditorFeature: Feature {
         case let .open(path):
             state.path = path
             state.isLoading = true
-            
         case let .documentLoaded(doc):
             state.document = doc
             state.isLoading = false
+        case .addPageTapped:
+            state.document?.addPage(.empty)
             
+        // MARK: - save
         case let .save(markups):
             state.isLoading = true
             
@@ -59,17 +66,18 @@ nonisolated struct EditorFeature: Feature {
                     state.document?.pages[index].markup = markup
                 }
             }
-            
         case .saved:
             state.isLoading = false
             
+        // MARK: - mode
         case .toggleEditMode:
             state.mode = toggleReadWriteMode(state.mode)
         case .toggleFocusMode:
             state.mode = toggleFocusMode(state.mode)
             
-        case .addPageTapped:
-            state.document?.addPage(.empty)
+        // MARK: - tool
+        case let .toolSelected(tool):
+            state.selectedTool = tool
             
         default: break
         }

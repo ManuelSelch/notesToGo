@@ -30,7 +30,8 @@ struct EditorContainer: View {
         self.store = store
         
         controller = MultiPageController(
-            onPageChanged: { _ in }
+            onPageChanged: { _ in },
+            onToolChanged: { tool in store.dispatch(.toolSelected(tool))}
         )
         controller.document = store.state.document
     }
@@ -77,9 +78,16 @@ struct EditorContainer: View {
                     Image(systemName: "plus.rectangle.portrait")
                 }
                 
-                Button(action: { store.dispatch(.toggleEditMode) }) {
-                    Image(systemName: store.state.mode.isDrawing ? "pencil.slash": "square.and.pencil")
+                if(store.state.selectedTool == .eraser) {
+                    Button(action: { store.dispatch(.toggleEditMode) }) {
+                        Image(systemName: store.state.mode.isDrawing ? "eraser.slash": "eraser")
+                    }
+                } else {
+                    Button(action: { store.dispatch(.toggleEditMode) }) {
+                        Image(systemName: store.state.mode.isDrawing ? "pencil.slash": "pencil")
+                    }
                 }
+               
             }
             
             Button(action: { store.dispatch(.toggleFocusMode) }) {
