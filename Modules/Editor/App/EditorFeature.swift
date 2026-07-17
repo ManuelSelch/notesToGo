@@ -72,6 +72,9 @@ nonisolated struct EditorFeature: Feature {
         // MARK: - mode
         case .toggleEditMode:
             state.mode = toggleReadWriteMode(state.mode)
+            if(state.mode == .write) {
+                state.selectedTool = .pen // auto select pen when toggling from read to write mode
+            }
         case .toggleFocusMode:
             state.mode = toggleFocusMode(state.mode)
             

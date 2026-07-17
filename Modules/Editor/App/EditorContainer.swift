@@ -62,6 +62,9 @@ struct EditorContainer: View {
         .onChange(of: store.state.mode) {
             controller.updateMode(store.state.mode)
         }
+        .onChange(of: store.state.selectedTool) {
+           controller.selectTool(store.state.selectedTool)
+        }
         .ignoresSafeArea(.all)
     }
     

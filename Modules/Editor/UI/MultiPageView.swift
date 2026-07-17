@@ -22,12 +22,17 @@ class MultiPageController: UIViewController {
     /// last visible page (changes when scrolling)
     private var currentPage: UUID? = nil
     
-    private var toolPicker = PKToolPicker()
+    private let blackPen = PKToolPickerInkingItem(type: .pen, color: .black, width: 5, identifier: "notesToGo.blackPen" )
+    private let eraser = PKToolPickerEraserItem(type: .bitmap, width: 50)
+    private lazy var toolPicker: PKToolPicker = {
+       let picker = PKToolPicker(toolItems: [blackPen, eraser])
+       picker.stateAutosaveName = nil
+       return picker
+    }()
     private var isToolPickerVisible = false
     private var onToolChanged: (PencilTool) -> Void
     
     private var mode: EditMode = .read
-    
     
     // layout constants
     private let pageSpacing: CGFloat = 10
@@ -259,11 +264,20 @@ extension MultiPageController {
 
 extension MultiPageController: PKToolPickerObserver {
     func toolPickerSelectedToolItemDidChange(_ toolPicker: PKToolPicker) {
-       let tool: PencilTool =
-           toolPicker.selectedToolItem is PKToolPickerEraserItem
-               ? .eraser
-               : .pen
-                                                                                                                                                             
-       onToolChanged(tool)
-   }
+        let tool: PencilTool =
+            toolPicker.selectedToolItem is PKToolPickerEraserItem
+            ? .eraser
+            : .pen
+            
+        onToolChanged(tool)
+    }
+    
+    func selectTool(_ tool: PencilTool) {
+        switch(tool) {
+        case .pen, .pencil, .marker, .lasso:
+            toolPicker.selectedToolItem = blackPen
+        case .eraser:
+            toolPicker.selectedToolItem = eraser
+        }
+    }
 }

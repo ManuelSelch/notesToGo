@@ -124,7 +124,7 @@ class PageView: UIView {
         controller.view.isUserInteractionEnabled = mode.isDrawing
         controller.pencilKitResponderState.activeToolPicker = isActiveDrawingPage ? toolPicker : nil
         controller.pencilKitResponderState.toolPickerVisibility = mode.isToolbarVisible && isCurrentPage ? .visible : .hidden
-        
+   
         if(isActiveDrawingPage) {
             controller.becomeFirstResponder()
         } else {
