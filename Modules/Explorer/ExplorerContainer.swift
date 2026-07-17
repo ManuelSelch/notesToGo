@@ -48,11 +48,11 @@ struct ExplorerContainer: View {
                     }
             case .createSheet:
                 VStack(alignment: .leading, spacing: 20) {
-                    Text("New Note")
+                    Text("Create")
                         .font(.title2)
                         .bold()
                     
-                    TextField("Note name", text: $newNoteName)
+                    TextField("Name", text: $newNoteName)
                         .textFieldStyle(.roundedBorder)
                     
                     HStack {
@@ -78,11 +78,21 @@ struct ExplorerContainer: View {
                         .disabled(newNoteName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     }
                     
-                    Button(action: {
+                    Button("Add Folder") {
+                        let name = newNoteName.trimmingCharacters(in: .whitespacesAndNewlines)
+                        guard !name.isEmpty else { return }
                         
-                    }) {
-                        Text("Add Folder")
+                        do {
+                            let folder = try explorer.addFolder(at: currentFolder, name: name)
+                            newNoteName = ""
+                            router.sheet = nil
+                            router.stack.push(.explorer(.dashboard(path: folder)))
+                        } catch {
+                            return
+                        }
                     }
+                    .buttonStyle(.bordered)
+                    .disabled(newNoteName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
                 .padding()
                 .presentationDetents([.medium])

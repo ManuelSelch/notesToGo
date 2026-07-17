@@ -84,6 +84,15 @@ class Explorer {
         return try await addNote(at: folder, name: uniqueName)
     }
     
+    func addFolder(at folder: URL? = nil, name: String) throws -> URL {
+        let parent = folder ?? rootFolder()
+        try ensureFolderExists(parent)
+        
+        let folderURL = parent.appendingPathComponent(uniqueFolderName(base: name, in: parent), isDirectory: true)
+        try fm.createDirectory(at: folderURL, withIntermediateDirectories: false)
+        return folderURL
+    }
+    
     func uniqueNoteName(base: String, in folder: URL? = nil) -> String {
         let folder = folder ?? rootFolder()
         var candidate = base
@@ -91,6 +100,19 @@ class Explorer {
         
         while fm.fileExists(atPath: folder.appendingPathComponent("\(candidate).pdf").path)
             || fm.fileExists(atPath: folder.appendingPathComponent(".\(candidate).markup").path) {
+            candidate = "\(base) \(index)"
+            index += 1
+        }
+        
+        return candidate
+    }
+    
+    func uniqueFolderName(base: String, in folder: URL? = nil) -> String {
+        let folder = folder ?? rootFolder()
+        var candidate = base
+        var index = 2
+        
+        while fm.fileExists(atPath: folder.appendingPathComponent(candidate, isDirectory: true).path) {
             candidate = "\(base) \(index)"
             index += 1
         }
