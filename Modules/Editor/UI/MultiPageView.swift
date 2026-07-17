@@ -94,7 +94,14 @@ class MultiPageController: UIViewController {
     private func refreshPages() {
         guard let document = document else { return }
     
-        // --- 1. TODO: remove deleted pages
+        // --- 1. remove deleted/stale pages
+        let validIDs = Set(document.pages.map(\.id))
+        let staleIDs = pageViewsById.keys.filter { !validIDs.contains($0) }
+        for id in staleIDs {
+            pageViewsById[id]?.cleanup()
+            pageViewsById[id]?.removeFromSuperview()
+            pageViewsById.removeValue(forKey: id)
+        }
         
         // --- 2. update existing & add new pages
         var lastNewPage: PageView? = nil
@@ -154,7 +161,7 @@ class MultiPageController: UIViewController {
         )
        
         let view = PageView(frame: pageFrame)
-        view.configure(with: page, pdfPage: pdfDocument?.page(at: pageIndex))
+        view.configure(with: page, pdfPage: pdfDocument?.page(at: pageIndex), parentViewController: self)
         contentView.addSubview(view)
         
         return view

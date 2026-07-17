@@ -1,6 +1,7 @@
 import Foundation
 import Dependencies
 import PaperKit
+import PDFKit
 
 /// repository to load and save documents
 protocol DocumentRepositoryProtocol {
@@ -21,25 +22,45 @@ class DocumentRepository: DocumentRepositoryProtocol {
         try data.write(to: path, options: .atomic)
     }
     
-    func load(_ path: URL) throws -> MultiPageDocument {
-        let data = try Data(contentsOf: path)
-        return try JSONDecoder().decode(MultiPageDocument.self, from: data)
+    func load(_ path: URL) async throws -> MultiPageDocument {
+        if FileManager.default.fileExists(atPath: path.path) {
+            let data = try Data(contentsOf: path)
+            return try JSONDecoder().decode(MultiPageDocument.self, from: data)
+        }
+        
+        guard let pdf = PDFDocument(url: pdfURL(forMarkupURL: path)) else {
+            throw EditorError.documentNotFound
+        }
+        
+        let document = MultiPageDocument(
+            pages: (0..<pdf.pageCount).compactMap { index in
+                guard let page = pdf.page(at: index) else { return nil }
+                return Page(bounds: page.bounds(for: .mediaBox), background: .plain(.white))
+            }
+        )
+        
+        try await save(document, at: path)
+        return document
+    }
+    
+    private func pdfURL(forMarkupURL markupURL: URL) -> URL {
+        let markupName = markupURL.deletingPathExtension().lastPathComponent
+        let pdfName = markupName.hasPrefix(".") ? String(markupName.dropFirst()) : markupName
+        return markupURL.deletingLastPathComponent().appendingPathComponent("\(pdfName).pdf")
     }
 }
 
 class InMemoryDocumentRepository: DocumentRepositoryProtocol {
     private var documents: [URL: MultiPageDocument] = [:]
     
-    func save(_ document: MultiPageDocument, at path: URL) throws {
+    func save(_ document: MultiPageDocument, at path: URL) async throws {
         documents[path] = document
     }
     
-    func load(_ path: URL) throws -> MultiPageDocument {
+    func load(_ path: URL) async throws -> MultiPageDocument {
         guard let doc = documents[path] else { throw EditorError.documentNotFound }
         return doc
     }
-    
-    
 }
 
 struct DocumentRepositoryKey: DependencyKey {

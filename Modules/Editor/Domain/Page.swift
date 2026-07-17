@@ -4,19 +4,21 @@ import PencilKit
 
 /// model to store a single page (markup and background)
 struct Page: Identifiable, Equatable {
-    let id = UUID()
+    let id: UUID
     var markup: PaperMarkup
     var background: PageBackground
     
     var width: CGFloat { markup.bounds.width }
     var height: CGFloat { markup.bounds.height }
     
-    init(bounds: CGRect, background: PageBackground) {
+    init(id: UUID = UUID(), bounds: CGRect, background: PageBackground) {
+        self.id = id
         self.markup = PaperMarkup(bounds: bounds)
         self.background = background
     }
     
-    init(markup: PaperMarkup, background: PageBackground) {
+    init(id: UUID = UUID(), markup: PaperMarkup, background: PageBackground) {
+        self.id = id
         self.markup = markup
         self.background = background
     }

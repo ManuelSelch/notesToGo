@@ -6,6 +6,10 @@ import PencilKit
 struct MultiPageDocument: Equatable {
     var pages: [Page] = []
     
+    init(pages: [Page] = []) {
+        self.pages = pages
+    }
+    
     init(pageCount: Int = 1, template: Page) {
         for _ in 0..<pageCount {
             pages.append(template)
@@ -25,6 +29,7 @@ struct MultiPageDocument: Equatable {
 // MARK: - encode & decode
 extension MultiPageDocument: Codable {
     struct PageDTO: Codable {
+        let id: UUID
         let markupData: Data
         let background: PageBackground
     }
@@ -38,7 +43,7 @@ extension MultiPageDocument: Codable {
         let dtos = try container.decode([PageDTO].self, forKey: .pages)
         pages = try dtos.map { dto in
             let markup = try PaperMarkup(dataRepresentation: dto.markupData)
-            return Page(markup: markup, background: dto.background)
+            return Page(id: dto.id, markup: markup, background: dto.background)
         }
     }
 
@@ -52,7 +57,7 @@ extension MultiPageDocument: Codable {
 
         var container = encoder.container(keyedBy: CodingKeys.self)
         let dtos = zip(pages, markupDataList).map { page, data in
-            PageDTO(markupData: data, background: page.background)
+            PageDTO(id: page.id, markupData: data, background: page.background)
         }
         try container.encode(dtos, forKey: .pages)
     }

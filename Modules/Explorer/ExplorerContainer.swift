@@ -12,6 +12,7 @@ enum ExplorerRoute: RouteType {
 
 struct ExplorerContainer: View {
     @Dependency(\.router) var router
+    @Environment(\.scenePhase) private var scenePhase
     
     @State var docs: [Document] = []
     @State var newItemName = ""
@@ -36,10 +37,14 @@ struct ExplorerContainer: View {
                     noteTapped: { note in router.stack.push(.editor(.editor(note))) },
                     folderTapped: { folder in router.stack.push(.explorer(.dashboard(path: folder)))}
                 )
-                    .onAppear {
-                        Task {
-                            docs = (try? await explorer.loadAllDocs(in: currentFolder)) ?? []
+                    .onAppear(perform: reloadDocs)
+                    .onChange(of: scenePhase) {
+                        if scenePhase == .active {
+                            reloadDocs()
                         }
+                    }
+                    .refreshable {
+                        reloadDocs()
                     }
                     .toolbar {
                         ToolbarItemGroup(placement: .topBarTrailing) {
@@ -75,6 +80,12 @@ struct ExplorerContainer: View {
     
     var trimmedName: String {
         newItemName.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    
+    func reloadDocs() {
+        Task {
+            docs = (try? await explorer.loadAllDocs(in: currentFolder)) ?? []
+        }
     }
     
     func closeSheet() {

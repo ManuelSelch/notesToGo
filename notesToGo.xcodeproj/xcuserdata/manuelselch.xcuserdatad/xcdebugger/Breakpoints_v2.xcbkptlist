@@ -66,6 +66,36 @@
             endingLineNumber = "24"
             landmarkName = "handle(state:action:)"
             landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "73C0BA3D-6B8B-410A-9167-075DF49C14CD - cba620c3dfb574da"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(7) suspend resume partial function for notesToGo.DocumentMiddleware.handle(state: notesToGo.EditorFeature.State, action: notesToGo.EditorFeature.Action) async -&gt; Swift.Optional&lt;notesToGo.EditorFeature.Action&gt;"
+                  moduleName = "notesToGo.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/manuelselch/Documents/A_Personal/40%20Projekte/42%20iOS/notesToGo/Modules/Editor/Middlewares/DocumentMiddleware.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "24"
+                  endingLineNumber = "24">
+               </Location>
+               <Location
+                  uuid = "73C0BA3D-6B8B-410A-9167-075DF49C14CD - cba620c3dfb574da"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(7) suspend resume partial function for notesToGo.DocumentMiddleware.handle(state: notesToGo.EditorFeature.State, action: notesToGo.EditorFeature.Action) async -&gt; Swift.Optional&lt;notesToGo.EditorFeature.Action&gt;"
+                  moduleName = "notesToGo.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/manuelselch/Documents/A_Personal/40%20Projekte/42%20iOS/notesToGo/Modules/Editor/Middlewares/DocumentMiddleware.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "24"
+                  endingLineNumber = "24">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -82,6 +112,36 @@
             endingLineNumber = "16"
             landmarkName = "handle(state:action:)"
             landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "F7E422CB-2559-4BB4-9619-A91F04E70641 - 8a898fe1bbd8ffe6"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(3) suspend resume partial function for notesToGo.DocumentMiddleware.handle(state: notesToGo.EditorFeature.State, action: notesToGo.EditorFeature.Action) async -&gt; Swift.Optional&lt;notesToGo.EditorFeature.Action&gt;"
+                  moduleName = "notesToGo.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/manuelselch/Documents/A_Personal/40%20Projekte/42%20iOS/notesToGo/Modules/Editor/Middlewares/DocumentMiddleware.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "16"
+                  endingLineNumber = "16">
+               </Location>
+               <Location
+                  uuid = "F7E422CB-2559-4BB4-9619-A91F04E70641 - fa5e183b7498d5e3"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(6) suspend resume partial function for notesToGo.DocumentMiddleware.handle(state: notesToGo.EditorFeature.State, action: notesToGo.EditorFeature.Action) async -&gt; Swift.Optional&lt;notesToGo.EditorFeature.Action&gt;"
+                  moduleName = "notesToGo.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/manuelselch/Documents/A_Personal/40%20Projekte/42%20iOS/notesToGo/Modules/Editor/Middlewares/DocumentMiddleware.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "16"
+                  endingLineNumber = "16">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -128,7 +188,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "34"
             endingLineNumber = "34"
-            landmarkName = "save(_:at:)"
+            landmarkName = "load(_:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

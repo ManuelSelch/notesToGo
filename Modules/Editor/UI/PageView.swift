@@ -3,9 +3,35 @@ import PaperKit
 import PencilKit
 import PDFKit
 
+private final class PDFPageBackgroundView: UIView {
+    var pdfPage: PDFPage? {
+        didSet { setNeedsDisplay() }
+    }
+    
+    override func draw(_ rect: CGRect) {
+        guard let context = UIGraphicsGetCurrentContext() else { return }
+        
+        UIColor.white.setFill()
+        context.fill(rect)
+        
+        guard let pdfPage else { return }
+        
+        let pdfBounds = pdfPage.bounds(for: .mediaBox)
+        let scale = min(bounds.width / pdfBounds.width, bounds.height / pdfBounds.height)
+        let drawSize = CGSize(width: pdfBounds.width * scale, height: pdfBounds.height * scale)
+        let origin = CGPoint(x: (bounds.width - drawSize.width) / 2, y: (bounds.height - drawSize.height) / 2)
+        
+        context.saveGState()
+        context.translateBy(x: origin.x, y: origin.y + drawSize.height)
+        context.scaleBy(x: scale, y: -scale)
+        pdfPage.draw(with: .mediaBox, to: context)
+        context.restoreGState()
+    }
+}
+
 /// UIView that displays background + paper markup for one page
 class PageView: UIView {
-    private var backgroundImageView: UIImageView!
+    private var backgroundImageView: PDFPageBackgroundView!
     private var controller: PaperMarkupViewController?
     
     override init(frame: CGRect) {
@@ -26,20 +52,24 @@ class PageView: UIView {
         layer.shadowRadius = 6
         layer.masksToBounds = false
         
-        // Background image view
-        backgroundImageView = UIImageView(frame: bounds)
-        backgroundImageView.contentMode = .scaleToFill
+        // Background PDF/page view
+        backgroundImageView = PDFPageBackgroundView(frame: bounds)
         backgroundImageView.clipsToBounds = true
         backgroundImageView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        backgroundImageView.backgroundColor = .white
         addSubview(backgroundImageView)
     }
     
-    func configure(with page: Page, pdfPage: PDFPage?) {
+    func configure(with page: Page, pdfPage: PDFPage?, parentViewController: UIViewController) {
         // remove existing paper view controller
         if let existingVC = controller {
-            existingVC.willMove(toParent: nil)
+            if existingVC.parent != nil {
+                existingVC.willMove(toParent: nil)
+            }
             existingVC.view.removeFromSuperview()
-            existingVC.removeFromParent()
+            if existingVC.parent != nil {
+                existingVC.removeFromParent()
+            }
             controller = nil
         }
         
@@ -54,7 +84,7 @@ class PageView: UIView {
             markup = page.markup
         }
         
-        backgroundImageView.image = pdfPage.map { renderPDFPage($0, size: bounds.size) }
+        backgroundImageView.pdfPage = pdfPage
         
         // create new paper markup view controller with correct bounds
         let paperVC = PaperMarkupViewController(
@@ -62,11 +92,12 @@ class PageView: UIView {
             supportedFeatureSet: .latest
         )
         
-        // parentViewController.addChild(paperVC)
+        parentViewController.addChild(paperVC)
         paperVC.view.frame = bounds
         paperVC.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         paperVC.view.backgroundColor = .clear
         addSubview(paperVC.view)
+        paperVC.didMove(toParent: parentViewController)
 
         // Disable any internal scroll views in PaperMarkupViewController
         disableInternalScrolling(in: paperVC.view)
@@ -90,27 +121,6 @@ class PageView: UIView {
         paperVC.contentView = contentBackgroundView
         
         controller = paperVC
-    }
-    
-    private func renderPDFPage(_ page: PDFPage, size: CGSize) -> UIImage {
-        let renderer = UIGraphicsImageRenderer(size: size)
-        
-        return renderer.image { context in
-            UIColor.white.setFill()
-            context.fill(CGRect(origin: .zero, size: size))
-            
-            let pdfBounds = page.bounds(for: .mediaBox)
-            let scale = min(size.width / pdfBounds.width, size.height / pdfBounds.height)
-            let drawSize = CGSize(width: pdfBounds.width * scale, height: pdfBounds.height * scale)
-            let origin = CGPoint(x: (size.width - drawSize.width) / 2, y: (size.height - drawSize.height) / 2)
-            
-            let cg = context.cgContext
-            cg.saveGState()
-            cg.translateBy(x: origin.x, y: origin.y + drawSize.height)
-            cg.scaleBy(x: scale, y: -scale)
-            page.draw(with: .mediaBox, to: cg)
-            cg.restoreGState()
-        }
     }
     
     public func transform(_ scale: CGFloat, to size: CGSize) {
@@ -165,9 +175,13 @@ class PageView: UIView {
     func cleanup() {
         guard let controller = controller else { return }
         
-        controller.willMove(toParent: nil)
+        if controller.parent != nil {
+            controller.willMove(toParent: nil)
+        }
         controller.view.removeFromSuperview()
-        controller.removeFromParent()
+        if controller.parent != nil {
+            controller.removeFromParent()
+        }
         
         self.controller = nil
     }
