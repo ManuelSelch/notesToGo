@@ -4,7 +4,8 @@ import Dependencies
 
 enum ExplorerRoute: RouteType {
     case dashboard(path: URL?)
-    case createSheet(path: URL?)
+    case createNoteSheet(path: URL?)
+    case createFolderSheet(path: URL?)
     
     var id: Self { self }
 }
@@ -13,7 +14,7 @@ struct ExplorerContainer: View {
     @Dependency(\.router) var router
     
     @State var docs: [Document] = []
-    @State var newNoteName = ""
+    @State var newItemName = ""
     
     let explorer = Explorer()
     
@@ -21,7 +22,7 @@ struct ExplorerContainer: View {
     
     var currentFolder: URL? {
         switch route {
-        case let .dashboard(path), let .createSheet(path):
+        case let .dashboard(path), let .createNoteSheet(path), let .createFolderSheet(path):
             return path
         }
     }
@@ -43,62 +44,61 @@ struct ExplorerContainer: View {
                     .toolbar {
                         ToolbarItemGroup(placement: .topBarTrailing) {
                             QuickNoteToolbar()
-                            CreateToolbar()
+                            CreateNoteToolbar()
+                            CreateFolderToolbar()
                         }
                     }
-            case .createSheet:
-                VStack(alignment: .leading, spacing: 20) {
-                    Text("Create")
-                        .font(.title2)
-                        .bold()
-                    
-                    TextField("Name", text: $newNoteName)
-                        .textFieldStyle(.roundedBorder)
-                    
-                    HStack {
-                        Button("Cancel") {
-                            newNoteName = ""
-                            router.sheet = nil
-                        }
-                        
-                        Spacer()
-                        
-                        Button("Add Note") {
-                            let name = newNoteName.trimmingCharacters(in: .whitespacesAndNewlines)
-                            guard !name.isEmpty else { return }
-                            
-                            Task {
-                                guard let note = try? await explorer.addNote(at: currentFolder, name: name) else { return }
-                                newNoteName = ""
-                                router.sheet = nil
-                                router.stack.push(.editor(.editor(note)))
-                            }
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .disabled(newNoteName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                    }
-                    
-                    Button("Add Folder") {
-                        let name = newNoteName.trimmingCharacters(in: .whitespacesAndNewlines)
-                        guard !name.isEmpty else { return }
-                        
-                        do {
-                            let folder = try explorer.addFolder(at: currentFolder, name: name)
-                            newNoteName = ""
-                            router.sheet = nil
-                            router.stack.push(.explorer(.dashboard(path: folder)))
-                        } catch {
-                            return
-                        }
-                    }
-                    .buttonStyle(.bordered)
-                    .disabled(newNoteName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                }
-                .padding()
-                .presentationDetents([.medium])
+            case .createNoteSheet:
+                CreateItemSheet(
+                    title: "New Note",
+                    placeholder: "Note name",
+                    buttonTitle: "Create Note",
+                    name: $newItemName,
+                    locationName: currentFolder?.lastPathComponent,
+                    onCancel: closeSheet,
+                    onCreate: createNote
+                )
+            case .createFolderSheet:
+                CreateItemSheet(
+                    title: "New Folder",
+                    placeholder: "Folder name",
+                    buttonTitle: "Create Folder",
+                    name: $newItemName,
+                    locationName: currentFolder?.lastPathComponent,
+                    onCancel: closeSheet,
+                    onCreate: createFolder
+                )
             }
             
         }
+    }
+    
+    var trimmedName: String {
+        newItemName.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    
+    func closeSheet() {
+        newItemName = ""
+        router.sheet = nil
+    }
+    
+    func createNote() {
+        let name = trimmedName
+        guard !name.isEmpty else { return }
+        
+        Task {
+            guard let note = try? await explorer.addNote(at: currentFolder, name: name) else { return }
+            closeSheet()
+            router.stack.push(.editor(.editor(note)))
+        }
+    }
+    
+    func createFolder() {
+        let name = trimmedName
+        guard !name.isEmpty else { return }
+        guard let folder = try? explorer.addFolder(at: currentFolder, name: name) else { return }
+        closeSheet()
+        router.stack.push(.explorer(.dashboard(path: folder)))
     }
     
     @ViewBuilder
@@ -115,14 +115,61 @@ struct ExplorerContainer: View {
     }
     
     @ViewBuilder
-    func CreateToolbar() -> some View {
-        Button(action: { router.presentSheet(.explorer(.createSheet(path: currentFolder))) }) {
-            Image(systemName: "plus")
+    func CreateNoteToolbar() -> some View {
+        Button(action: { router.presentSheet(.explorer(.createNoteSheet(path: currentFolder))) }) {
+            Image(systemName: "plus.square")
+        }
+    }
+    
+    @ViewBuilder
+    func CreateFolderToolbar() -> some View {
+        Button(action: { router.presentSheet(.explorer(.createFolderSheet(path: currentFolder))) }) {
+            Image(systemName: "folder.badge.plus")
         }
     }
 
 }
 
+
+private struct CreateItemSheet: View {
+    let title: String
+    let placeholder: String
+    let buttonTitle: String
+    @Binding var name: String
+    let locationName: String?
+    let onCancel: () -> Void
+    let onCreate: () -> Void
+    
+    var trimmedName: String {
+        name.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                TextField(placeholder, text: $name)
+                
+                if let locationName {
+                    LabeledContent("Location", value: locationName)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .navigationTitle(title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel", action: onCancel)
+                }
+                
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(buttonTitle, action: onCreate)
+                        .disabled(trimmedName.isEmpty)
+                }
+            }
+        }
+        .presentationDetents([.medium])
+    }
+}
 
 #Preview {
     ExplorerContainer(route: .dashboard(path: nil))
