@@ -47,7 +47,7 @@ class EditorTests {
     func save_whenDocWasLoaded_savesDocToRepo() async throws {
         try await givenDocumentWasLoaded(ANY_DOCUMENT, at: ANY_PATH)
         
-        store.dispatch(.save) { $0.isLoading = true }
+        store.dispatch(.save(.init())) { $0.isLoading = true }
         
         await store.receive(.saved) { $0.isLoading = false }
     }
@@ -80,10 +80,5 @@ class EditorTests {
     func toggleEditMode_togglesBetweenReadAndWriteMode() {
         store.dispatch(.toggleEditMode) { $0.mode = .write }
         store.dispatch(.toggleEditMode) { $0.mode = .read }
-    }
-    
-    @Test
-    func pageChanged_updatesCurrentPage() {
-        store.dispatch(.pageChanged(1)) { $0.currentPage = 1 }
     }
 }

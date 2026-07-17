@@ -132,6 +132,7 @@ class MultiPageController: UIViewController {
             scrollToPage(lastNewPage)
         }
         
+        updateCurrentPage()
         refreshModeOfPages()
     }
     
