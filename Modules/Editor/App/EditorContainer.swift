@@ -5,6 +5,7 @@ import Router
 
 struct EditorApp {
     @Dependency(\.documentRepository) var repo
+    private static var storesByPath: [URL: FluxStore<EditorFeature>] = [:]
     
     func build() -> FluxStore<EditorFeature> {
          return .init(
@@ -13,6 +14,15 @@ struct EditorApp {
                 DocumentMiddleware(repo: repo).handle
             ]
         )
+    }
+    
+    mutating func store(for note: Note) -> FluxStore<EditorFeature> {
+        if let existing = Self.storesByPath[note.markup] {
+            return existing
+        }
+        let store = build()
+        Self.storesByPath[note.markup] = store
+        return store
     }
 }
 
@@ -23,10 +33,24 @@ struct EditorContainer: View {
     
     let route: EditorFeature.Route
     
+    var note: Note {
+        switch route {
+        case let .editor(note), let .grid(note):
+            return note
+        }
+    }
+    
     init(route: EditorFeature.Route) {
         self.route = route
         
-        let store = EditorApp().build()
+        let note: Note
+        switch route {
+        case let .editor(value), let .grid(value):
+            note = value
+        }
+        
+        var app = EditorApp()
+        let store = app.store(for: note)
         self.store = store
         
         controller = MultiPageController(
@@ -42,9 +66,9 @@ struct EditorContainer: View {
     var body: some View {
         VStack {
             switch(route) {
-            case let .editor(note):
+            case .editor:
                 MultiPageView(controller: controller)
-                    .onAppear { store.dispatch(.open(note.markup)) }
+                    .onAppear(perform: openIfNeeded)
                     .toolbar {
                         if store.state.mode != .focus {
                             ToolbarItem(placement: .topBarLeading) {
@@ -63,7 +87,19 @@ struct EditorContainer: View {
                     .navigationBarBackButtonHidden(store.state.mode == .focus)
             
             case .grid:
-                GridView(pages: store.state.document?.pages ?? [])
+                GridView(
+                    pages: store.state.document?.pages ?? [],
+                    hasCopiedPage: store.state.copiedPage != nil,
+                    onAddPage: { store.dispatch(.insertPage(after: $0)) },
+                    onCopyPage: { store.dispatch(.copyPage($0)) },
+                    onPastePage: { store.dispatch(.pastePage(after: $0)) },
+                    onMovePage: { store.dispatch(.movePage(source: $0, destination: $1)) },
+                    onDone: {
+                        store.dispatch(.save(controller.currentMarkups()))
+                        router.stack.dismiss()
+                    }
+                )
+                .onAppear(perform: openIfNeeded)
             }
             
         }
@@ -79,6 +115,12 @@ struct EditorContainer: View {
         .ignoresSafeArea(.all)
     }
     
+    func openIfNeeded() {
+        if store.state.path != note.markup || store.state.document == nil {
+            store.dispatch(.open(note.markup))
+        }
+    }
+    
     @ViewBuilder
     func EditToolbar() -> some View {
         HStack(spacing: 20) {
@@ -89,7 +131,10 @@ struct EditorContainer: View {
                    }
                                                                                                                                                                          
                case .write:
-                    Button(action: { router.stack.push(.editor(.grid)) }) {
+                    Button(action: {
+                        store.dispatch(.save(controller.currentMarkups()))
+                        router.stack.push(.editor(.grid(note)))
+                    }) {
                         Image(systemName: "square.grid.2x2")
                     }
                                                                                                                                                                          

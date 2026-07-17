@@ -61,6 +61,28 @@ class EditorTests {
         }
     }
     
+    @Test
+    func insertCopyPasteAndMovePage_updatesDocument() async throws {
+        var doc = MultiPageDocument(template: .empty)
+        doc.pages.append(.empty)
+        try await givenDocumentWasLoaded(doc, at: ANY_PATH)
+        
+        let firstID = try #require(store.state.document?.pages.first?.id)
+        let secondID = try #require(store.state.document?.pages.last?.id)
+        
+        store.dispatch(.copyPage(firstID)) {
+            $0.copiedPage = doc.pages.first
+        }
+        
+        let oldCount = try #require(store.state.document?.pages.count)
+        store.dispatch(.pastePage(after: secondID))
+        #expect(store.state.document?.pages.count == oldCount + 1)
+        
+        let pastedID = try #require(store.state.document?.pages.last?.id)
+        store.dispatch(.movePage(source: pastedID, destination: firstID))
+        #expect(store.state.document?.pages.first?.id == pastedID)
+    }
+    
     func givenDocumentWasLoaded(_ doc: MultiPageDocument, at path: URL) async throws {
         try await repo.save(doc, at: path)
         

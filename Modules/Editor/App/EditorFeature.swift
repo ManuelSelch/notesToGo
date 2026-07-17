@@ -11,6 +11,7 @@ nonisolated struct EditorFeature: Feature {
         var mode: EditMode = .read
         var selectedTool: PencilTool = .pen
         var previousInkTool: PencilTool = .pen
+        var copiedPage: Page?
     }
     
     enum Action: Equatable, Sendable {
@@ -18,6 +19,10 @@ nonisolated struct EditorFeature: Feature {
         case open(URL)
         case documentLoaded(MultiPageDocument)
         case addPageTapped
+        case insertPage(after: UUID?)
+        case movePage(source: UUID, destination: UUID)
+        case copyPage(UUID)
+        case pastePage(after: UUID?)
         
         // MARK: - save
         case save([UUID:PaperMarkup])
@@ -37,8 +42,8 @@ nonisolated struct EditorFeature: Feature {
         /// main editor screen to read & write
         case editor(Note)
         
-        /// page grid to rearrange or delete them
-        case grid
+        /// page grid to rearrange, copy, and insert pages
+        case grid(Note)
         
         var id: Self { self }
     }
@@ -56,6 +61,30 @@ nonisolated struct EditorFeature: Feature {
             state.isLoading = false
         case .addPageTapped:
             state.document?.addPage(.empty)
+        case let .insertPage(after: pageID):
+            guard var pages = state.document?.pages else { break }
+            let index = pageID.flatMap { id in pages.firstIndex(where: { $0.id == id }).map { $0 + 1 } } ?? pages.endIndex
+            pages.insert(.empty, at: index)
+            state.document?.pages = pages
+        case let .movePage(source, destination):
+            guard var pages = state.document?.pages,
+                  let sourceIndex = pages.firstIndex(where: { $0.id == source }),
+                  let destinationIndex = pages.firstIndex(where: { $0.id == destination }),
+                  sourceIndex != destinationIndex else { break }
+            
+            let page = pages.remove(at: sourceIndex)
+            let insertionIndex = sourceIndex < destinationIndex ? destinationIndex - 1 : destinationIndex
+            pages.insert(page, at: insertionIndex)
+            state.document?.pages = pages
+        case let .copyPage(pageID):
+            state.copiedPage = state.document?.pages.first(where: { $0.id == pageID })
+        case let .pastePage(after: pageID):
+            guard let copiedPage = state.copiedPage else { break }
+            guard var pages = state.document?.pages else { break }
+            let page = copiedPage.duplicated()
+            let index = pageID.flatMap { id in pages.firstIndex(where: { $0.id == id }).map { $0 + 1 } } ?? pages.endIndex
+            pages.insert(page, at: index)
+            state.document?.pages = pages
             
         // MARK: - save
         case let .save(markups):

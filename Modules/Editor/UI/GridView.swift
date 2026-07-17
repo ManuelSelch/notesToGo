@@ -1,131 +1,206 @@
 import SwiftUI
 import PaperKit
+import UniformTypeIdentifiers
 
-// MARK: - PageThumbnailView
+// MARK: - Page Thumbnail
 struct PageThumbnailView: View {
-    let markup: PaperMarkup
-    let pageSize: CGSize
+    let page: Page
     let pageIndex: Int
     let thumbnailSize: CGSize
+    let isSelected: Bool
 
     @State private var image: UIImage?
 
     var body: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 8) {
             ZStack {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.white)
-                    .shadow(radius: 2)
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(uiColor: page.background.backgroundColor))
+                    .overlay {
+                        if let pattern = page.background.patternImage() {
+                            Image(uiImage: pattern)
+                                .resizable(resizingMode: .tile)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                        }
+                    }
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(isSelected ? Color.accentColor : Color.secondary.opacity(0.25), lineWidth: isSelected ? 3 : 1)
+                    }
+                    .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
 
                 if let image {
                     Image(uiImage: image)
                         .resizable()
                         .scaledToFit()
-                        .padding(4)
+                        .padding(6)
                 } else {
                     ProgressView()
                 }
             }
-            .aspectRatio(pageSize.width / pageSize.height, contentMode: .fit)
+            .aspectRatio(page.width / page.height, contentMode: .fit)
 
-            Text("\(pageIndex + 1)")
+            Text("Page \(pageIndex + 1)")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
         }
-        .task {
-            if image == nil {
-                image = await makeThumbnail(
-                    markup: markup,
-                    pageSize: pageSize,
-                    thumbnailSize: thumbnailSize
-                )
-            }
+        .task(id: page.id) {
+            image = await makeThumbnail(page: page, thumbnailSize: thumbnailSize)
         }
     }
 
-    // MARK: - Async Thumbnail Generator
-    func makeThumbnail(
-        markup: PaperMarkup,
-        pageSize: CGSize,
-        thumbnailSize: CGSize
-    ) async -> UIImage {
-        await MainActor.run {
-            UIGraphicsBeginImageContextWithOptions(thumbnailSize, true, 0)
-            defer { UIGraphicsEndImageContext() }
+    @MainActor
+    private func makeThumbnail(page: Page, thumbnailSize: CGSize) async -> UIImage {
+        UIGraphicsBeginImageContextWithOptions(thumbnailSize, false, 0)
+        defer { UIGraphicsEndImageContext() }
 
-            guard let cg = UIGraphicsGetCurrentContext() else { return UIImage() }
+        guard let cg = UIGraphicsGetCurrentContext() else { return UIImage() }
 
-            // Background
-            UIColor.white.setFill()
-            cg.fill(CGRect(origin: .zero, size: thumbnailSize))
+        let bounds = CGRect(origin: .zero, size: thumbnailSize)
+        page.background.backgroundColor.setFill()
+        cg.fill(bounds)
 
-            let scale = min(
-                thumbnailSize.width / pageSize.width,
-                thumbnailSize.height / pageSize.height
-            )
-
-            cg.saveGState()
-            cg.scaleBy(x: scale, y: scale)
-
-            let pageRect = CGRect(origin: .zero, size: pageSize)
-
-            // ⚠️ async draw
-            Task {
-                await markup.draw(in: cg, frame: pageRect)
-            }
-
-            cg.restoreGState()
-
-            return UIGraphicsGetImageFromCurrentImageContext() ?? UIImage()
+        if let pattern = page.background.patternImage() {
+            UIColor(patternImage: pattern).setFill()
+            cg.fill(bounds)
         }
+
+        let scale = min(
+            thumbnailSize.width / page.width,
+            thumbnailSize.height / page.height
+        )
+
+        cg.saveGState()
+        cg.scaleBy(x: scale, y: scale)
+        await page.markup.draw(in: cg, frame: CGRect(origin: .zero, size: CGSize(width: page.width, height: page.height)))
+        cg.restoreGState()
+
+        return UIGraphicsGetImageFromCurrentImageContext() ?? UIImage()
     }
 }
 
-// MARK: - GridView
+// MARK: - Grid View
 struct GridView: View {
     let pages: [Page]
-    let columns: [GridItem] = Array(repeating: .init(.flexible(), spacing: 16), count: 4)
-    let thumbnailSize = CGSize(width: 200, height: 280)
+    let hasCopiedPage: Bool
+    let onAddPage: (UUID?) -> Void
+    let onCopyPage: (UUID) -> Void
+    let onPastePage: (UUID?) -> Void
+    let onMovePage: (UUID, UUID) -> Void
+    let onDone: () -> Void
+
+    private let columns = [GridItem(.adaptive(minimum: 140, maximum: 180), spacing: 16)]
+    private let thumbnailSize = CGSize(width: 220, height: 320)
+
+    @State private var selectedPageID: UUID?
+    @State private var draggedPageID: UUID?
 
     var body: some View {
         VStack {
-            HStack(alignment: .center, spacing: 20) {
-                ButtonWithIcon("Kopieren", icon: "doc.on.doc")
-                ButtonWithIcon("Einfügen", icon: "clipboard")
-                ButtonWithIcon("Teilen", icon: "square.and.arrow.up")
-            }
-
-            Spacer()
-
             ScrollView {
-                LazyVGrid(columns: columns, spacing: 16) {
+                LazyVGrid(columns: columns, spacing: 18) {
                     ForEach(Array(pages.enumerated()), id: \.element.id) { index, page in
                         PageThumbnailView(
-                            markup: page.markup,
-                            pageSize: .init(width: page.width, height: page.height),
+                            page: page,
                             pageIndex: index,
-                            thumbnailSize: thumbnailSize
+                            thumbnailSize: thumbnailSize,
+                            isSelected: selectedPageID == page.id
                         )
-                        .frame(maxWidth: 150)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            selectedPageID = page.id
+                        }
+                        .onDrag {
+                            draggedPageID = page.id
+                            return NSItemProvider(object: page.id.uuidString as NSString)
+                        }
+                        .onDrop(
+                            of: [UTType.text],
+                            delegate: PageDropDelegate(
+                                targetPageID: page.id,
+                                draggedPageID: $draggedPageID,
+                                onMovePage: onMovePage
+                            )
+                        )
                     }
                 }
-                .padding()
+                .padding(20)
             }
         }
-        .padding()
-    }
-
-    @ViewBuilder
-    func ButtonWithIcon(_ name: String, icon: String) -> some View {
-        HStack(alignment: .center) {
-            Image(systemName: icon)
-            Text(name)
+        .navigationTitle("Pages")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                HStack {
+                    Button {
+                        onAddPage(selectedPageID)
+                    } label: {
+                        Label("Add", systemImage: "plus.rectangle.portrait")
+                    }
+                    
+                    Button {
+                        guard let selectedPageID else { return }
+                        onCopyPage(selectedPageID)
+                    } label: {
+                        Label("Copy", systemImage: "doc.on.doc")
+                    }
+                    .disabled(selectedPageID == nil)
+                    
+                    Button {
+                        onPastePage(selectedPageID)
+                    } label: {
+                        Label("Paste", systemImage: "clipboard")
+                    }
+                    .disabled(!hasCopiedPage)
+                }
+            }
+            
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Done", action: onDone)
+                    .buttonStyle(.borderedProminent)
+            }
+        }
+        .onAppear {
+            selectedPageID = selectedPageID ?? pages.first?.id
+        }
+        .onChange(of: pages.map(\.id)) {
+            if let selectedPageID, !pages.contains(where: { $0.id == selectedPageID }) {
+                self.selectedPageID = pages.first?.id
+            } else if self.selectedPageID == nil {
+                self.selectedPageID = pages.first?.id
+            }
         }
     }
 }
 
-// MARK: - Preview
+private struct PageDropDelegate: DropDelegate {
+    let targetPageID: UUID
+    @Binding var draggedPageID: UUID?
+    let onMovePage: (UUID, UUID) -> Void
+
+    func dropEntered(info: DropInfo) {
+        guard let draggedPageID, draggedPageID != targetPageID else { return }
+        onMovePage(draggedPageID, targetPageID)
+    }
+
+    func performDrop(info: DropInfo) -> Bool {
+        draggedPageID = nil
+        return true
+    }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        DropProposal(operation: .move)
+    }
+}
+
 #Preview {
-    let emptyPages = Array(repeating: Page.empty, count: 8)
-    GridView(pages: emptyPages)
+    GridView(
+        pages: Array(repeating: Page.empty, count: 8),
+        hasCopiedPage: true,
+        onAddPage: { _ in },
+        onCopyPage: { _ in },
+        onPastePage: { _ in },
+        onMovePage: { _, _ in },
+        onDone: {}
+    )
 }

@@ -21,6 +21,10 @@ struct Page: Identifiable, Equatable {
         self.background = background
     }
 
+    func duplicated() -> Page {
+        Page(markup: markup, background: background)
+    }
+    
     static var empty: Page {
         return Page(
            bounds: .init(x: 0, y: 0, width: 300, height: 500),
