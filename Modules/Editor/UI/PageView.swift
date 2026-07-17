@@ -115,22 +115,17 @@ class PageView: UIView {
     }
     
     
-    func showToolPicker(_ visible: Bool, with toolPicker: PKToolPicker) {
+    func updateMode(_ mode: EditMode, isCurrentPage: Bool, with toolPicker: PKToolPicker) {
         guard let controller = controller else { return }
         
-        toolPicker.setVisible(visible, forFirstResponder: controller)
+        toolPicker.setVisible(mode.isToolbarVisible, forFirstResponder: controller)
+        controller.view.isUserInteractionEnabled = mode.isDrawing
         
-        if(visible) {
+        if(mode.isDrawing && isCurrentPage) {
             controller.becomeFirstResponder()
         } else {
             controller.resignFirstResponder()
         }
-    }
-    
-    func enableDrawing(_ enabled: Bool) {
-        guard let controller = controller else { return }
-        
-        controller.view.isUserInteractionEnabled = enabled
     }
     
     func cleanup() {

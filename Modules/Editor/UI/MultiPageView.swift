@@ -24,7 +24,7 @@ class MultiPageController: UIViewController {
     private var mode: EditMode = .read
     
     /// last visible page (changes when scrolling)
-    private var lastPage: UUID? = nil
+    private var currentPage: UUID? = nil
     
     // layout constants
     private let pageSpacing: CGFloat = 10
@@ -198,10 +198,10 @@ extension MultiPageController: UIScrollViewDelegate {
     private func updateCurrentPage() {
         guard let currentPage = getCurrentPage() else { return }
         
-        if(lastPage == currentPage) { return }
+        if(self.currentPage == currentPage) { return }
         
         onPageChanged(currentPage)
-        lastPage = currentPage
+        self.currentPage = currentPage
     }
     
     private func scrollToPage(_ pageView: PageView, animated: Bool = true) {
@@ -225,9 +225,8 @@ extension MultiPageController {
     
     /// Updates tool picker visibility and draw flag for every page
     private func refreshModeOfPages() {
-        for (_, pageView) in self.pageViewsById {
-            pageView.showToolPicker(mode.isToolbarVisible, with: toolPicker)
-            pageView.enableDrawing(mode.isDrawing)
+        for (id, pageView) in self.pageViewsById {
+            pageView.updateMode(mode, isCurrentPage: currentPage == id, with: toolPicker)
         }
     }
 }
