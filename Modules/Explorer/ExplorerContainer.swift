@@ -4,7 +4,7 @@ import Dependencies
 
 enum ExplorerRoute: RouteType {
     case dashboard(path: URL?)
-    case createSheet
+    case createSheet(path: URL?)
     
     var id: Self { self }
 }
@@ -13,11 +13,18 @@ struct ExplorerContainer: View {
     @Dependency(\.router) var router
     
     @State var docs: [Document] = []
-    @State var selectedFolder: URL? = nil
+    @State var newNoteName = ""
     
     let explorer = Explorer()
     
     let route: ExplorerRoute
+    
+    var currentFolder: URL? {
+        switch route {
+        case let .dashboard(path), let .createSheet(path):
+            return path
+        }
+    }
     
     var body: some View {
         VStack {
@@ -30,24 +37,42 @@ struct ExplorerContainer: View {
                 )
                     .onAppear {
                         Task {
-                            docs = (try? await explorer.loadAllDocs()) ?? []
+                            docs = (try? await explorer.loadAllDocs(in: currentFolder)) ?? []
                         }
                     }
                     .toolbar {
                         ToolbarItem(placement: .topBarTrailing, content: CreateToolbar)
                     }
             case .createSheet:
-                VStack {
-                    Button(action: {
-                        Task {
-                            guard let note = try? await explorer.addNote(at: selectedFolder, name: "NewNote") else { return }
-                            docs.append(.note(note))
-                            
+                VStack(alignment: .leading, spacing: 20) {
+                    Text("New Note")
+                        .font(.title2)
+                        .bold()
+                    
+                    TextField("Note name", text: $newNoteName)
+                        .textFieldStyle(.roundedBorder)
+                    
+                    HStack {
+                        Button("Cancel") {
+                            newNoteName = ""
                             router.sheet = nil
-                            router.stack.push(.editor(.editor(note)))
                         }
-                    }) {
-                        Text("Add Note")
+                        
+                        Spacer()
+                        
+                        Button("Add Note") {
+                            let name = newNoteName.trimmingCharacters(in: .whitespacesAndNewlines)
+                            guard !name.isEmpty else { return }
+                            
+                            Task {
+                                guard let note = try? await explorer.addNote(at: currentFolder, name: name) else { return }
+                                newNoteName = ""
+                                router.sheet = nil
+                                router.stack.push(.editor(.editor(note)))
+                            }
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(newNoteName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     }
                     
                     Button(action: {
@@ -56,6 +81,7 @@ struct ExplorerContainer: View {
                         Text("Add Folder")
                     }
                 }
+                .padding()
                 .presentationDetents([.medium])
             }
             
@@ -64,7 +90,7 @@ struct ExplorerContainer: View {
     
     @ViewBuilder
     func CreateToolbar() -> some View {
-        Button(action: { router.presentSheet(.explorer(.createSheet)) }) {
+        Button(action: { router.presentSheet(.explorer(.createSheet(path: currentFolder))) }) {
             Image(systemName: "plus")
         }
     }
