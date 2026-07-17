@@ -20,6 +20,12 @@ struct Note: Identifiable, Hashable, Codable {
 class Explorer {
     let fm = FileManager.default
     
+    static let quickNoteFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
+    }()
+    
     func loadAllDocs(in folder: URL? = nil) async throws -> [Document] {
         var docs: [Document] = []
         
@@ -70,6 +76,26 @@ class Explorer {
         
         
         return Note(pdf: pdf, markup: markup)
+    }
+    
+    func addQuickNote(at folder: URL? = nil, date: Date = .now) async throws -> Note {
+        let baseName = Self.quickNoteFormatter.string(from: date)
+        let uniqueName = uniqueNoteName(base: baseName, in: folder)
+        return try await addNote(at: folder, name: uniqueName)
+    }
+    
+    func uniqueNoteName(base: String, in folder: URL? = nil) -> String {
+        let folder = folder ?? rootFolder()
+        var candidate = base
+        var index = 2
+        
+        while fm.fileExists(atPath: folder.appendingPathComponent("\(candidate).pdf").path)
+            || fm.fileExists(atPath: folder.appendingPathComponent(".\(candidate).markup").path) {
+            candidate = "\(base) \(index)"
+            index += 1
+        }
+        
+        return candidate
     }
     
     private func ensureFolderExists(_ folder: URL) throws {

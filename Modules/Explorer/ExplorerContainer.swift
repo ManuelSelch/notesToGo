@@ -41,7 +41,10 @@ struct ExplorerContainer: View {
                         }
                     }
                     .toolbar {
-                        ToolbarItem(placement: .topBarTrailing, content: CreateToolbar)
+                        ToolbarItemGroup(placement: .topBarTrailing) {
+                            QuickNoteToolbar()
+                            CreateToolbar()
+                        }
                     }
             case .createSheet:
                 VStack(alignment: .leading, spacing: 20) {
@@ -85,6 +88,19 @@ struct ExplorerContainer: View {
                 .presentationDetents([.medium])
             }
             
+        }
+    }
+    
+    @ViewBuilder
+    func QuickNoteToolbar() -> some View {
+        Button(action: {
+            Task {
+                guard let note = try? await explorer.addQuickNote(at: currentFolder) else { return }
+                docs.append(.note(note))
+                router.stack.push(.editor(.quickNote(note)))
+            }
+        }) {
+            Image(systemName: "bolt.badge.plus")
         }
     }
     

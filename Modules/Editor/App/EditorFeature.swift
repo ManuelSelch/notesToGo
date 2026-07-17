@@ -31,6 +31,7 @@ nonisolated struct EditorFeature: Feature {
         
         // MARK: - mode
         case enableEditMode
+        case enableFocusMode
         case toggleEditMode
         case toggleFocusMode
         
@@ -42,6 +43,9 @@ nonisolated struct EditorFeature: Feature {
     enum Route: RouteType {
         /// main editor screen to read & write
         case editor(Note)
+        
+        /// quick note opens directly in focus mode
+        case quickNote(Note)
         
         /// page grid to rearrange, copy, and insert pages
         case grid(Note)
@@ -107,6 +111,9 @@ nonisolated struct EditorFeature: Feature {
         case .enableEditMode:
             state.mode = .write
             state.selectedTool = .pen // auto select pen when toggling from read to write mode
+        case .enableFocusMode:
+            state.mode = .focus
+            state.selectedTool = .pen
         case .toggleEditMode:
             switch(state.mode) {
             case .read:

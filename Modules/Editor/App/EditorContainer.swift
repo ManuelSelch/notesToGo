@@ -35,7 +35,7 @@ struct EditorContainer: View {
     
     var note: Note {
         switch route {
-        case let .editor(note), let .grid(note):
+        case let .editor(note), let .quickNote(note), let .grid(note):
             return note
         }
     }
@@ -45,7 +45,7 @@ struct EditorContainer: View {
         
         let note: Note
         switch route {
-        case let .editor(value), let .grid(value):
+        case let .editor(value), let .quickNote(value), let .grid(value):
             note = value
         }
         
@@ -66,9 +66,10 @@ struct EditorContainer: View {
     var body: some View {
         VStack {
             switch(route) {
-            case .editor:
+            case .editor, .quickNote:
                 MultiPageView(controller: controller)
                     .onAppear(perform: openIfNeeded)
+                    .onAppear(perform: applyInitialMode)
                     .toolbar {
                         if store.state.mode != .focus {
                             ToolbarItem(placement: .topBarLeading) {
@@ -113,15 +114,23 @@ struct EditorContainer: View {
         .onChange(of: store.state.selectedTool) {
             controller.selectTool(store.state.selectedTool)
         }
-        .onAppear {
-            store.dispatch(.enableEditMode) // open note in edit mode (instead of read)
-        }
         
     }
     
     func openIfNeeded() {
         if store.state.path != note.markup || store.state.document == nil {
             store.dispatch(.open(note.markup))
+        }
+    }
+    
+    func applyInitialMode() {
+        switch route {
+        case .editor:
+            store.dispatch(.enableEditMode)
+        case .quickNote:
+            store.dispatch(.enableFocusMode)
+        case .grid:
+            break
         }
     }
     
