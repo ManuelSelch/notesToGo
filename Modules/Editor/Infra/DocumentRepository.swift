@@ -32,15 +32,12 @@ class DocumentRepository: DocumentRepositoryProtocol {
             throw EditorError.documentNotFound
         }
         
-        let document = MultiPageDocument(
+        return MultiPageDocument(
             pages: (0..<pdf.pageCount).compactMap { index in
                 guard let page = pdf.page(at: index) else { return nil }
                 return Page(bounds: page.bounds(for: .mediaBox), background: .plain(.white))
             }
         )
-        
-        try await save(document, at: path)
-        return document
     }
     
     private func pdfURL(forMarkupURL markupURL: URL) -> URL {
