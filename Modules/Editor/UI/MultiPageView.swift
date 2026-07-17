@@ -216,8 +216,9 @@ extension MultiPageController: UIScrollViewDelegate {
         
         if(self.currentPage == currentPage) { return }
         
-        onPageChanged(currentPage)
         self.currentPage = currentPage
+        refreshModeOfPages()
+        onPageChanged(currentPage)
     }
     
     private func scrollToPage(_ pageView: PageView, animated: Bool = true) {

@@ -9,7 +9,6 @@ nonisolated struct EditorFeature: Feature {
         
         var isLoading = false
         var mode: EditMode = .read
-        
         var selectedTool: PencilTool = .pen
     }
     
@@ -71,9 +70,14 @@ nonisolated struct EditorFeature: Feature {
             
         // MARK: - mode
         case .toggleEditMode:
-            state.mode = toggleReadWriteMode(state.mode)
-            if(state.mode == .write) {
+            switch(state.mode) {
+            case .read:
+                state.mode = .write
                 state.selectedTool = .pen // auto select pen when toggling from read to write mode
+            case .write:
+                state.mode = .read
+            case .focus:
+                break
             }
         case .toggleFocusMode:
             state.mode = toggleFocusMode(state.mode)
@@ -86,18 +90,9 @@ nonisolated struct EditorFeature: Feature {
         }
     }
     
-    func toggleReadWriteMode(_ mode: EditMode) -> EditMode {
-        return switch(mode) {
-        case .read:  .write
-        case .write: .read
-        case .focus: .focus
-        }
-    }
-    
     func toggleFocusMode(_ mode: EditMode) -> EditMode {
         return switch(mode) {
-        case .read:  .focus
-        case .write: .focus
+        case .read, .write:  .focus
         case .focus: .write
         }
     }

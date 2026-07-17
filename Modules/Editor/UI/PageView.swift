@@ -86,8 +86,6 @@ class PageView: UIView {
         controller = paperVC
         
         toolPicker.addObserver(paperVC)
-        paperVC.pencilKitResponderState.activeToolPicker = toolPicker
-        paperVC.pencilKitResponderState.toolPickerVisibility = .visible
     }
     
     public func transform(_ scale: CGFloat, to size: CGSize) {
@@ -124,6 +122,7 @@ class PageView: UIView {
         controller.view.isUserInteractionEnabled = mode.isDrawing
         controller.pencilKitResponderState.activeToolPicker = isActiveDrawingPage ? toolPicker : nil
         controller.pencilKitResponderState.toolPickerVisibility = mode.isToolbarVisible && isCurrentPage ? .visible : .hidden
+        
    
         if(isActiveDrawingPage) {
             controller.becomeFirstResponder()
