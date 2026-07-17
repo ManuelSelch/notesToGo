@@ -30,6 +30,7 @@ nonisolated struct EditorFeature: Feature {
         case savedFailed
         
         // MARK: - mode
+        case enableEditMode
         case toggleEditMode
         case toggleFocusMode
         
@@ -96,10 +97,16 @@ nonisolated struct EditorFeature: Feature {
                     state.document?.pages[index].markup = markup
                 }
             }
+            
+            // reset editor state
+            state.mode = .read
         case .saved:
             state.isLoading = false
             
         // MARK: - mode
+        case .enableEditMode:
+            state.mode = .write
+            state.selectedTool = .pen // auto select pen when toggling from read to write mode
         case .toggleEditMode:
             switch(state.mode) {
             case .read:

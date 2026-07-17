@@ -84,7 +84,7 @@ struct EditorContainer: View {
                             EditToolbar()
                         }
                     }
-                    .navigationBarBackButtonHidden(store.state.mode == .focus)
+                    .navigationBarBackButtonHidden() // hide native backup button to be able to save note when user clicks back
                     .ignoresSafeArea(.all)
             
             case .grid:
@@ -112,6 +112,9 @@ struct EditorContainer: View {
         }
         .onChange(of: store.state.selectedTool) {
             controller.selectTool(store.state.selectedTool)
+        }
+        .onAppear {
+            store.dispatch(.enableEditMode) // open note in edit mode (instead of read)
         }
         
     }
@@ -186,8 +189,11 @@ struct EditorContainer: View {
     @ViewBuilder
     func SaveToolbar() -> some View {
         HStack {
-            Button(action: { store.dispatch(.save(controller.currentMarkups())) }) {
-                Image(systemName: "square.and.arrow.down")
+            Button(action: {
+                store.dispatch(.save(controller.currentMarkups()))
+                router.stack.dismiss()
+            }) {
+                Image(systemName: "chevron.left")
             }
         }
     }
