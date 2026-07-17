@@ -33,7 +33,7 @@ class PageView: UIView {
         addSubview(backgroundImageView)
     }
     
-    func configure(with page: Page, toolPicker: PKToolPicker) {
+    func configure(with page: Page) {
         // remove existing paper view controller
         if let existingVC = controller {
             existingVC.willMove(toParent: nil)
@@ -84,8 +84,6 @@ class PageView: UIView {
         paperVC.contentView = contentBackgroundView
         
         controller = paperVC
-        
-        toolPicker.addObserver(paperVC)
     }
     
     public func transform(_ scale: CGFloat, to size: CGSize) {
@@ -115,19 +113,25 @@ class PageView: UIView {
     }
     
     
-    func updateMode(_ mode: EditMode, isCurrentPage: Bool, with toolPicker: PKToolPicker) {
+    func updateMode(_ mode: EditMode, isCurrentPage: Bool) {
         guard let controller = controller else { return }
         let isActiveDrawingPage = mode.isDrawing && isCurrentPage
         
         controller.view.isUserInteractionEnabled = mode.isDrawing
-        controller.pencilKitResponderState.activeToolPicker = isActiveDrawingPage ? toolPicker : nil
-        controller.pencilKitResponderState.toolPickerVisibility = mode.isToolbarVisible && isCurrentPage ? .visible : .hidden
         
-   
         if(isActiveDrawingPage) {
             controller.becomeFirstResponder()
         } else {
             controller.resignFirstResponder()
+        }
+    }
+    
+    func selectTool(_ tool: PencilTool) {
+        switch tool {
+        case .eraser:
+            controller?.drawingTool = PKEraserTool(.bitmap, width: 50)
+        case .pen, .pencil, .marker, .lasso:
+            controller?.drawingTool = PKInkingTool(.pen, color: .black, width: 5)
         }
     }
     

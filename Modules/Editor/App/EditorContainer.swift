@@ -30,9 +30,12 @@ struct EditorContainer: View {
         self.store = store
         
         controller = MultiPageController(
-            onPageChanged: { _ in },
-            onToolChanged: { tool in store.dispatch(.toolSelected(tool))}
+            onPageChanged: { _ in }
         )
+        controller.onPencilDoubleTap = {
+            guard store.state.mode.isDrawing else { return }
+            store.dispatch(.pencilDoubleTap)
+        }
         controller.document = store.state.document
     }
     
@@ -43,11 +46,19 @@ struct EditorContainer: View {
                 MultiPageView(controller: controller)
                     .onAppear { store.dispatch(.open(note.markup)) }
                     .toolbar {
-                        if(store.state.mode != .focus) {
-                            ToolbarItem(placement: .topBarLeading, content: SaveToolbar)
+                        if store.state.mode != .focus {
+                            ToolbarItem(placement: .topBarLeading) {
+                                SaveToolbar()
+                            }
                         }
-                        
-                        ToolbarItem(placement: .topBarTrailing, content: EditToolbar)
+                                                                                                                                                                                 
+                        ToolbarItem(placement: .principal) {
+                            PenToolbar()
+                        }
+                                                                                                                                                                                 
+                        ToolbarItem(placement: .topBarTrailing) {
+                            EditToolbar()
+                        }
                     }
                     .navigationBarBackButtonHidden(store.state.mode == .focus)
             
@@ -78,30 +89,49 @@ struct EditorContainer: View {
                    }
                                                                                                                                                                          
                case .write:
-                   Button(action: { router.stack.push(.editor(.grid)) }) {
-                       Image(systemName: "square.grid.2x2")
-                   }
+                    Button(action: { router.stack.push(.editor(.grid)) }) {
+                        Image(systemName: "square.grid.2x2")
+                    }
                                                                                                                                                                          
-                   Button(action: { store.dispatch(.addPageTapped) }) {
-                       Image(systemName: "plus.rectangle.portrait")
-                   }
+                    Button(action: { store.dispatch(.addPageTapped) }) {
+                        Image(systemName: "plus.rectangle.portrait")
+                    }
+                
                                                                                                                                                                          
-                   Button(action: { store.dispatch(.toggleFocusMode) }) {
-                       Image(systemName: "viewfinder")
-                   }
+                    Button(action: { store.dispatch(.toggleFocusMode) }) {
+                        Image(systemName: "viewfinder")
+                    }
                                                                                                                                                                          
-                   Button(action: { store.dispatch(.toggleEditMode) }) {
-                       Image(systemName: "checkmark")
-                   }
+                    Button(action: { store.dispatch(.toggleEditMode) }) {
+                        Image(systemName: "checkmark")
+                    }
                                                                                                                                                                          
                case .focus:
-                   Image(systemName:
-                       store.state.selectedTool == .eraser ? "eraser" : "pencil"
-                   )
+                    Image(systemName:
+                        store.state.selectedTool == .eraser ? "eraser" : "pencil"
+                    )
                                                                                                                                                                          
-                   Button(action: { store.dispatch(.toggleFocusMode) }) {
-                       Image(systemName: "arrow.down.right.and.arrow.up.left")
-                   }
+                    Button(action: { store.dispatch(.toggleFocusMode) }) {
+                        Image(systemName: "arrow.down.right.and.arrow.up.left")
+                    }
+            }
+        }
+        .padding()
+    }
+    
+    @ViewBuilder
+    func PenToolbar() -> some View {
+        HStack(spacing: 20) {
+            if store.state.mode == .write {
+                Button(action: { store.dispatch(.toolSelected(.pen)) }) {
+                    Image(systemName: "pencil")
+                        .foregroundStyle(store.state.selectedTool == .eraser ? .black : .blue)
+                }
+                
+                Button(action: { store.dispatch(.toolSelected(.eraser)) }) {
+                    Image(systemName: "eraser")
+                        .foregroundStyle(store.state.selectedTool == .eraser ? .blue : .black)
+                }
             }
         }
         .padding()

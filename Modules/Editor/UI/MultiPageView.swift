@@ -22,17 +22,11 @@ class MultiPageController: UIViewController {
     /// last visible page (changes when scrolling)
     private var currentPage: UUID? = nil
     
-    private let blackPen = PKToolPickerInkingItem(type: .pen, color: .black, width: 5, identifier: "notesToGo.blackPen" )
-    private let eraser = PKToolPickerEraserItem(type: .bitmap, width: 50)
-    private lazy var toolPicker: PKToolPicker = {
-       let picker = PKToolPicker(toolItems: [blackPen, eraser])
-       picker.stateAutosaveName = nil
-       return picker
-    }()
-    private var isToolPickerVisible = false
-    private var onToolChanged: (PencilTool) -> Void
+    private lazy var pencilInteraction = UIPencilInteraction(delegate: self)
+    var onPencilDoubleTap: (() -> Void)?
     
     private var mode: EditMode = .read
+    private var currentTool: PencilTool = .pen
     
     // layout constants
     private let pageSpacing: CGFloat = 10
@@ -49,11 +43,9 @@ class MultiPageController: UIViewController {
     var onPageChanged: (UUID) -> Void
     
     init(
-        onPageChanged: @escaping (UUID) -> Void,
-        onToolChanged: @escaping (PencilTool) -> Void
+        onPageChanged: @escaping (UUID) -> Void
     ) {
         self.onPageChanged = onPageChanged
-        self.onToolChanged = onToolChanged
         
         super.init(nibName: nil, bundle: nil)
     }
@@ -65,16 +57,12 @@ class MultiPageController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemGray5
-        
-        toolPicker.addObserver(self)
+        view.addInteraction(pencilInteraction)
         setupScrollView()
         refreshPages()
     }
     
-    deinit {
-      toolPicker.removeObserver(self)
-    }
-    
+
     private func setupScrollView() {
         // Single scroll view for everything - only vertical scrolling, no zooming
         scrollView = UIScrollView(frame: view.bounds)
@@ -149,6 +137,7 @@ class MultiPageController: UIViewController {
         
         updateCurrentPage()
         refreshModeOfPages()
+        applyCurrentToolToCurrentPage()
     }
     
     private func createNewPageView(_ page: Page) -> PageView {
@@ -162,7 +151,7 @@ class MultiPageController: UIViewController {
         )
        
         let view = PageView(frame: pageFrame)
-        view.configure(with: page, toolPicker: toolPicker)
+        view.configure(with: page)
         contentView.addSubview(view)
         
         return view
@@ -211,6 +200,10 @@ extension MultiPageController: UIScrollViewDelegate {
         updateCurrentPage()
     }
     
+    func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
+        updateCurrentPage()
+    }
+    
     private func updateCurrentPage() {
         guard let currentPage = getCurrentPage() else { return }
         
@@ -218,6 +211,7 @@ extension MultiPageController: UIScrollViewDelegate {
         
         self.currentPage = currentPage
         refreshModeOfPages()
+        applyCurrentToolToCurrentPage()
         onPageChanged(currentPage)
     }
     
@@ -238,13 +232,24 @@ extension MultiPageController {
     func updateMode(_ mode: EditMode) {
         self.mode = mode
         refreshModeOfPages()
+        applyCurrentToolToCurrentPage()
     }
     
-    /// Updates tool picker visibility and draw flag for every page
+    func selectTool(_ tool: PencilTool) {
+        currentTool = tool
+        applyCurrentToolToCurrentPage()
+    }
+    
+    /// Updates draw flag for every page
     private func refreshModeOfPages() {
         for (id, pageView) in self.pageViewsById {
-            pageView.updateMode(mode, isCurrentPage: currentPage == id, with: toolPicker)
+            pageView.updateMode(mode, isCurrentPage: currentPage == id)
         }
+    }
+    
+    private func applyCurrentToolToCurrentPage() {
+        guard let currentPage, mode.isDrawing else { return }
+        pageViewsById[currentPage]?.selectTool(currentTool)
     }
 }
 
@@ -263,22 +268,13 @@ extension MultiPageController {
     }
 }
 
-extension MultiPageController: PKToolPickerObserver {
-    func toolPickerSelectedToolItemDidChange(_ toolPicker: PKToolPicker) {
-        let tool: PencilTool =
-            toolPicker.selectedToolItem is PKToolPickerEraserItem
-            ? .eraser
-            : .pen
-            
-        onToolChanged(tool)
+extension MultiPageController: UIPencilInteractionDelegate {
+    func pencilInteractionDidTap(_ interaction: UIPencilInteraction) {
+        onPencilDoubleTap?()
     }
     
-    func selectTool(_ tool: PencilTool) {
-        switch(tool) {
-        case .pen, .pencil, .marker, .lasso:
-            toolPicker.selectedToolItem = blackPen
-        case .eraser:
-            toolPicker.selectedToolItem = eraser
-        }
+    @available(iOS 17.5, *)
+    func pencilInteraction(_ interaction: UIPencilInteraction, didReceiveTap tap: UIPencilInteraction.Tap) {
+        onPencilDoubleTap?()
     }
 }

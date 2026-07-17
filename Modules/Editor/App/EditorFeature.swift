@@ -10,6 +10,7 @@ nonisolated struct EditorFeature: Feature {
         var isLoading = false
         var mode: EditMode = .read
         var selectedTool: PencilTool = .pen
+        var previousInkTool: PencilTool = .pen
     }
     
     enum Action: Equatable, Sendable {
@@ -29,6 +30,7 @@ nonisolated struct EditorFeature: Feature {
         
         // MARK: - tool
         case toolSelected(PencilTool)
+        case pencilDoubleTap
     }
     
     enum Route: RouteType {
@@ -85,6 +87,11 @@ nonisolated struct EditorFeature: Feature {
         // MARK: - tool
         case let .toolSelected(tool):
             state.selectedTool = tool
+            if tool != .eraser {
+                state.previousInkTool = tool
+            }
+        case .pencilDoubleTap:
+            state.selectedTool = state.selectedTool == .eraser ? state.previousInkTool : .eraser
             
         default: break
         }
