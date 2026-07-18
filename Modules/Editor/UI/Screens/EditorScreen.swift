@@ -26,6 +26,9 @@ struct EditorScreen: View {
         MultiPageView(controller: multiPage)
             .navigationBarBackButtonHidden() // hide native backup button to be able to save note when user clicks back
             .ignoresSafeArea(.all)
+            .onAppear {
+                theme.statusBarHidden = (mode == .focus)
+            }
             .toolbar {
                 if mode != .focus {
                     ToolbarItem(placement: .topBarLeading) { SaveToolbar() }
