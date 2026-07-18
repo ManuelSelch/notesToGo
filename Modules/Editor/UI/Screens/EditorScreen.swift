@@ -27,18 +27,10 @@ struct EditorScreen: View {
             .ignoresSafeArea(.all)
             .toolbar {
                 if mode != .focus {
-                    ToolbarItem(placement: .topBarLeading) {
-                        SaveToolbar()
-                    }
-                }
-                                                                                                                                                                         
-                ToolbarItem(placement: .principal) {
-                    PenToolbar()
-                }
-                                                                                                                                                                         
-                ToolbarItem(placement: .topBarTrailing) {
-                    EditToolbar()
-                }
+                    ToolbarItem(placement: .topBarLeading) { SaveToolbar() }
+                }                                                                                                                                                   
+                ToolbarItem(placement: .principal) { PenToolbar() }
+                ToolbarItem(placement: .topBarTrailing) { EditToolbar() }
             }
             .onAppear {
                 multiPage.onPageChanged = { page in

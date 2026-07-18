@@ -105,9 +105,6 @@ nonisolated struct EditorFeature: Feature {
                     state.document?.pages[index].markup = markup
                 }
             }
-            
-            // reset editor state
-            state.mode = .read
         case .saved:
             state.isLoading = false
             

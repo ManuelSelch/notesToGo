@@ -26,7 +26,7 @@ struct ExplorerContainer: View {
         VStack {
             switch(route) {
             case .dashboard:
-                ExplorerView(
+                ExplorerScreen(
                     docs: $docs,
                     noteTapped: openNoteTapped,
                     folderTapped: { folder in router.stack.push(.explorer(.dashboard(path: folder)))}
@@ -41,11 +41,8 @@ struct ExplorerContainer: View {
                         reloadDocs()
                     }
                     .toolbar {
-                        ToolbarItemGroup(placement: .topBarTrailing) {
-                            QuickNoteToolbar()
-                            CreateNoteToolbar()
-                            CreateFolderToolbar()
-                        }
+                        ToolbarItemGroup(placement: .topBarLeading) { LeftToolbar() }
+                        ToolbarItemGroup(placement: .topBarTrailing) { RightToolbar() }
                     }
             case .createNoteSheet:
                 CreateItemSheet(
@@ -105,74 +102,29 @@ struct ExplorerContainer: View {
         closeSheet()
         router.stack.push(.explorer(.dashboard(path: folder)))
     }
-    
-    @ViewBuilder
-    func QuickNoteToolbar() -> some View {
-        Button(action: {
-            Task {
-                guard let inbox = try? explorer.inboxFolder() else { return }
-                guard let note = try? await explorer.addQuickNote(at: inbox) else { return }
-                docs.append(.note(note))
-                openQuickNoteTapped(note)
-            }
-        }) {
-            Image(systemName: "square.and.pencil")
-        }
-    }
-    
-    @ViewBuilder
-    func CreateNoteToolbar() -> some View {
-        Button(action: { router.presentSheet(.explorer(.createNoteSheet(path: currentFolder))) }) {
-            Image(systemName: "plus.square")
-        }
-    }
-    
-    @ViewBuilder
-    func CreateFolderToolbar() -> some View {
-        Button(action: { router.presentSheet(.explorer(.createFolderSheet(path: currentFolder))) }) {
-            Image(systemName: "folder.badge.plus")
-        }
-    }
-
 }
 
-
-private struct CreateItemSheet: View {
-    let title: String
-    let placeholder: String
-    let buttonTitle: String
-    @Binding var name: String
-    let locationName: String?
-    let onCancel: () -> Void
-    let onCreate: () -> Void
-    
-    var trimmedName: String {
-        name.trimmingCharacters(in: .whitespacesAndNewlines)
+extension ExplorerContainer {
+    @ViewBuilder
+    func LeftToolbar() -> some View {
+        HStack {
+            SimpleButton("gear", action: {router.presentSheet(.settings(.settings))})
+        }
     }
     
-    var body: some View {
-        NavigationStack {
-            Form {
-                TextField(placeholder, text: $name)
-                
-                if let locationName {
-                    LabeledContent("Location", value: locationName)
-                        .foregroundStyle(.secondary)
+    @ViewBuilder
+    func RightToolbar() -> some View {
+        HStack {
+            SimpleButton("square.and.pencil", action: {
+                Task {
+                    guard let inbox = try? explorer.inboxFolder() else { return }
+                    guard let note = try? await explorer.addQuickNote(at: inbox) else { return }
+                    docs.append(.note(note))
+                    openQuickNoteTapped(note)
                 }
-            }
-            .navigationTitle(title)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", action: onCancel)
-                }
-                
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(buttonTitle, action: onCreate)
-                        .disabled(trimmedName.isEmpty)
-                }
-            }
+            })
+            SimpleButton("plus.square", action: { router.presentSheet(.explorer(.createNoteSheet(path: currentFolder))) })
+            SimpleButton("folder.badge.plus", action: { router.presentSheet(.explorer(.createFolderSheet(path: currentFolder))) })
         }
-        .presentationDetents([.medium])
     }
 }

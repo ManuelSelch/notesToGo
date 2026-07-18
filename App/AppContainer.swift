@@ -22,6 +22,8 @@ struct AppContainer: View {
                     )
                 case let .editor(route):
                     EditorContainer(editor, route: route)
+                case let .settings(route):
+                    SettingsContainer(route: route)
                 }
             }
         })
