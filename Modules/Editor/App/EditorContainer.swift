@@ -56,7 +56,6 @@ struct EditorContainer: View {
         self.store = store
         
         controller = MultiPageController()
-        controller.document = store.state.document
         controller.pdfDocument = PDFDocument(url: note.pdf)
         controller.onPageChanged = { [weak controller] page in
             controller?.selectTool(store.state.selectedTool)
@@ -65,7 +64,10 @@ struct EditorContainer: View {
             guard store.state.mode.isDrawing else { return }
             store.dispatch(.pencilDoubleTap)
         }
-        
+        controller.onScreenWidthChanged = { [weak controller] in
+            guard let document = store.state.document else { return }
+            controller?.rebuildPages(document)
+        }
     }
     
     var body: some View {
@@ -111,7 +113,8 @@ struct EditorContainer: View {
             
         }
         .onChange(of: store.state.document) {
-            controller.document = store.state.document
+            guard let document = store.state.document else { return }
+            controller.rebuildPages(document)
         }
         .onChange(of: store.state.mode) {
             controller.updateMode(store.state.mode)

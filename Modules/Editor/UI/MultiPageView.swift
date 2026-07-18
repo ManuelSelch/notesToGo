@@ -29,25 +29,17 @@ class MultiPageController: UIViewController {
     /// last visible page (changes when scrolling)
     private var currentPage: UUID? = nil
     
-    var document: MultiPageDocument? {
-        didSet {
-            if isViewLoaded {
-                rebuildPages()
-            }
-        }
-    }
-    
     var pdfDocument: PDFDocument?
     
     var onPageChanged: ((UUID) -> Void)?
     var onPencilDoubleTap: (() -> Void)?
+    var onScreenWidthChanged: (() -> Void)?
     
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemGray5
         view.addInteraction(pencilInteraction)
         setupScrollView()
-        rebuildPages()
     }
     
     override func viewDidLayoutSubviews() {
@@ -55,7 +47,7 @@ class MultiPageController: UIViewController {
         
         // rebuild on width change
         if abs(contentView.bounds.width - view.bounds.width) > 1 {
-            rebuildPages()
+            onScreenWidthChanged?()
         }
     }
 }
@@ -64,9 +56,7 @@ class MultiPageController: UIViewController {
 // MARK: build pages
 extension MultiPageController {
     /// refreshes existing page views with updated data (after document was set or width changed)
-    private func rebuildPages() {
-        guard let document = document else { return }
-    
+    func rebuildPages(_ document: MultiPageDocument) {
         // --- 1. remove deleted/stale pages
         let validIDs = Set(document.pages.map(\.id))
         let staleIDs = pageViewsById.keys.filter { !validIDs.contains($0) }
