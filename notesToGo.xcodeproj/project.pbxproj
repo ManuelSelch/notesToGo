@@ -52,6 +52,11 @@
 			path = Modules;
 			sourceTree = "<group>";
 		};
+		97C46132300BC1090088C428 /* Shared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Shared;
+			sourceTree = "<group>";
+		};
 		97C63C9D2F35F79E007C45B7 /* notesToGoTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = notesToGoTests;
@@ -89,6 +94,7 @@
 		97192CFA2EF32240000C9F6A = {
 			isa = PBXGroup;
 			children = (
+				97C46132300BC1090088C428 /* Shared */,
 				97C63CA52F35F7BB007C45B7 /* App */,
 				97192D052EF32240000C9F6A /* notesToGo */,
 				97C63C9D2F35F79E007C45B7 /* notesToGoTests */,
@@ -132,6 +138,7 @@
 			fileSystemSynchronizedGroups = (
 				97192D052EF32240000C9F6A /* notesToGo */,
 				97192D122EF32258000C9F6A /* Modules */,
+				97C46132300BC1090088C428 /* Shared */,
 				97C63CA52F35F7BB007C45B7 /* App */,
 			);
 			name = notesToGo;

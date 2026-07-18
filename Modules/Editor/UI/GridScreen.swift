@@ -80,7 +80,7 @@ struct PageThumbnailView: View {
 }
 
 // MARK: - Grid View
-struct GridView: View {
+struct GridScreen: View {
     let pages: [Page]
     let hasCopiedPage: Bool
     let onAddPage: (UUID?) -> Void
@@ -194,7 +194,7 @@ private struct PageDropDelegate: DropDelegate {
 }
 
 #Preview {
-    GridView(
+    GridScreen(
         pages: Array(repeating: Page.empty, count: 8),
         hasCopiedPage: true,
         onAddPage: { _ in },

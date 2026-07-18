@@ -29,9 +29,7 @@ struct EditorApp {
 
 struct EditorContainer: View {
     @Dependency(\.router) var router
-    @EnvironmentObject var theme: Theme
     @ObservedObject var store: FluxStore<EditorFeature>
-    @State var multiPage: MultiPageController
     
     let route: EditorFeature.Route
     
@@ -53,74 +51,52 @@ struct EditorContainer: View {
         self.store = store
         self.note = note
         self.pdf = pdf
-        
-        multiPage = MultiPageController()
-        
-        multiPage.onPageChanged = { [weak multiPage] page in
-            multiPage?.selectTool(store.state.selectedTool)
-        }
-        multiPage.onPencilDoubleTap = {
-            guard store.state.mode.isDrawing else { return }
-            store.dispatch(.pencilDoubleTap)
-        }
-        multiPage.onScreenWidthChanged = { [weak multiPage] in
-            guard let document = store.state.document else { return }
-            multiPage?.rebuildPages(document, pdf)
-        }
     }
     
     var body: some View {
         VStack {
             switch(route) {
             case .editor, .quickNote:
-                MultiPageView(controller: multiPage)
-                    .onAppear(perform: openIfNeeded)
-                    .onAppear(perform: applyInitialMode)
-                    .toolbar {
-                        if store.state.mode != .focus {
-                            ToolbarItem(placement: .topBarLeading) {
-                                SaveToolbar()
-                            }
-                        }
-                                                                                                                                                                                 
-                        ToolbarItem(placement: .principal) {
-                            PenToolbar()
-                        }
-                                                                                                                                                                                 
-                        ToolbarItem(placement: .topBarTrailing) {
-                            EditToolbar()
-                        }
-                    }
-                    .navigationBarBackButtonHidden() // hide native backup button to be able to save note when user clicks back
-                    .ignoresSafeArea(.all)
+                EditorScreen(
+                    document: store.state.document,
+                    pdf: pdf,
+                    mode: store.state.mode,
+                    selectedTool: store.state.selectedTool,
+                    
+                    editModeToggled: {store.dispatch(.toggleEditMode)},
+                    focusModeToggled: {store.dispatch(.toggleFocusMode)},
+                    
+                    addPageTapped: {store.dispatch(.addPageTapped)},
+                    toolSelected: {store.dispatch(.toolSelected($0))},
+                    openGridTapped: {
+                        store.dispatch(.save($0))
+                        router.stack.push(.editor(.grid(note)))
+                    },
+                    saveAndCloseTapped: {
+                        store.dispatch(.save($0))
+                        router.stack.dismiss()
+                    },
+                    
+                    pencilDoubleTapped: { store.dispatch(.pencilDoubleTap) }
+                )
+                .onAppear(perform: openIfNeeded)
+                .onAppear(perform: applyInitialMode)
+                .navigationBarBackButtonHidden() // hide native backup button to be able to save note when user clicks back
+                .ignoresSafeArea(.all)
             
             case .grid:
-                GridView(
+                GridScreen(
                     pages: store.state.document?.pages ?? [],
                     hasCopiedPage: store.state.copiedPage != nil,
                     onAddPage: { store.dispatch(.insertPage(after: $0)) },
                     onCopyPage: { store.dispatch(.copyPage($0)) },
                     onPastePage: { store.dispatch(.pastePage(after: $0)) },
                     onMovePage: { store.dispatch(.movePage(source: $0, destination: $1)) },
-                    onDone: {
-                        store.dispatch(.save(multiPage.currentMarkups()))
-                        router.stack.dismiss()
-                    }
+                    onDone: { router.stack.dismiss() }
                 )
                 .onAppear(perform: openIfNeeded)
             }
             
-        }
-        .onChange(of: store.state.document) {
-            guard let document = store.state.document else { return }
-            multiPage.rebuildPages(document, pdf)
-        }
-        .onChange(of: store.state.mode) {
-            multiPage.updateMode(store.state.mode)
-            theme.statusBarHidden = (store.state.mode == .focus)
-        }
-        .onChange(of: store.state.selectedTool) {
-            multiPage.selectTool(store.state.selectedTool)
         }
     }
     
@@ -138,79 +114,6 @@ struct EditorContainer: View {
             store.dispatch(.enableFocusMode)
         case .grid:
             break
-        }
-    }
-    
-    @ViewBuilder
-    func EditToolbar() -> some View {
-        HStack(spacing: 20) {
-            switch store.state.mode {
-               case .read:
-                   Button(action: { store.dispatch(.toggleEditMode) }) {
-                       Image(systemName: "square.and.pencil")
-                   }
-                                                                                                                                                                         
-               case .write:
-                    Button(action: {
-                        store.dispatch(.save(multiPage.currentMarkups()))
-                        router.stack.push(.editor(.grid(note)))
-                    }) {
-                        Image(systemName: "square.grid.2x2")
-                    }
-                                                                                                                                                                         
-                    Button(action: { store.dispatch(.addPageTapped) }) {
-                        Image(systemName: "plus.rectangle.portrait")
-                    }
-                
-                                                                                                                                                                         
-                    Button(action: { store.dispatch(.toggleFocusMode) }) {
-                        Image(systemName: "viewfinder")
-                    }
-                                                                                                                                                                         
-                    Button(action: { store.dispatch(.toggleEditMode) }) {
-                        Image(systemName: "checkmark")
-                    }
-                                                                                                                                                                         
-               case .focus:
-                    Image(systemName:
-                        store.state.selectedTool == .eraser ? "eraser" : "pencil"
-                    )
-                                                                                                                                                                         
-                    Button(action: { store.dispatch(.toggleFocusMode) }) {
-                        Image(systemName: "arrow.down.right.and.arrow.up.left")
-                    }
-            }
-        }
-        .padding()
-    }
-    
-    @ViewBuilder
-    func PenToolbar() -> some View {
-        HStack(spacing: 20) {
-            if store.state.mode == .write {
-                Button(action: { store.dispatch(.toolSelected(.pen)) }) {
-                    Image(systemName: "pencil")
-                        .foregroundStyle(store.state.selectedTool == .eraser ? .black : .blue)
-                }
-                
-                Button(action: { store.dispatch(.toolSelected(.eraser)) }) {
-                    Image(systemName: "eraser")
-                        .foregroundStyle(store.state.selectedTool == .eraser ? .blue : .black)
-                }
-            }
-        }
-        .padding()
-    }
-    
-    @ViewBuilder
-    func SaveToolbar() -> some View {
-        HStack {
-            Button(action: {
-                store.dispatch(.save(multiPage.currentMarkups()))
-                router.stack.dismiss()
-            }) {
-                Image(systemName: "chevron.left")
-            }
         }
     }
 }
