@@ -177,7 +177,7 @@ class PageView: UIView {
         case .eraser:
             controller?.drawingTool = PKEraserTool(.bitmap, width: 50)
         case .pen, .pencil, .marker, .lasso:
-            controller?.drawingTool = PKInkingTool(.pen, color: .black, width: 5)
+            controller?.drawingTool = PKInkingTool(.monoline, color: .black, width: 1)
         }
     }
     
