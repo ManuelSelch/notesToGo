@@ -174,16 +174,8 @@ extension MultiPageController: UIScrollViewDelegate {
         scrollView.addSubview(contentView)
     }
     
-    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-        reportVisiblePage()
-    }
-    
-    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
-        reportVisiblePage()
-    }
-    
-    func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
-        reportVisiblePage()
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+       reportVisiblePage()
     }
     
     private func reportVisiblePage() {
