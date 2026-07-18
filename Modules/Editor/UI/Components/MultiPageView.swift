@@ -28,10 +28,13 @@ class MultiPageController: UIViewController {
     private var pageViewsById: [UUID:PageView] = [:]
     /// last visible page (changes when scrolling)
     private var currentPage: UUID? = nil
+    private var didTriggerBottomOverscroll = false
+    private var shouldScrollToNewPageAfterRebuild = false
     
     var onPageChanged: ((UUID) -> Void)?
     var onPencilDoubleTap: (() -> Void)?
     var onScreenWidthChanged: (() -> Void)?
+    var onBottomOverscrolled: (() -> Void)?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -102,7 +105,10 @@ extension MultiPageController {
         contentView.frame = CGRect(x: 0, y: 0, width: contentWidth, height: yOffset)
         scrollView.contentSize = CGSize(width: contentWidth, height: yOffset)
         
-        if let lastNewPage = lastNewPage {
+        if shouldScrollToNewPageAfterRebuild, let lastNewPage = lastNewPage {
+            scrollToPage(lastNewPage, animated: false, alignToTopEdge: true)
+            shouldScrollToNewPageAfterRebuild = false
+        } else if let lastNewPage = lastNewPage {
             scrollToPage(lastNewPage)
         }
         
@@ -164,6 +170,7 @@ extension MultiPageController: UIScrollViewDelegate {
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
        reportVisiblePage()
+       detectBottomOverscroll()
     }
     
     private func reportVisiblePage() {
@@ -188,9 +195,22 @@ extension MultiPageController: UIScrollViewDelegate {
         return nil
     }
     
-    private func scrollToPage(_ pageView: PageView, animated: Bool = true) {
-        // Scroll to the top of the page (with some spacing above)
-        let targetY = max(0, pageView.frame.origin.y - pageSpacing)
+    private func detectBottomOverscroll() {
+        let threshold: CGFloat = 200
+        let overscroll = scrollView.contentOffset.y + scrollView.bounds.height - scrollView.contentSize.height
+        
+        if overscroll > threshold {
+            guard !didTriggerBottomOverscroll else { return }
+            didTriggerBottomOverscroll = true
+            shouldScrollToNewPageAfterRebuild = true
+            onBottomOverscrolled?()
+        } else {
+            didTriggerBottomOverscroll = false
+        }
+    }
+    
+    private func scrollToPage(_ pageView: PageView, animated: Bool = true, alignToTopEdge: Bool = false) {
+        let targetY = max(0, alignToTopEdge ? pageView.frame.origin.y : pageView.frame.origin.y - pageSpacing)
         let maxY = max(0, scrollView.contentSize.height - scrollView.bounds.height)
         let clampedY = min(targetY, maxY)
         let targetOffset = CGPoint(x: 0, y: clampedY)

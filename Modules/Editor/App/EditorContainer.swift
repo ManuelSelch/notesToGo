@@ -60,7 +60,8 @@ struct EditorContainer: View {
                         router.stack.dismiss()
                     },
                     
-                    pencilDoubleTapped: { store.dispatch(.pencilDoubleTap) }
+                    pencilDoubleTapped: { store.dispatch(.pencilDoubleTap) },
+                    bottomOverscrolled: { store.dispatch(.addPageTapped) }
                 )
                 .onChange(of: store.state.note) {
                     // guard let note = store.state.note else { return }

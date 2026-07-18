@@ -20,6 +20,7 @@ struct EditorScreen: View {
     let saveAndCloseTapped: ([UUID: PaperMarkup]) -> Void
     
     let pencilDoubleTapped: () -> Void
+    let bottomOverscrolled: () -> Void
     
     var body: some View {
         MultiPageView(controller: multiPage)
@@ -32,30 +33,42 @@ struct EditorScreen: View {
                 ToolbarItem(placement: .principal) { PenToolbar() }
                 ToolbarItem(placement: .topBarTrailing) { EditToolbar() }
             }
-            .onAppear {
-                multiPage.onPageChanged = { page in
-                    multiPage.selectTool(selectedTool)
-                }
-                multiPage.onPencilDoubleTap = {
-                    guard mode.isDrawing else { return }
-                    pencilDoubleTapped()
-                }
-                multiPage.onScreenWidthChanged = {
-                    guard let document = document else { return }
-                    multiPage.rebuildPages(document, pdf)
-                }
-            }
+            .onAppear(perform: bindControllerCallbacks)
             .onChange(of: document) {
+                bindControllerCallbacks()
                 guard let document = document else { return }
                 multiPage.rebuildPages(document, pdf)
             }
             .onChange(of: mode) {
+                bindControllerCallbacks()
                 multiPage.updateMode(mode)
                 theme.statusBarHidden = (mode == .focus)
             }
             .onChange(of: selectedTool) {
+                bindControllerCallbacks()
                 multiPage.selectTool(selectedTool)
             }
+    }
+}
+
+// MARK: controller binding
+extension EditorScreen {
+    func bindControllerCallbacks() {
+        multiPage.onPageChanged = { _ in
+            multiPage.selectTool(selectedTool)
+        }
+        multiPage.onPencilDoubleTap = {
+            guard mode.isDrawing else { return }
+            pencilDoubleTapped()
+        }
+        multiPage.onScreenWidthChanged = {
+            guard let document = document else { return }
+            multiPage.rebuildPages(document, pdf)
+        }
+        multiPage.onBottomOverscrolled = {
+            guard mode.isDrawing else { return }
+            bottomOverscrolled()
+        }
     }
 }
 
@@ -121,7 +134,8 @@ extension EditorScreen {
         openGridTapped: { _ in },
         saveAndCloseTapped: { _ in },
         
-        pencilDoubleTapped: {}
+        pencilDoubleTapped: {},
+        bottomOverscrolled: {}
     )
 }
 
