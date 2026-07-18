@@ -19,20 +19,20 @@ struct MultiPageView: UIViewControllerRepresentable {
 class MultiPageController: UIViewController {
     private var scrollView: UIScrollView!
     private var contentView: UIView!
-    private var pageViewsById: [UUID:PageView] = [:]
-    /// last visible page (changes when scrolling)
-    private var currentPage: UUID? = nil
-    
     private lazy var pencilInteraction = UIPencilInteraction(delegate: self)
     
     // layout constants
     private let pageSpacing: CGFloat = 10
     private let horizontalPadding: CGFloat = 0
     
+    private var pageViewsById: [UUID:PageView] = [:]
+    /// last visible page (changes when scrolling)
+    private var currentPage: UUID? = nil
+    
     var document: MultiPageDocument? {
         didSet {
             if isViewLoaded {
-                refreshPages()
+                rebuildPages()
             }
         }
     }
@@ -47,36 +47,24 @@ class MultiPageController: UIViewController {
         view.backgroundColor = .systemGray5
         view.addInteraction(pencilInteraction)
         setupScrollView()
-        refreshPages()
+        rebuildPages()
     }
     
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        
+        // rebuild on width change
+        if abs(contentView.bounds.width - view.bounds.width) > 1 {
+            rebuildPages()
+        }
+    }
+}
 
-    private func setupScrollView() {
-        // Single scroll view for everything - only vertical scrolling, no zooming
-        scrollView = UIScrollView(frame: view.bounds)
-        scrollView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        scrollView.backgroundColor = .systemGray5
-        scrollView.showsVerticalScrollIndicator = true
-        scrollView.showsHorizontalScrollIndicator = false
-        scrollView.alwaysBounceVertical = true
-        scrollView.delegate = self
-        
-        // Disable zooming - only scroll
-        scrollView.minimumZoomScale = 1.0
-        scrollView.maximumZoomScale = 1.0
-        scrollView.bouncesZoom = false
-        scrollView.pinchGestureRecognizer?.isEnabled = false
-        
-        view.addSubview(scrollView)
-        
-        // Content view that holds all pages
-        contentView = UIView()
-        contentView.backgroundColor = .clear
-        scrollView.addSubview(contentView)
-    }
-    
-    /// refreshes existing page views with updated data
-    private func refreshPages() {
+
+// MARK: build pages
+extension MultiPageController {
+    /// refreshes existing page views with updated data (after document was set or width changed)
+    private func rebuildPages() {
         guard let document = document else { return }
     
         // --- 1. remove deleted/stale pages
@@ -130,7 +118,7 @@ class MultiPageController: UIViewController {
             scrollToPage(lastNewPage)
         }
         
-        updateCurrentPage()
+        reportVisiblePage()
     }
     
     private func createNewPageView(_ page: Page, pageIndex: Int) -> PageView {
@@ -158,14 +146,52 @@ class MultiPageController: UIViewController {
         let displayHeight = availableWidth * aspectRatio
         return CGSize(width: availableWidth, height: displayHeight)
     }
-    
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
+}
+
+// MARK: - page scrolling
+extension MultiPageController: UIScrollViewDelegate {
+    private func setupScrollView() {
+        // Single scroll view for everything - only vertical scrolling, no zooming
+        scrollView = UIScrollView(frame: view.bounds)
+        scrollView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        scrollView.backgroundColor = .systemGray5
+        scrollView.showsVerticalScrollIndicator = true
+        scrollView.showsHorizontalScrollIndicator = false
+        scrollView.alwaysBounceVertical = true
+        scrollView.delegate = self
         
-        // rebuild on width change
-        if abs(contentView.bounds.width - view.bounds.width) > 1 {
-            refreshPages()
-        }
+        // Disable zooming - only scroll
+        scrollView.minimumZoomScale = 1.0
+        scrollView.maximumZoomScale = 1.0
+        scrollView.bouncesZoom = false
+        scrollView.pinchGestureRecognizer?.isEnabled = false
+        
+        view.addSubview(scrollView)
+        
+        // Content view that holds all pages
+        contentView = UIView()
+        contentView.backgroundColor = .clear
+        scrollView.addSubview(contentView)
+    }
+    
+    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        reportVisiblePage()
+    }
+    
+    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        reportVisiblePage()
+    }
+    
+    func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
+        reportVisiblePage()
+    }
+    
+    private func reportVisiblePage() {
+        guard let currentPage = getCurrentPage() else { return }
+        if(self.currentPage == currentPage) { return }
+        
+        self.currentPage = currentPage
+        onPageChanged?(currentPage)
     }
     
     private func getCurrentPage() -> UUID? {
@@ -181,29 +207,6 @@ class MultiPageController: UIViewController {
         
         return nil
     }
-}
-
-// MARK: - UIScrollViewDelegate
-extension MultiPageController: UIScrollViewDelegate {
-    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-        updateCurrentPage()
-    }
-    
-    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
-        updateCurrentPage()
-    }
-    
-    func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
-        updateCurrentPage()
-    }
-    
-    private func updateCurrentPage() {
-        guard let currentPage = getCurrentPage() else { return }
-        if(self.currentPage == currentPage) { return }
-        
-        self.currentPage = currentPage
-        onPageChanged?(currentPage)
-    }
     
     private func scrollToPage(_ pageView: PageView, animated: Bool = true) {
         // Scroll to the top of the page (with some spacing above)
@@ -214,10 +217,9 @@ extension MultiPageController: UIScrollViewDelegate {
         
         scrollView.setContentOffset(targetOffset, animated: animated)
     }
-    
 }
 
-
+// MARK: - mode & tool
 extension MultiPageController {
     func updateMode(_ mode: EditMode) {
         for (id, pageView) in self.pageViewsById {
@@ -231,7 +233,7 @@ extension MultiPageController {
     }
 }
 
-
+// MARK: - markup
 extension MultiPageController {
     /// returns current markups edited by user
     func currentMarkups() -> [UUID: PaperMarkup] {
@@ -246,6 +248,7 @@ extension MultiPageController {
     }
 }
 
+// MARK: - pencil interaction
 extension MultiPageController: UIPencilInteractionDelegate {
     func pencilInteractionDidTap(_ interaction: UIPencilInteraction) {
         onPencilDoubleTap?()
