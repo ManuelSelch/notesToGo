@@ -18,6 +18,8 @@ struct Note: Identifiable, Hashable, Codable {
 
 /// load & save documents & folders
 class Explorer {
+    static let blankTemplatePDFCreator = "NotesToGo.BlankTemplate"
+    
     let fm = FileManager.default
     
     static let quickNoteFormatter: DateFormatter = {
@@ -127,6 +129,9 @@ class Explorer {
         
         let pdf = PDFDocument()
         pdf.insert(PDFPage(), at: 0)
+        var attributes = pdf.documentAttributes ?? [:]
+        attributes[PDFDocumentAttribute.creatorAttribute] = Self.blankTemplatePDFCreator
+        pdf.documentAttributes = attributes
         pdf.write(to: pdfURL)
         
         return pdfURL

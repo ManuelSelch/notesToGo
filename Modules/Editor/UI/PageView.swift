@@ -3,6 +3,8 @@ import PaperKit
 import PencilKit
 import PDFKit
 
+private let blankTemplatePDFCreator = "NotesToGo.BlankTemplate"
+
 private final class PDFPageBackgroundView: UIView {
     var pdfPage: PDFPage? {
         didSet { setNeedsDisplay() }
@@ -84,7 +86,8 @@ class PageView: UIView {
             markup = page.markup
         }
         
-        backgroundImageView.pdfPage = pdfPage
+        let shouldShowPDF = shouldShowPDFPage(pdfPage)
+        backgroundImageView.pdfPage = shouldShowPDF ? pdfPage : nil
         
         // create new paper markup view controller with correct bounds
         let paperVC = PaperMarkupViewController(
@@ -104,7 +107,7 @@ class PageView: UIView {
         
         // Set content view for PaperKit - this is what shows behind the drawing
         let contentBackgroundView: UIView
-        if pdfPage != nil {
+        if shouldShowPDF {
             let clearView = UIView(frame: bounds)
             clearView.backgroundColor = .clear
             contentBackgroundView = clearView
@@ -121,6 +124,12 @@ class PageView: UIView {
         paperVC.contentView = contentBackgroundView
         
         controller = paperVC
+    }
+    
+    private func shouldShowPDFPage(_ pdfPage: PDFPage?) -> Bool {
+        guard let pdfPage, let document = pdfPage.document else { return false }
+        let creator = document.documentAttributes?[PDFDocumentAttribute.creatorAttribute] as? String
+        return creator != blankTemplatePDFCreator
     }
     
     public func transform(_ scale: CGFloat, to size: CGSize) {
