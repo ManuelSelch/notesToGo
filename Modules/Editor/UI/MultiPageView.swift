@@ -29,8 +29,6 @@ class MultiPageController: UIViewController {
     /// last visible page (changes when scrolling)
     private var currentPage: UUID? = nil
     
-    var pdfDocument: PDFDocument?
-    
     var onPageChanged: ((UUID) -> Void)?
     var onPencilDoubleTap: (() -> Void)?
     var onScreenWidthChanged: (() -> Void)?
@@ -56,7 +54,7 @@ class MultiPageController: UIViewController {
 // MARK: build pages
 extension MultiPageController {
     /// refreshes existing page views with updated data (after document was set or width changed)
-    func rebuildPages(_ document: MultiPageDocument) {
+    func rebuildPages(_ document: MultiPageDocument, _ pdf: PDFDocument?) {
         // --- 1. remove deleted/stale pages
         let validIDs = Set(document.pages.map(\.id))
         let staleIDs = pageViewsById.keys.filter { !validIDs.contains($0) }
@@ -71,7 +69,7 @@ extension MultiPageController {
         var yOffset: CGFloat = pageSpacing
         for (index, page) in document.pages.enumerated() {
             let existingPageView = pageViewsById[page.id]
-            let pageView = existingPageView ?? createNewPageView(page, pageIndex: index)
+            let pageView = existingPageView ?? createNewPageView(page, pdf, pageIndex: index)
             
             // track last added page to scroll to this page
             if existingPageView == nil {
@@ -111,7 +109,7 @@ extension MultiPageController {
         reportVisiblePage()
     }
     
-    private func createNewPageView(_ page: Page, pageIndex: Int) -> PageView {
+    private func createNewPageView(_ page: Page, _ pdf: PDFDocument?, pageIndex: Int) -> PageView {
         let size = displaySize(for: page)
         
         let pageFrame = CGRect(
@@ -122,7 +120,7 @@ extension MultiPageController {
         )
        
         let view = PageView(frame: pageFrame)
-        view.configure(with: page, pdfPage: pdfDocument?.page(at: pageIndex), parentViewController: self)
+        view.configure(with: page, pdfPage: pdf?.page(at: pageIndex), parentViewController: self)
         contentView.addSubview(view)
         
         return view

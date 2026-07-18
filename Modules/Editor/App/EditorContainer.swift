@@ -35,12 +35,8 @@ struct EditorContainer: View {
     
     let route: EditorFeature.Route
     
-    var note: Note {
-        switch route {
-        case let .editor(note), let .quickNote(note), let .grid(note):
-            return note
-        }
-    }
+    var note: Note
+    var pdf: PDFDocument?
     
     init(route: EditorFeature.Route) {
         self.route = route
@@ -50,13 +46,16 @@ struct EditorContainer: View {
         case let .editor(value), let .quickNote(value), let .grid(value):
             note = value
         }
+        let pdf = PDFDocument(url: note.pdf)
         
         var app = EditorApp()
         let store = app.store(for: note)
         self.store = store
+        self.note = note
+        self.pdf = pdf
         
         controller = MultiPageController()
-        controller.pdfDocument = PDFDocument(url: note.pdf)
+        
         controller.onPageChanged = { [weak controller] page in
             controller?.selectTool(store.state.selectedTool)
         }
@@ -66,7 +65,7 @@ struct EditorContainer: View {
         }
         controller.onScreenWidthChanged = { [weak controller] in
             guard let document = store.state.document else { return }
-            controller?.rebuildPages(document)
+            controller?.rebuildPages(document, pdf)
         }
     }
     
@@ -114,7 +113,7 @@ struct EditorContainer: View {
         }
         .onChange(of: store.state.document) {
             guard let document = store.state.document else { return }
-            controller.rebuildPages(document)
+            controller.rebuildPages(document, pdf)
         }
         .onChange(of: store.state.mode) {
             controller.updateMode(store.state.mode)
@@ -126,8 +125,6 @@ struct EditorContainer: View {
     }
     
     func openIfNeeded() {
-        controller.pdfDocument = PDFDocument(url: note.pdf)
-        
         if store.state.path != note.markup || store.state.document == nil {
             store.dispatch(.open(note.markup))
         }
