@@ -7,10 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		97C3AD792F325E77005535E0 /* Dependencies in Frameworks */ = {isa = PBXBuildFile; productRef = 97C3AD782F325E77005535E0 /* Dependencies */; };
 		97C63C922F35F5BA007C45B7 /* Flux in Frameworks */ = {isa = PBXBuildFile; productRef = 97C63C912F35F5BA007C45B7 /* Flux */; };
 		97C63CA82F35F8FF007C45B7 /* FluxTestStore in Frameworks */ = {isa = PBXBuildFile; productRef = 97C63CA72F35F8FF007C45B7 /* FluxTestStore */; };
-		97E9E6D82EF9B246007AEB5F /* Router in Frameworks */ = {isa = PBXBuildFile; productRef = 97E9E6D72EF9B246007AEB5F /* Router */; };
+		97F710B5300BD54900BCD806 /* Dependencies in Frameworks */ = {isa = PBXBuildFile; productRef = 97F710B4300BD54900BCD806 /* Dependencies */; };
+		97F710B7300BD54E00BCD806 /* Router in Frameworks */ = {isa = PBXBuildFile; productRef = 97F710B6300BD54E00BCD806 /* Router */; };
+		97F710B9300BD55300BCD806 /* PulseUI in Frameworks */ = {isa = PBXBuildFile; productRef = 97F710B8300BD55300BCD806 /* PulseUI */; };
+		97F710BB300BD5A400BCD806 /* Pulse in Frameworks */ = {isa = PBXBuildFile; productRef = 97F710BA300BD5A400BCD806 /* Pulse */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -74,9 +76,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				97E9E6D82EF9B246007AEB5F /* Router in Frameworks */,
 				97C63C922F35F5BA007C45B7 /* Flux in Frameworks */,
-				97C3AD792F325E77005535E0 /* Dependencies in Frameworks */,
+				97F710B7300BD54E00BCD806 /* Router in Frameworks */,
+				97F710BB300BD5A400BCD806 /* Pulse in Frameworks */,
+				97F710B9300BD55300BCD806 /* PulseUI in Frameworks */,
+				97F710B5300BD54900BCD806 /* Dependencies in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -143,9 +147,11 @@
 			);
 			name = notesToGo;
 			packageProductDependencies = (
-				97E9E6D72EF9B246007AEB5F /* Router */,
-				97C3AD782F325E77005535E0 /* Dependencies */,
 				97C63C912F35F5BA007C45B7 /* Flux */,
+				97F710B4300BD54900BCD806 /* Dependencies */,
+				97F710B6300BD54E00BCD806 /* Router */,
+				97F710B8300BD55300BCD806 /* PulseUI */,
+				97F710BA300BD5A400BCD806 /* Pulse */,
 			);
 			productName = notesToGo;
 			productReference = 97192D032EF32240000C9F6A /* notesToGo.app */;
@@ -204,9 +210,10 @@
 			mainGroup = 97192CFA2EF32240000C9F6A;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				97E9E6D62EF9B246007AEB5F /* XCRemoteSwiftPackageReference "Router" */,
-				97C3AD772F325E77005535E0 /* XCRemoteSwiftPackageReference "Dependencies" */,
 				97C63C902F35F5BA007C45B7 /* XCRemoteSwiftPackageReference "Flux" */,
+				97F710B1300BD4E400BCD806 /* XCRemoteSwiftPackageReference "Pulse" */,
+				97F710B2300BD52200BCD806 /* XCRemoteSwiftPackageReference "Router" */,
+				97F710B3300BD53E00BCD806 /* XCRemoteSwiftPackageReference "Dependencies" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 97192D042EF32240000C9F6A /* Products */;
@@ -563,14 +570,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		97C3AD772F325E77005535E0 /* XCRemoteSwiftPackageReference "Dependencies" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "git@github.com:ManuelSelch/Dependencies.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.0.0;
-			};
-		};
 		97C63C902F35F5BA007C45B7 /* XCRemoteSwiftPackageReference "Flux" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/ManuelSelch/Flux";
@@ -579,22 +578,33 @@
 				minimumVersion = 1.0.10;
 			};
 		};
-		97E9E6D62EF9B246007AEB5F /* XCRemoteSwiftPackageReference "Router" */ = {
+		97F710B1300BD4E400BCD806 /* XCRemoteSwiftPackageReference "Pulse" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "git@github.com:ManuelSelch/Router.git";
+			repositoryURL = "https://github.com/kean/Pulse";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.2.3;
+			};
+		};
+		97F710B2300BD52200BCD806 /* XCRemoteSwiftPackageReference "Router" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ManuelSelch/Router";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 1.0.10;
 			};
 		};
+		97F710B3300BD53E00BCD806 /* XCRemoteSwiftPackageReference "Dependencies" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ManuelSelch/Dependencies";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		97C3AD782F325E77005535E0 /* Dependencies */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 97C3AD772F325E77005535E0 /* XCRemoteSwiftPackageReference "Dependencies" */;
-			productName = Dependencies;
-		};
 		97C63C912F35F5BA007C45B7 /* Flux */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 97C63C902F35F5BA007C45B7 /* XCRemoteSwiftPackageReference "Flux" */;
@@ -605,10 +615,25 @@
 			package = 97C63C902F35F5BA007C45B7 /* XCRemoteSwiftPackageReference "Flux" */;
 			productName = FluxTestStore;
 		};
-		97E9E6D72EF9B246007AEB5F /* Router */ = {
+		97F710B4300BD54900BCD806 /* Dependencies */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 97E9E6D62EF9B246007AEB5F /* XCRemoteSwiftPackageReference "Router" */;
+			package = 97F710B3300BD53E00BCD806 /* XCRemoteSwiftPackageReference "Dependencies" */;
+			productName = Dependencies;
+		};
+		97F710B6300BD54E00BCD806 /* Router */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 97F710B2300BD52200BCD806 /* XCRemoteSwiftPackageReference "Router" */;
 			productName = Router;
+		};
+		97F710B8300BD55300BCD806 /* PulseUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 97F710B1300BD4E400BCD806 /* XCRemoteSwiftPackageReference "Pulse" */;
+			productName = PulseUI;
+		};
+		97F710BA300BD5A400BCD806 /* Pulse */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 97F710B1300BD4E400BCD806 /* XCRemoteSwiftPackageReference "Pulse" */;
+			productName = Pulse;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

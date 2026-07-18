@@ -1,6 +1,8 @@
 import SwiftUI
 import Dependencies
 import Router
+import Pulse
+import PulseUI
 
 struct SettingsContainer: View {
     @Dependency(\.router) var router
@@ -15,7 +17,7 @@ struct SettingsContainer: View {
                     consoleTapped: { router.sheet?.push(.settings(.console))}
                 )
             case .console:
-                Text("Console")
+                ConsoleView(store: .shared)
             }
             
         }

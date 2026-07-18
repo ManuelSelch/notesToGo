@@ -6,7 +6,7 @@ import Flux
 struct AppContainer: View {
     @Dependency(\.router) var router
     
-    @ObservedObject var editor = EditorApp().build()
+    @StateObject var editor = EditorApp().build()
     
     init() {}
     

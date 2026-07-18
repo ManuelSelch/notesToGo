@@ -3,13 +3,22 @@ import Flux
 import Dependencies
 import Router
 import PDFKit
+import Pulse
+
+class LogMiddleware {
+    func handle(state: EditorFeature.State, action: EditorFeature.Action) async -> EditorFeature.Action? {
+        LoggerStore.shared.storeMessage(label: "Redux", level: .debug, message: "\(action)")
+        return .none
+    }
+}
 
 struct EditorApp {
     func build() -> FluxStore<EditorFeature> {
          return .init(
             state: .init(),
             middlewares: [
-                DocumentMiddleware().handle
+                DocumentMiddleware().handle,
+                LogMiddleware().handle
             ]
         )
     }
