@@ -2,14 +2,6 @@ import SwiftUI
 import Router
 import Dependencies
 
-enum ExplorerRoute: RouteType {
-    case dashboard(path: URL?)
-    case createNoteSheet(path: URL?)
-    case createFolderSheet(path: URL?)
-    
-    var id: Self { self }
-}
-
 struct ExplorerContainer: View {
     @Dependency(\.router) var router
     @Environment(\.scenePhase) private var scenePhase
@@ -18,8 +10,10 @@ struct ExplorerContainer: View {
     @State var newItemName = ""
     
     let explorer = Explorer()
-    
     let route: ExplorerRoute
+    
+    let openNoteTapped: (Note) -> Void
+    let openQuickNoteTapped: (Note) -> Void
     
     var currentFolder: URL? {
         switch route {
@@ -34,7 +28,7 @@ struct ExplorerContainer: View {
             case .dashboard:
                 ExplorerView(
                     docs: $docs,
-                    noteTapped: { note in router.stack.push(.editor(.editor(note))) },
+                    noteTapped: openNoteTapped,
                     folderTapped: { folder in router.stack.push(.explorer(.dashboard(path: folder)))}
                 )
                     .onAppear(perform: reloadDocs)
@@ -100,7 +94,7 @@ struct ExplorerContainer: View {
         Task {
             guard let note = try? await explorer.addNote(at: currentFolder, name: name) else { return }
             closeSheet()
-            router.stack.push(.editor(.editor(note)))
+            openNoteTapped(note)
         }
     }
     
@@ -119,7 +113,7 @@ struct ExplorerContainer: View {
                 guard let inbox = try? explorer.inboxFolder() else { return }
                 guard let note = try? await explorer.addQuickNote(at: inbox) else { return }
                 docs.append(.note(note))
-                router.stack.push(.editor(.quickNote(note)))
+                openQuickNoteTapped(note)
             }
         }) {
             Image(systemName: "square.and.pencil")
@@ -181,8 +175,4 @@ private struct CreateItemSheet: View {
         }
         .presentationDetents([.medium])
     }
-}
-
-#Preview {
-    ExplorerContainer(route: .dashboard(path: nil))
 }

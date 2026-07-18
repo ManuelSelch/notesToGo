@@ -5,6 +5,7 @@ import PaperKit
 nonisolated struct EditorFeature: Feature {
     struct State: Equatable, Sendable {
         var path: URL?
+        var note: Note?
         var document: MultiPageDocument?
         
         var isLoading = false
@@ -42,13 +43,10 @@ nonisolated struct EditorFeature: Feature {
     
     enum Route: RouteType {
         /// main editor screen to read & write
-        case editor(Note)
-        
-        /// quick note opens directly in focus mode
-        case quickNote(Note)
+        case editor
         
         /// page grid to rearrange, copy, and insert pages
-        case grid(Note)
+        case grid
         
         var id: Self { self }
     }

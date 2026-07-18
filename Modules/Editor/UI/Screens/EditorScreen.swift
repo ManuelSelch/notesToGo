@@ -23,6 +23,8 @@ struct EditorScreen: View {
     
     var body: some View {
         MultiPageView(controller: multiPage)
+            .navigationBarBackButtonHidden() // hide native backup button to be able to save note when user clicks back
+            .ignoresSafeArea(.all)
             .toolbar {
                 if mode != .focus {
                     ToolbarItem(placement: .topBarLeading) {
