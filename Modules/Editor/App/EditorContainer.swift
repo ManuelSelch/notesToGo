@@ -5,13 +5,11 @@ import Router
 import PDFKit
 
 struct EditorApp {
-    @Dependency(\.documentRepository) var repo
-    
     func build() -> FluxStore<EditorFeature> {
          return .init(
             state: .init(),
             middlewares: [
-                DocumentMiddleware(repo: repo).handle
+                DocumentMiddleware().handle
             ]
         )
     }

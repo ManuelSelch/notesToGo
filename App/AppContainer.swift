@@ -17,16 +17,8 @@ struct AppContainer: View {
                 case let .explorer(route):
                     ExplorerContainer(
                         route: route,
-                        openNoteTapped: {
-                            editor.dispatch(.open($0.markup))
-                            editor.dispatch(.enableEditMode)
-                            router.stack.push(.editor(.editor))
-                        },
-                        openQuickNoteTapped: {
-                            editor.dispatch(.open($0.markup))
-                            editor.dispatch(.enableFocusMode)
-                            router.stack.push(.editor(.editor))
-                        }
+                        openNoteTapped: { editor.dispatch(.openNote($0)) },
+                        openQuickNoteTapped: { editor.dispatch(.openQuickNote($0)) }
                     )
                 case let .editor(route):
                     EditorContainer(editor, route: route)

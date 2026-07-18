@@ -4,7 +4,6 @@ import PaperKit
 
 nonisolated struct EditorFeature: Feature {
     struct State: Equatable, Sendable {
-        var path: URL?
         var note: Note?
         var document: MultiPageDocument?
         
@@ -17,7 +16,8 @@ nonisolated struct EditorFeature: Feature {
     
     enum Action: Equatable, Sendable {
         // MARK: - document
-        case open(URL)
+        case openNote(Note)
+        case openQuickNote(Note)
         case documentLoaded(MultiPageDocument)
         case addPageTapped
         case insertPage(after: UUID?)
@@ -31,8 +31,6 @@ nonisolated struct EditorFeature: Feature {
         case savedFailed
         
         // MARK: - mode
-        case enableEditMode
-        case enableFocusMode
         case toggleEditMode
         case toggleFocusMode
         
@@ -56,9 +54,17 @@ nonisolated struct EditorFeature: Feature {
     func reduce(_ state: inout State, _ action: Action) {
         switch action {
         // MARK: - document
-        case let .open(path):
-            state.path = path
+        case let .openNote(note):
+            state.note = note
+            state.mode = .write
+            state.selectedTool = .pen
             state.isLoading = true
+        case let .openQuickNote(note):
+            state.note = note
+            state.mode = .focus
+            state.selectedTool = .pen
+            state.isLoading = true
+            
         case let .documentLoaded(doc):
             state.document = doc
             state.isLoading = false
@@ -106,12 +112,6 @@ nonisolated struct EditorFeature: Feature {
             state.isLoading = false
             
         // MARK: - mode
-        case .enableEditMode:
-            state.mode = .write
-            state.selectedTool = .pen // auto select pen when toggling from read to write mode
-        case .enableFocusMode:
-            state.mode = .focus
-            state.selectedTool = .pen
         case .toggleEditMode:
             switch(state.mode) {
             case .read:

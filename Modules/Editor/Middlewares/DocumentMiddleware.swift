@@ -1,22 +1,28 @@
 import Foundation
 import Dependencies
 import Flux
+import Router
 
 class DocumentMiddleware {
-    private var repo: DocumentRepositoryProtocol
+    @Dependency(\.documentRepository) var repo
+    @Dependency(\.router) var router
     
-    init(repo: DocumentRepositoryProtocol) {
-        self.repo = repo
-    }
+    init() {}
     
     func handle(state: EditorFeature.State, action: EditorFeature.Action) async -> EditorFeature.Action? {
         switch(action) {
-        case let .open(path):
-            let doc = (try? await repo.load(path)) ?? .empty
+        case let .openNote(note):
+            router.stack.push(.editor(.editor))
+            let doc = (try? await repo.load(note.markup)) ?? .empty
+            return .documentLoaded(doc)
+            
+        case let .openQuickNote(note):
+            router.stack.push(.editor(.editor))
+            let doc = (try? await repo.load(note.markup)) ?? .empty
             return .documentLoaded(doc)
             
         case .save:
-            guard let doc = state.document, let path = state.path else { break }
+            guard let doc = state.document, let path = state.note?.markup else { break }
             
             do {
                 try await repo.save(doc, at: path)
