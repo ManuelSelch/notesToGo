@@ -29,6 +29,7 @@ struct EditorApp {
 
 struct EditorContainer: View {
     @Dependency(\.router) var router
+    @EnvironmentObject var theme: Theme
     @ObservedObject var store: FluxStore<EditorFeature>
     @State var controller: MultiPageController
     
@@ -112,11 +113,11 @@ struct EditorContainer: View {
         }
         .onChange(of: store.state.mode) {
             controller.updateMode(store.state.mode)
+            theme.statusBarHidden = (store.state.mode == .focus)
         }
         .onChange(of: store.state.selectedTool) {
             controller.selectTool(store.state.selectedTool)
-        }
-        
+        }        
     }
     
     func openIfNeeded() {
