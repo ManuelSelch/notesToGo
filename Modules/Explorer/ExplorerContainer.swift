@@ -116,7 +116,8 @@ struct ExplorerContainer: View {
     func QuickNoteToolbar() -> some View {
         Button(action: {
             Task {
-                guard let note = try? await explorer.addQuickNote(at: currentFolder) else { return }
+                guard let inbox = try? explorer.inboxFolder() else { return }
+                guard let note = try? await explorer.addQuickNote(at: inbox) else { return }
                 docs.append(.note(note))
                 router.stack.push(.editor(.quickNote(note)))
             }

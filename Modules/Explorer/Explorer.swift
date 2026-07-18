@@ -82,6 +82,12 @@ class Explorer {
         return try await addNote(at: folder, name: uniqueName)
     }
     
+    func inboxFolder() throws -> URL {
+        let url = rootFolder().appendingPathComponent("QuickNotes", isDirectory: true)
+        try ensureFolderExists(url)
+        return url
+    }
+    
     func addFolder(at folder: URL? = nil, name: String) throws -> URL {
         let parent = folder ?? rootFolder()
         try ensureFolderExists(parent)
