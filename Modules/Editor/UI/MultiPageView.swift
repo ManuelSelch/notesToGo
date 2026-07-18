@@ -25,8 +25,6 @@ class MultiPageController: UIViewController {
     
     private lazy var pencilInteraction = UIPencilInteraction(delegate: self)
     
-    private var mode: EditMode = .read
-    
     // layout constants
     private let pageSpacing: CGFloat = 10
     private let horizontalPadding: CGFloat = 0
@@ -133,7 +131,6 @@ class MultiPageController: UIViewController {
         }
         
         updateCurrentPage()
-        refreshModeOfPages()
     }
     
     private func createNewPageView(_ page: Page, pageIndex: Int) -> PageView {
@@ -202,11 +199,9 @@ extension MultiPageController: UIScrollViewDelegate {
     
     private func updateCurrentPage() {
         guard let currentPage = getCurrentPage() else { return }
-        
         if(self.currentPage == currentPage) { return }
         
         self.currentPage = currentPage
-        refreshModeOfPages()
         onPageChanged?(currentPage)
     }
     
@@ -225,20 +220,14 @@ extension MultiPageController: UIScrollViewDelegate {
 
 extension MultiPageController {
     func updateMode(_ mode: EditMode) {
-        self.mode = mode
-        refreshModeOfPages()
-    }
-    
-    func selectTool(_ tool: PencilTool) {
-        guard let currentPage, mode.isDrawing else { return }
-        pageViewsById[currentPage]?.selectTool(tool)
-    }
-    
-    /// Updates draw flag for every page
-    private func refreshModeOfPages() {
         for (id, pageView) in self.pageViewsById {
             pageView.updateMode(mode, isCurrentPage: currentPage == id)
         }
+    }
+    
+    func selectTool(_ tool: PencilTool) {
+        guard let currentPage else { return }
+        pageViewsById[currentPage]?.selectTool(tool)
     }
 }
 
