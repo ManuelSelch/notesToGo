@@ -18,6 +18,7 @@ struct EditorApp {
             state: .init(),
             middlewares: [
                 DocumentMiddleware().handle,
+                PageMiddleware().handle,
                 LogMiddleware().handle
             ]
         )
@@ -72,9 +73,9 @@ struct EditorContainer: View {
                 GridScreen(
                     pages: store.state.document?.pages ?? [],
                     hasCopiedPage: store.state.copiedPage != nil,
-                    onAddPage: { store.dispatch(.insertPage(after: $0)) },
+                    onAddPage: { store.dispatch(.insertPageTapped(after: $0)) },
                     onCopyPage: { store.dispatch(.copyPage($0)) },
-                    onPastePage: { store.dispatch(.pastePage(after: $0)) },
+                    onPastePage: { store.dispatch(.pastePageTapped(after: $0)) },
                     onMovePage: { store.dispatch(.movePage(source: $0, destination: $1)) },
                     onDone: { router.stack.dismiss() }
                 )

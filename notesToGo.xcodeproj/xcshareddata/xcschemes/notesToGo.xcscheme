@@ -41,6 +41,17 @@
                ReferencedContainer = "container:notesToGo.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "97F710BF300BEECA00BCD806"
+               BuildableName = "notesToGoUITests.xctest"
+               BlueprintName = "notesToGoUITests"
+               ReferencedContainer = "container:notesToGo.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

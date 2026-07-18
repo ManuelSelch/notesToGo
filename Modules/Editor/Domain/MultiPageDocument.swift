@@ -10,9 +10,9 @@ struct MultiPageDocument: Equatable {
         self.pages = pages
     }
     
-    init(pageCount: Int = 1, template: Page) {
+    init(pageCount: Int = 1, template: @autoclosure () -> Page) {
         for _ in 0..<pageCount {
-            pages.append(template)
+            pages.append(template())
         }
     }
     

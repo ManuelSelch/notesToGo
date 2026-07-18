@@ -20,10 +20,13 @@ nonisolated struct EditorFeature: Feature {
         case openQuickNote(Note)
         case documentLoaded(MultiPageDocument)
         case addPageTapped
-        case insertPage(after: UUID?)
+        case pageAppended(Page)
+        case insertPageTapped(after: UUID?)
+        case pageInserted(after: UUID?, page: Page)
         case movePage(source: UUID, destination: UUID)
         case copyPage(UUID)
-        case pastePage(after: UUID?)
+        case pastePageTapped(after: UUID?)
+        case pagePasted(after: UUID?, page: Page)
         
         // MARK: - save
         case save([UUID:PaperMarkup])
@@ -68,12 +71,12 @@ nonisolated struct EditorFeature: Feature {
         case let .documentLoaded(doc):
             state.document = doc
             state.isLoading = false
-        case .addPageTapped:
-            state.document?.addPage(.empty)
-        case let .insertPage(after: pageID):
+        case let .pageAppended(page):
+            state.document?.addPage(page)
+        case let .pageInserted(after: pageID, page: page):
             guard var pages = state.document?.pages else { break }
             let index = pageID.flatMap { id in pages.firstIndex(where: { $0.id == id }).map { $0 + 1 } } ?? pages.endIndex
-            pages.insert(.empty, at: index)
+            pages.insert(page, at: index)
             state.document?.pages = pages
         case let .movePage(source, destination):
             guard var pages = state.document?.pages,
@@ -87,10 +90,8 @@ nonisolated struct EditorFeature: Feature {
             state.document?.pages = pages
         case let .copyPage(pageID):
             state.copiedPage = state.document?.pages.first(where: { $0.id == pageID })
-        case let .pastePage(after: pageID):
-            guard let copiedPage = state.copiedPage else { break }
+        case let .pagePasted(after: pageID, page: page):
             guard var pages = state.document?.pages else { break }
-            let page = copiedPage.duplicated()
             let index = pageID.flatMap { id in pages.firstIndex(where: { $0.id == id }).map { $0 + 1 } } ?? pages.endIndex
             pages.insert(page, at: index)
             state.document?.pages = pages
