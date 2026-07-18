@@ -31,7 +31,7 @@ struct EditorContainer: View {
     @Dependency(\.router) var router
     @EnvironmentObject var theme: Theme
     @ObservedObject var store: FluxStore<EditorFeature>
-    @State var controller: MultiPageController
+    @State var multiPage: MultiPageController
     
     let route: EditorFeature.Route
     
@@ -54,18 +54,18 @@ struct EditorContainer: View {
         self.note = note
         self.pdf = pdf
         
-        controller = MultiPageController()
+        multiPage = MultiPageController()
         
-        controller.onPageChanged = { [weak controller] page in
-            controller?.selectTool(store.state.selectedTool)
+        multiPage.onPageChanged = { [weak multiPage] page in
+            multiPage?.selectTool(store.state.selectedTool)
         }
-        controller.onPencilDoubleTap = {
+        multiPage.onPencilDoubleTap = {
             guard store.state.mode.isDrawing else { return }
             store.dispatch(.pencilDoubleTap)
         }
-        controller.onScreenWidthChanged = { [weak controller] in
+        multiPage.onScreenWidthChanged = { [weak multiPage] in
             guard let document = store.state.document else { return }
-            controller?.rebuildPages(document, pdf)
+            multiPage?.rebuildPages(document, pdf)
         }
     }
     
@@ -73,7 +73,7 @@ struct EditorContainer: View {
         VStack {
             switch(route) {
             case .editor, .quickNote:
-                MultiPageView(controller: controller)
+                MultiPageView(controller: multiPage)
                     .onAppear(perform: openIfNeeded)
                     .onAppear(perform: applyInitialMode)
                     .toolbar {
@@ -103,7 +103,7 @@ struct EditorContainer: View {
                     onPastePage: { store.dispatch(.pastePage(after: $0)) },
                     onMovePage: { store.dispatch(.movePage(source: $0, destination: $1)) },
                     onDone: {
-                        store.dispatch(.save(controller.currentMarkups()))
+                        store.dispatch(.save(multiPage.currentMarkups()))
                         router.stack.dismiss()
                     }
                 )
@@ -113,15 +113,15 @@ struct EditorContainer: View {
         }
         .onChange(of: store.state.document) {
             guard let document = store.state.document else { return }
-            controller.rebuildPages(document, pdf)
+            multiPage.rebuildPages(document, pdf)
         }
         .onChange(of: store.state.mode) {
-            controller.updateMode(store.state.mode)
+            multiPage.updateMode(store.state.mode)
             theme.statusBarHidden = (store.state.mode == .focus)
         }
         .onChange(of: store.state.selectedTool) {
-            controller.selectTool(store.state.selectedTool)
-        }        
+            multiPage.selectTool(store.state.selectedTool)
+        }
     }
     
     func openIfNeeded() {
@@ -152,7 +152,7 @@ struct EditorContainer: View {
                                                                                                                                                                          
                case .write:
                     Button(action: {
-                        store.dispatch(.save(controller.currentMarkups()))
+                        store.dispatch(.save(multiPage.currentMarkups()))
                         router.stack.push(.editor(.grid(note)))
                     }) {
                         Image(systemName: "square.grid.2x2")
@@ -206,7 +206,7 @@ struct EditorContainer: View {
     func SaveToolbar() -> some View {
         HStack {
             Button(action: {
-                store.dispatch(.save(controller.currentMarkups()))
+                store.dispatch(.save(multiPage.currentMarkups()))
                 router.stack.dismiss()
             }) {
                 Image(systemName: "chevron.left")
