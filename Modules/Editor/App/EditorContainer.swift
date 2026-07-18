@@ -55,15 +55,17 @@ struct EditorContainer: View {
         let store = app.store(for: note)
         self.store = store
         
-        controller = MultiPageController(
-            onPageChanged: { _ in }
-        )
+        controller = MultiPageController()
+        controller.document = store.state.document
         controller.pdfDocument = PDFDocument(url: note.pdf)
+        controller.onPageChanged = { [weak controller] page in
+            controller?.selectTool(store.state.selectedTool)
+        }
         controller.onPencilDoubleTap = {
             guard store.state.mode.isDrawing else { return }
             store.dispatch(.pencilDoubleTap)
         }
-        controller.document = store.state.document
+        
     }
     
     var body: some View {

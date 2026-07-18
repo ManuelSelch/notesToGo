@@ -24,10 +24,8 @@ class MultiPageController: UIViewController {
     private var currentPage: UUID? = nil
     
     private lazy var pencilInteraction = UIPencilInteraction(delegate: self)
-    var onPencilDoubleTap: (() -> Void)?
     
     private var mode: EditMode = .read
-    private var currentTool: PencilTool = .pen
     
     // layout constants
     private let pageSpacing: CGFloat = 10
@@ -43,19 +41,8 @@ class MultiPageController: UIViewController {
     
     var pdfDocument: PDFDocument?
     
-    var onPageChanged: (UUID) -> Void
-    
-    init(
-        onPageChanged: @escaping (UUID) -> Void
-    ) {
-        self.onPageChanged = onPageChanged
-        
-        super.init(nibName: nil, bundle: nil)
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
+    var onPageChanged: ((UUID) -> Void)?
+    var onPencilDoubleTap: (() -> Void)?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -147,7 +134,6 @@ class MultiPageController: UIViewController {
         
         updateCurrentPage()
         refreshModeOfPages()
-        applyCurrentToolToCurrentPage()
     }
     
     private func createNewPageView(_ page: Page, pageIndex: Int) -> PageView {
@@ -221,8 +207,7 @@ extension MultiPageController: UIScrollViewDelegate {
         
         self.currentPage = currentPage
         refreshModeOfPages()
-        applyCurrentToolToCurrentPage()
-        onPageChanged(currentPage)
+        onPageChanged?(currentPage)
     }
     
     private func scrollToPage(_ pageView: PageView, animated: Bool = true) {
@@ -242,12 +227,11 @@ extension MultiPageController {
     func updateMode(_ mode: EditMode) {
         self.mode = mode
         refreshModeOfPages()
-        applyCurrentToolToCurrentPage()
     }
     
     func selectTool(_ tool: PencilTool) {
-        currentTool = tool
-        applyCurrentToolToCurrentPage()
+        guard let currentPage, mode.isDrawing else { return }
+        pageViewsById[currentPage]?.selectTool(tool)
     }
     
     /// Updates draw flag for every page
@@ -255,11 +239,6 @@ extension MultiPageController {
         for (id, pageView) in self.pageViewsById {
             pageView.updateMode(mode, isCurrentPage: currentPage == id)
         }
-    }
-    
-    private func applyCurrentToolToCurrentPage() {
-        guard let currentPage, mode.isDrawing else { return }
-        pageViewsById[currentPage]?.selectTool(currentTool)
     }
 }
 
