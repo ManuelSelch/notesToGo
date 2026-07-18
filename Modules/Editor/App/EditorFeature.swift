@@ -9,8 +9,11 @@ nonisolated struct EditorFeature: Feature {
         
         var isLoading = false
         var mode: EditMode = .read
-        var selectedTool: PencilTool = .pen
-        var previousInkTool: PencilTool = .pen
+        
+        var penSize: CGFloat = 1
+        var selectedTool: PencilTool = .pen(1)
+        var previousInkTool: PencilTool = .pen(1)
+        
         var copiedPage: Page?
     }
     
@@ -38,6 +41,7 @@ nonisolated struct EditorFeature: Feature {
         case toggleFocusMode
         
         // MARK: - tool
+        case penSizeLoaded(CGFloat)
         case toolSelected(PencilTool)
         case pencilDoubleTap
     }
@@ -60,12 +64,10 @@ nonisolated struct EditorFeature: Feature {
         case let .openNote(note):
             state.note = note
             state.mode = .write
-            state.selectedTool = .pen
             state.isLoading = true
         case let .openQuickNote(note):
             state.note = note
             state.mode = .focus
-            state.selectedTool = .pen
             state.isLoading = true
             
         case let .documentLoaded(doc):
@@ -114,7 +116,7 @@ nonisolated struct EditorFeature: Feature {
             switch(state.mode) {
             case .read:
                 state.mode = .write
-                state.selectedTool = .pen // auto select pen when toggling from read to write mode
+                state.selectedTool = .pen(state.penSize) // auto select pen when toggling from read to write mode
             case .write:
                 state.mode = .read
             case .focus:
@@ -124,6 +126,9 @@ nonisolated struct EditorFeature: Feature {
             state.mode = toggleFocusMode(state.mode)
             
         // MARK: - tool
+        case let .penSizeLoaded(size):
+            state.penSize = size
+            state.selectedTool = .pen(size)
         case let .toolSelected(tool):
             state.selectedTool = tool
             if tool != .eraser {

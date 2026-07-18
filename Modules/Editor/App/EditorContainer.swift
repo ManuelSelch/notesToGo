@@ -5,21 +5,22 @@ import Router
 import PDFKit
 import Pulse
 
-class LogMiddleware {
-    func handle(state: EditorFeature.State, action: EditorFeature.Action) async -> EditorFeature.Action? {
+class LogMiddleware<F> where F:Feature {
+    func handle(state: F.State, action: F.Action) async -> F.Action? {
         LoggerStore.shared.storeMessage(label: "Redux", level: .debug, message: "\(action)")
         return .none
     }
 }
 
 struct EditorApp {
-    func build() -> FluxStore<EditorFeature> {
+    func build(editor: EditorConfig) -> FluxStore<EditorFeature> {
          return .init(
             state: .init(),
             middlewares: [
                 DocumentMiddleware().handle,
                 PageMiddleware().handle,
-                LogMiddleware().handle
+                MarkupMiddleware(editor: editor).handle,
+                LogMiddleware<EditorFeature>().handle
             ]
         )
     }

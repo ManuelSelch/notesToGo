@@ -89,7 +89,7 @@ extension EditorScreen {
         HStack(spacing: 20) {
             if mode == .write {
                 SimpleButton(
-                    "pencil", action: { toolSelected(.pen) },
+                    "pencil", action: { toolSelected(.pen(1)) },
                     color: selectedTool == .eraser ? .black : .blue
                 )
                 
@@ -127,7 +127,7 @@ extension EditorScreen {
         document: MultiPageDocument(),
         pdf: PDFDocument(),
         mode: .write,
-        selectedTool: .pen,
+        selectedTool: .pen(1),
         
         editModeToggled: {},
         focusModeToggled: {},
