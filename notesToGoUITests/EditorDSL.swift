@@ -36,13 +36,19 @@ struct EditorDSL {
         openGridButton.tap()
     }
 
-    func scrollBelowLastPage(file: StaticString = #filePath, line: UInt = #line) {
+    func scrollToBottom(file: StaticString = #filePath, line: UInt = #line) {
         XCTAssertTrue(pagesScrollView.waitForExistence(timeout: 2), file: file, line: line)
-
+        
         for _ in 0..<5 {
             pagesScrollView.swipeUp()
         }
-
+        
+        RunLoop.current.run(until: Date().addingTimeInterval(0.5))
+    }
+    
+    func dragPage(file: StaticString = #filePath, line: UInt = #line) {
+        XCTAssertTrue(pagesScrollView.waitForExistence(timeout: 2), file: file, line: line)
+        
         let start = pagesScrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.9))
         let end = pagesScrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1))
         start.press(forDuration: 0.01, thenDragTo: end)

@@ -66,7 +66,8 @@ final class notesToGoUITests: XCTestCase {
         app.grid.done()
         app.editor.thenIsVisible()
 
-        app.editor.scrollBelowLastPage()
+        app.editor.scrollToBottom()
+        app.editor.dragPage()
         app.editor.openGrid()
         app.grid.thenPageCountIs(2)
     }
@@ -78,8 +79,9 @@ final class notesToGoUITests: XCTestCase {
         app.editor.thenIsVisible()
         app.editor.thenIsInWriteMode()
 
-        app.editor.scrollBelowLastPage()
-        app.editor.scrollBelowLastPage()
+        app.editor.scrollToBottom()
+        app.editor.dragPage()
+        app.editor.dragPage()
 
         app.editor.openGrid()
         app.grid.thenPageCountIs(3)

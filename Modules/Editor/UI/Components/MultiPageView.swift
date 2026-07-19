@@ -199,7 +199,11 @@ extension MultiPageController: UIScrollViewDelegate {
     
     private func detectBottomOverscroll() {
         let threshold: CGFloat = 200
-        let overscroll = scrollView.contentOffset.y + scrollView.bounds.height - scrollView.contentSize.height
+        let maxOffsetY = max(
+            -scrollView.adjustedContentInset.top,
+            scrollView.contentSize.height - scrollView.bounds.height + scrollView.adjustedContentInset.bottom
+        )
+        let overscroll = scrollView.contentOffset.y - maxOffsetY
         
         if overscroll > threshold {
             guard !didTriggerBottomOverscroll else { return }
