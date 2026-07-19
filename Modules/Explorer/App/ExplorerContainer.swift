@@ -58,7 +58,9 @@ struct ExplorerContainer: View {
                     store.dispatch(.reloadDocs(currentFolder))
                 }
                 .toolbar {
-                    ToolbarItemGroup(placement: .topBarLeading) { LeftToolbar() }
+                    if(currentFolder == nil) {
+                        ToolbarItemGroup(placement: .topBarLeading) { LeftToolbar() }
+                    }
                     ToolbarItemGroup(placement: .topBarTrailing) { RightToolbar() }
                 }
 
@@ -119,10 +121,7 @@ extension ExplorerContainer {
     @ViewBuilder
     func LeftToolbar() -> some View {
         HStack {
-            if currentFolder == nil {
-                SimpleButton("gear", action: { router.presentSheet(.settings(.settings)) })
-            }
-            
+            SimpleButton("gear", action: { router.presentSheet(.settings(.settings)) })
         }
     }
 
