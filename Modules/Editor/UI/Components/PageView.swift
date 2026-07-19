@@ -123,6 +123,7 @@ class PageView: UIView {
                 scrollView.bouncesZoom = false
                 scrollView.minimumZoomScale = 1.0
                 scrollView.maximumZoomScale = 1.0
+                scrollView.scrollsToTop = false
                 scrollView.pinchGestureRecognizer?.isEnabled = false
                 scrollView.panGestureRecognizer.isEnabled = false
             }

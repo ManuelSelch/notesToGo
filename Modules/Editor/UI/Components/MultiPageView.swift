@@ -19,6 +19,7 @@ struct MultiPageView: UIViewControllerRepresentable {
 class MultiPageController: UIViewController {
     private var scrollView: UIScrollView!
     private var contentView: UIView!
+    private let currentPageIndicatorView = UIView()
     private lazy var pencilInteraction = UIPencilInteraction(delegate: self)
     
     // layout constants
@@ -26,6 +27,7 @@ class MultiPageController: UIViewController {
     private let horizontalPadding: CGFloat = 0
     
     private var pageViewsById: [UUID:PageView] = [:]
+    private var pageOrder: [UUID] = []
     /// last visible page (changes when scrolling)
     private var currentPage: UUID? = nil
     private var didTriggerBottomOverscroll = false
@@ -58,6 +60,8 @@ class MultiPageController: UIViewController {
 extension MultiPageController {
     /// refreshes existing page views with updated data (after document was set or width changed)
     func rebuildPages(_ document: MultiPageDocument, _ pdf: PDFDocument?) {
+        pageOrder = document.pages.map(\.id)
+
         // --- 1. remove deleted/stale pages
         let validIDs = Set(document.pages.map(\.id))
         let staleIDs = pageViewsById.keys.filter { !validIDs.contains($0) }
@@ -153,6 +157,7 @@ extension MultiPageController: UIScrollViewDelegate {
         scrollView.showsVerticalScrollIndicator = true
         scrollView.showsHorizontalScrollIndicator = false
         scrollView.alwaysBounceVertical = true
+        scrollView.scrollsToTop = false
         scrollView.delegate = self
         
         // Disable zooming - only scroll
@@ -168,6 +173,14 @@ extension MultiPageController: UIScrollViewDelegate {
         contentView.backgroundColor = .clear
         contentView.accessibilityIdentifier = "editor.pagesContentView"
         scrollView.addSubview(contentView)
+
+        currentPageIndicatorView.isAccessibilityElement = true
+        currentPageIndicatorView.accessibilityIdentifier = "editor.currentPageIndicator"
+        currentPageIndicatorView.accessibilityLabel = "Current page"
+        currentPageIndicatorView.accessibilityValue = "1"
+        currentPageIndicatorView.frame = CGRect(x: 0, y: 0, width: 1, height: 1)
+        currentPageIndicatorView.backgroundColor = .clear
+        view.addSubview(currentPageIndicatorView)
     }
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
@@ -177,10 +190,16 @@ extension MultiPageController: UIScrollViewDelegate {
     
     private func reportVisiblePage() {
         guard let currentPage = getCurrentPage() else { return }
+        updateCurrentPageIndicator(currentPage)
         if(self.currentPage == currentPage) { return }
         
         self.currentPage = currentPage
         onPageChanged?(currentPage)
+    }
+
+    private func updateCurrentPageIndicator(_ pageID: UUID) {
+        guard let index = pageOrder.firstIndex(of: pageID) else { return }
+        currentPageIndicatorView.accessibilityValue = String(index + 1)
     }
     
     private func getCurrentPage() -> UUID? {

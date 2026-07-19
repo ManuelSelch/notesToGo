@@ -6,6 +6,7 @@ struct EditorDSL {
     var closeButton: XCUIElement { app.buttons["editor.closeButton"] }
     var openGridButton: XCUIElement { app.buttons["editor.openGridButton"] }
     var pagesScrollView: XCUIElement { app.scrollViews["editor.pagesScrollView"] }
+    var currentPageIndicator: XCUIElement { app.otherElements["editor.currentPageIndicator"] }
     var enterFocusModeButton: XCUIElement { app.buttons["editor.enterFocusModeButton"] }
     var exitFocusModeButton: XCUIElement { app.buttons["editor.exitFocusModeButton"] }
 
@@ -54,6 +55,34 @@ struct EditorDSL {
         start.press(forDuration: 0.01, thenDragTo: end)
 
         RunLoop.current.run(until: Date().addingTimeInterval(0.5))
+    }
+
+    func thenCurrentPageIs(_ expectedPage: Int, file: StaticString = #filePath, line: UInt = #line) {
+        XCTAssertTrue(currentPageIndicator.waitForExistence(timeout: 2), file: file, line: line)
+
+        let deadline = Date().addingTimeInterval(2)
+        while Date() < deadline {
+            if let value = currentPageIndicator.value as? String, value == String(expectedPage) {
+                return
+            }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        }
+
+        XCTAssertEqual(currentPageIndicator.value as? String, String(expectedPage), file: file, line: line)
+    }
+
+    func scrollUntilCurrentPageIs(_ expectedPage: Int, maxSwipes: Int = 6, file: StaticString = #filePath, line: UInt = #line) {
+        XCTAssertTrue(pagesScrollView.waitForExistence(timeout: 2), file: file, line: line)
+
+        for _ in 0..<maxSwipes {
+            if let value = currentPageIndicator.value as? String, value == String(expectedPage) {
+                return
+            }
+            pagesScrollView.swipeUp()
+            RunLoop.current.run(until: Date().addingTimeInterval(0.3))
+        }
+
+        thenCurrentPageIs(expectedPage, file: file, line: line)
     }
 
     func close(file: StaticString = #filePath, line: UInt = #line) {

@@ -47,4 +47,24 @@ final class EditorFlowUITests: BaseUITestCase {
         app.editor.openGrid()
         app.grid.thenPageCountIs(3)
     }
+
+    func test_tappingTopEdge_doesNotScrollBackToFirstPage() throws {
+        let noteName = "AT Top Edge \(UUID().uuidString.prefix(8))"
+
+        app.explorer.createNote(named: noteName)
+        app.editor.thenIsVisible()
+
+        app.editor.openGrid()
+        app.grid.addPage()
+        app.grid.addPage()
+        app.grid.done()
+
+        app.editor.thenIsVisible()
+        app.editor.thenCurrentPageIs(1)
+        app.editor.scrollUntilCurrentPageIs(2)
+        app.editor.thenCurrentPageIs(2)
+
+        app.tapTopEdge()
+        app.editor.thenCurrentPageIs(2)
+    }
 }
