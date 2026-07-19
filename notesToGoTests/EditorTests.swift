@@ -5,6 +5,7 @@ import FluxTestStore
 
 @testable import notesToGo
 
+@Suite(.serialized)
 @MainActor
 class EditorTests {
     // MARK: - setup
