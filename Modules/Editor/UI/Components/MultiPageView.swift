@@ -149,6 +149,7 @@ extension MultiPageController: UIScrollViewDelegate {
         scrollView = UIScrollView(frame: view.bounds)
         scrollView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         scrollView.backgroundColor = .systemGray5
+        scrollView.accessibilityIdentifier = "editor.pagesScrollView"
         scrollView.showsVerticalScrollIndicator = true
         scrollView.showsHorizontalScrollIndicator = false
         scrollView.alwaysBounceVertical = true
@@ -165,6 +166,7 @@ extension MultiPageController: UIScrollViewDelegate {
         // Content view that holds all pages
         contentView = UIView()
         contentView.backgroundColor = .clear
+        contentView.accessibilityIdentifier = "editor.pagesContentView"
         scrollView.addSubview(contentView)
     }
     

@@ -29,6 +29,8 @@ struct GridScreen: View {
                             thumbnailSize: thumbnailSize,
                             isSelected: selectedPageID == page.id
                         )
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityIdentifier("editor.grid.pageThumbnail")
                         .contentShape(Rectangle())
                         .onTapGesture {
                             selectedPageID = page.id
@@ -60,6 +62,7 @@ struct GridScreen: View {
                     } label: {
                         Label("Add", systemImage: "plus.rectangle.portrait")
                     }
+                    .accessibilityIdentifier("editor.grid.addPageButton")
                     
                     Button {
                         guard let selectedPageID else { return }
@@ -81,6 +84,7 @@ struct GridScreen: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Done", action: onDone)
                     .buttonStyle(.borderedProminent)
+                    .accessibilityIdentifier("editor.grid.doneButton")
             }
         }
         .onAppear {

@@ -5,6 +5,7 @@ struct AppDSL {
 
     var explorer: ExplorerDSL { .init(app: app) }
     var editor: EditorDSL { .init(app: app) }
+    var grid: GridDSL { .init(app: app) }
 
     init() {
         self.app = XCUIApplication()

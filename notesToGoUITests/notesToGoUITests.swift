@@ -1,16 +1,16 @@
 import XCTest
 
 final class notesToGoUITests: XCTestCase {
+    var app: AppDSL!
+
     override func setUpWithError() throws {
         continueAfterFailure = false
+        app = AppDSL()
+        app.launch()
     }
 
-    @MainActor
     func test_createNote_opensEditor_andAfterGoingBack_noteIsVisibleInExplorer() throws {
-        let app = AppDSL()
         let noteName = "AT Note \(UUID().uuidString.prefix(8))"
-
-        app.launch()
 
         app.explorer.createNote(named: noteName)
         app.editor.thenIsVisible()
@@ -19,12 +19,8 @@ final class notesToGoUITests: XCTestCase {
         app.explorer.thenNoteIsVisible(named: noteName)
     }
 
-    @MainActor
     func test_createFolder_andAfterGoingBack_folderIsVisibleInExplorer() throws {
-        let app = AppDSL()
         let folderName = "AT Folder \(UUID().uuidString.prefix(8))"
-
-        app.launch()
 
         app.explorer.createFolder(named: folderName)
         app.explorer.goBack()
@@ -32,12 +28,8 @@ final class notesToGoUITests: XCTestCase {
         app.explorer.thenFolderIsVisible(named: folderName)
     }
 
-    @MainActor
     func test_openExistingNote_opensEditor() throws {
-        let app = AppDSL()
         let noteName = "AT Existing Note \(UUID().uuidString.prefix(8))"
-
-        app.launch()
 
         app.explorer.createNote(named: noteName)
         app.editor.thenIsVisible()
@@ -48,12 +40,8 @@ final class notesToGoUITests: XCTestCase {
         app.editor.thenIsVisible()
     }
 
-    @MainActor
     func test_focusModeRoundtrip_returnsToWriteMode() throws {
-        let app = AppDSL()
         let noteName = "AT Focus Note \(UUID().uuidString.prefix(8))"
-
-        app.launch()
 
         app.explorer.createNote(named: noteName)
         app.editor.thenIsVisible()
@@ -64,5 +52,36 @@ final class notesToGoUITests: XCTestCase {
 
         app.editor.exitFocusMode()
         app.editor.thenIsInWriteMode()
+    }
+
+    func test_overscrollInWriteMode_addsOnePage() throws {
+        let noteName = "AT Overscroll One \(UUID().uuidString.prefix(8))"
+
+        app.explorer.createNote(named: noteName)
+        app.editor.thenIsVisible()
+        app.editor.thenIsInWriteMode()
+
+        app.editor.openGrid()
+        app.grid.thenPageCountIs(1)
+        app.grid.done()
+        app.editor.thenIsVisible()
+
+        app.editor.scrollBelowLastPage()
+        app.editor.openGrid()
+        app.grid.thenPageCountIs(2)
+    }
+
+    func test_overscrollTwice_addsTwoPages() throws {
+        let noteName = "AT Overscroll Two \(UUID().uuidString.prefix(8))"
+
+        app.explorer.createNote(named: noteName)
+        app.editor.thenIsVisible()
+        app.editor.thenIsInWriteMode()
+
+        app.editor.scrollBelowLastPage()
+        app.editor.scrollBelowLastPage()
+
+        app.editor.openGrid()
+        app.grid.thenPageCountIs(3)
     }
 }

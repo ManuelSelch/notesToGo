@@ -111,6 +111,7 @@ extension EditorScreen {
                 SimpleButton("square.and.pencil", action: editModeToggled)
             case .write:
                 SimpleButton("square.grid.2x2", action: {openGridTapped(multiPage.currentMarkups())})
+                    .accessibilityIdentifier("editor.openGridButton")
                 SimpleButton("plus.rectangle.portrait", action: addPageTapped)
                 SimpleButton("viewfinder", action: focusModeToggled)
                     .accessibilityIdentifier("editor.enterFocusModeButton")
