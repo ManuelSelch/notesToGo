@@ -4,10 +4,11 @@ struct CreateItemSheet: View {
     let title: String
     let placeholder: String
     let buttonTitle: String
-    @Binding var name: String
+    let name: String
     let locationName: String?
     let textFieldAccessibilityIdentifier: String
     let confirmButtonAccessibilityIdentifier: String
+    let nameChanged: (String) -> Void
     let onCancel: () -> Void
     let onCreate: () -> Void
     
@@ -18,8 +19,11 @@ struct CreateItemSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                TextField(placeholder, text: $name)
-                    .accessibilityIdentifier(textFieldAccessibilityIdentifier)
+                TextField(
+                    placeholder,
+                    text: Binding(get: { name }, set: nameChanged)
+                )
+                .accessibilityIdentifier(textFieldAccessibilityIdentifier)
                 
                 if let locationName {
                     LabeledContent("Location", value: locationName)

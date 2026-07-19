@@ -61,14 +61,27 @@ struct GridDSL {
         XCTAssertFalse(previousOrder.contains(insertedID), file: file, line: line)
     }
 
-    private func pageIDsInOrder() -> [String] {
+    func pageIDsInOrder() -> [String] {
         pageThumbnails.allElementsBoundByIndex.compactMap { element in
             let prefix = "editor.grid.page."
             guard element.identifier.hasPrefix(prefix) else { return nil }
             return String(element.identifier.dropFirst(prefix.count))
         }
     }
-    
+
+    func thenPageOrderIs(_ expectedOrder: [String], file: StaticString = #filePath, line: UInt = #line) {
+        thenIsVisible(file: file, line: line)
+
+        let deadline = Date().addingTimeInterval(2)
+        while Date() < deadline {
+            if pageIDsInOrder() == expectedOrder {
+                return
+            }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        }
+
+        XCTAssertEqual(pageIDsInOrder(), expectedOrder, file: file, line: line)
+    }
     
     func done(file: StaticString = #filePath, line: UInt = #line) {
         thenIsVisible(file: file, line: line)

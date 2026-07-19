@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ExplorerScreen: View {
-    @Binding var docs: [Document]
+    let docs: [Document]
     
     let noteTapped: (Note) -> ()
     let folderTapped: (URL) -> ()
@@ -68,12 +68,12 @@ private struct CardContent: View {
 
 #Preview {
     ExplorerScreen(
-        docs: .constant([
+        docs: [
             .folder(.dummy("Folder A")),
             .note(.init(pdf: .dummy("File A.pdf"), markup: .dummy(".File A.markup"))),
             .folder(.dummy("Folder B")),
             .note(.init(pdf: .dummy("File B.pdf"), markup: .dummy(".File B.markup"))),
-        ]),
+        ],
         
         noteTapped: { _ in },
         folderTapped: { _ in }

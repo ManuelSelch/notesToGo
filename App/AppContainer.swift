@@ -8,6 +8,7 @@ let config = EditorConfig()
 struct AppContainer: View {
     @Dependency(\.router) var router
     
+    @StateObject var explorer = ExplorerApp().build()
     @StateObject var editor = EditorApp().build(editor: config)
     @StateObject var settings = SettingsApp().build(editor: config)
     
@@ -17,7 +18,7 @@ struct AppContainer: View {
                 switch route {
                 case let .explorer(route):
                     ExplorerContainer(
-                        route: route,
+                        explorer, route: route,
                         openNoteTapped: { editor.dispatch(.openNote($0)) },
                         openQuickNoteTapped: { editor.dispatch(.openQuickNote($0)) }
                     )

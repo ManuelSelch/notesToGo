@@ -42,7 +42,7 @@ struct PageThumbnailView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
-        .task(id: page.id) {
+        .task(id: "\(page.id)-\(pageIndex)") {
             image = await makeThumbnail(page: page, thumbnailSize: thumbnailSize)
         }
     }

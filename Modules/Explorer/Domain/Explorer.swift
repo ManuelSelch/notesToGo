@@ -2,14 +2,14 @@ import Foundation
 import PDFKit
 import PaperKit
 
-enum Document: Identifiable, Hashable {
+enum Document: Identifiable, Hashable, Sendable {
     case note(Note)
     case folder(URL)
     
     var id: Self { self }
 }
 
-struct Note: Identifiable, Hashable, Codable {
+struct Note: Identifiable, Hashable, Codable, Sendable {
     let pdf: URL
     let markup: URL
     

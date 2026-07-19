@@ -9,7 +9,7 @@ struct ExplorerDSL {
     var folderNameField: XCUIElement { app.textFields["explorer.createFolder.nameField"] }
     var confirmCreateNoteButton: XCUIElement { app.buttons["explorer.createNote.confirmButton"] }
     var confirmCreateFolderButton: XCUIElement { app.buttons["explorer.createFolder.confirmButton"] }
-    var backButton: XCUIElement { app.buttons["explorer.backButton"] }
+    var backButton: XCUIElement { app.navigationBars.buttons.firstMatch }
 
     func createNote(named name: String, file: StaticString = #filePath, line: UInt = #line) {
         XCTAssertTrue(createNoteButton.waitForExistence(timeout: 2), file: file, line: line)
