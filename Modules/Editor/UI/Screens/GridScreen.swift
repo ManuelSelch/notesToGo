@@ -30,7 +30,9 @@ struct GridScreen: View {
                             isSelected: selectedPageID == page.id
                         )
                         .accessibilityElement(children: .ignore)
-                        .accessibilityIdentifier("editor.grid.pageThumbnail")
+                        .accessibilityIdentifier("editor.grid.page.\(page.id.uuidString)")
+                        .accessibilityLabel("Page \(index + 1)")
+                        .accessibilityValue(selectedPageID == page.id ? "selected" : "not_selected")
                         .contentShape(Rectangle())
                         .onTapGesture {
                             selectedPageID = page.id
