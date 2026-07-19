@@ -113,10 +113,12 @@ extension EditorScreen {
                 SimpleButton("square.grid.2x2", action: {openGridTapped(multiPage.currentMarkups())})
                 SimpleButton("plus.rectangle.portrait", action: addPageTapped)
                 SimpleButton("viewfinder", action: focusModeToggled)
+                    .accessibilityIdentifier("editor.enterFocusModeButton")
                 SimpleButton("checkmark", action: editModeToggled)
             case .focus:
                 Image(systemName: selectedTool == .eraser ? "eraser" : "pencil")
                 SimpleButton("arrow.down.right.and.arrow.up.left", action: focusModeToggled)
+                    .accessibilityIdentifier("editor.exitFocusModeButton")
             }
         }
         .padding()

@@ -41,6 +41,7 @@ struct ExplorerScreen: View {
                 )
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier("explorer.folder.\(folder.lastPathComponent)")
         }
     }
 }

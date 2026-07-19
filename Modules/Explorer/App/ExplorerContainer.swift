@@ -112,6 +112,10 @@ extension ExplorerContainer {
     @ViewBuilder
     func LeftToolbar() -> some View {
         HStack {
+            if currentFolder != nil {
+                SimpleButton("chevron.left", action: { router.stack.dismiss() })
+                    .accessibilityIdentifier("explorer.backButton")
+            }
             SimpleButton("gear", action: {router.presentSheet(.settings(.settings))})
         }
     }
@@ -130,6 +134,7 @@ extension ExplorerContainer {
             SimpleButton("plus.square", action: { router.presentSheet(.explorer(.createNoteSheet(path: currentFolder))) })
                 .accessibilityIdentifier("explorer.createNoteButton")
             SimpleButton("folder.badge.plus", action: { router.presentSheet(.explorer(.createFolderSheet(path: currentFolder))) })
+                .accessibilityIdentifier("explorer.createFolderButton")
         }
     }
 }
