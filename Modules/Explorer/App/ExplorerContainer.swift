@@ -51,6 +51,8 @@ struct ExplorerContainer: View {
                     buttonTitle: "Create Note",
                     name: $newItemName,
                     locationName: currentFolder?.lastPathComponent,
+                    textFieldAccessibilityIdentifier: "explorer.createNote.nameField",
+                    confirmButtonAccessibilityIdentifier: "explorer.createNote.confirmButton",
                     onCancel: closeSheet,
                     onCreate: createNote
                 )
@@ -61,6 +63,8 @@ struct ExplorerContainer: View {
                     buttonTitle: "Create Folder",
                     name: $newItemName,
                     locationName: currentFolder?.lastPathComponent,
+                    textFieldAccessibilityIdentifier: "explorer.createFolder.nameField",
+                    confirmButtonAccessibilityIdentifier: "explorer.createFolder.confirmButton",
                     onCancel: closeSheet,
                     onCreate: createFolder
                 )
@@ -124,6 +128,7 @@ extension ExplorerContainer {
                 }
             })
             SimpleButton("plus.square", action: { router.presentSheet(.explorer(.createNoteSheet(path: currentFolder))) })
+                .accessibilityIdentifier("explorer.createNoteButton")
             SimpleButton("folder.badge.plus", action: { router.presentSheet(.explorer(.createFolderSheet(path: currentFolder))) })
         }
     }

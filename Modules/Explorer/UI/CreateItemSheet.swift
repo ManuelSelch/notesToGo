@@ -6,6 +6,8 @@ struct CreateItemSheet: View {
     let buttonTitle: String
     @Binding var name: String
     let locationName: String?
+    let textFieldAccessibilityIdentifier: String
+    let confirmButtonAccessibilityIdentifier: String
     let onCancel: () -> Void
     let onCreate: () -> Void
     
@@ -17,6 +19,7 @@ struct CreateItemSheet: View {
         NavigationStack {
             Form {
                 TextField(placeholder, text: $name)
+                    .accessibilityIdentifier(textFieldAccessibilityIdentifier)
                 
                 if let locationName {
                     LabeledContent("Location", value: locationName)
@@ -33,6 +36,7 @@ struct CreateItemSheet: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button(buttonTitle, action: onCreate)
                         .disabled(trimmedName.isEmpty)
+                        .accessibilityIdentifier(confirmButtonAccessibilityIdentifier)
                 }
             }
         }

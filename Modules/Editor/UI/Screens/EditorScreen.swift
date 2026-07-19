@@ -81,6 +81,7 @@ extension EditorScreen {
     func SaveToolbar() -> some View {
         HStack {
             SimpleButton("chevron.left", action: { saveAndCloseTapped(multiPage.currentMarkups()) })
+                .accessibilityIdentifier("editor.closeButton")
         }
     }
     

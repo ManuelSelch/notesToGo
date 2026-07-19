@@ -31,6 +31,7 @@ struct ExplorerScreen: View {
                 )
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier("explorer.note.\(note.pdf.deletingPathExtension().lastPathComponent)")
             
         case .folder(let folder):
             Button(action: { folderTapped(folder) }) {
