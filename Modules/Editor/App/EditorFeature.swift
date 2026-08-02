@@ -11,12 +11,10 @@ nonisolated struct EditorFeature: Feature {
         var mode: EditMode = .read
         
         var penSize: CGFloat = 1
-        
-        var selectedTool: PencilTool = .pen(1)
-        var previousInkTool: PencilTool = .pen(1)
-        
-        var selectedColor: CodableColor = .black
         var defaultColor: CodableColor = .black
+        
+        var selectedTool: PencilTool = .pen(1, .black)
+        var previousInkTool: PencilTool = .pen(1, .black)
         
         var copiedPage: Page?
     }

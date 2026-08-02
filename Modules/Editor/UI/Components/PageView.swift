@@ -151,8 +151,8 @@ class PageView: UIView {
         switch tool {
         case .eraser:
             controller?.drawingTool = PKEraserTool(.bitmap, width: 50)
-        case let .pen(width):
-            controller?.drawingTool = PKInkingTool(.monoline, color: .black, width: width)
+        case let .pen(width, color):
+            controller?.drawingTool = PKInkingTool(.monoline, color: color.uiColor, width: width)
         case .pencil, .marker, .lasso:
             controller?.drawingTool = PKInkingTool(.monoline, color: .black, width: 1)
         }

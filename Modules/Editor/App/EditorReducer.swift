@@ -8,14 +8,14 @@ extension EditorFeature {
             state.note = note
             state.mode = .write
             state.isLoading = true
-            state.selectedTool = .pen(state.penSize)
-            state.previousInkTool = .pen(state.penSize)
+            state.selectedTool = .pen(state.penSize, state.defaultColor)
+            state.previousInkTool = .pen(state.penSize, state.defaultColor)
         case let .openQuickNote(note):
             state.note = note
             state.mode = .focus
             state.isLoading = true
-            state.selectedTool = .pen(state.penSize)
-            state.previousInkTool = .pen(state.penSize)
+            state.selectedTool = .pen(state.penSize, state.defaultColor)
+            state.previousInkTool = .pen(state.penSize, state.defaultColor)
             
         case let .documentLoaded(doc):
             state.document = doc
@@ -63,7 +63,7 @@ extension EditorFeature {
             switch(state.mode) {
             case .read:
                 state.mode = .write
-                state.selectedTool = .pen(state.penSize) // auto select pen when toggling from read to write mode
+                state.selectedTool = .pen(state.penSize, state.defaultColor) // auto select pen when toggling from read to write mode
             case .write:
                 state.mode = .read
             case .focus:
@@ -75,7 +75,7 @@ extension EditorFeature {
         // MARK: - tool
         case let .penSizeChanged(size):
             state.penSize = size
-            state.selectedTool = .pen(size)
+            state.selectedTool = .pen(size, state.defaultColor)
         case let .toolSelected(tool):
             state.selectedTool = tool
             if tool != .eraser {
@@ -85,7 +85,7 @@ extension EditorFeature {
             state.selectedTool = state.selectedTool == .eraser ? state.previousInkTool : .eraser
             
         case let .selectedColorChanged(color):
-            state.selectedColor = color
+            state.selectedTool = .pen(state.penSize, color)
         case let .defaultColorChanged(color):
             state.defaultColor = color
             
