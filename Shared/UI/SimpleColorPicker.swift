@@ -4,9 +4,8 @@ struct SimpleColorPicker: View {
        @Binding var color: UIColor
                                                                                                                                                                                                                      
        private let colors: [UIColor] = [
+           .black,
            .systemRed,
-           .systemOrange,
-           .systemYellow,
            .systemGreen,
            .systemBlue
        ]
