@@ -23,8 +23,6 @@ struct EditorScreen: View {
     let pencilDoubleTapped: () -> Void
     let bottomOverscrolled: () -> Void
     
-    let colorChanged: (UIColor) -> Void
-    
     var body: some View {
         MultiPageView(controller: multiPage)
             .navigationBarBackButtonHidden() // hide native backup button to be able to save note when user clicks back
@@ -111,8 +109,8 @@ extension EditorScreen {
                 SimpleButton("square.and.pencil", action: editModeToggled)
             case .write:
                 switch selectedTool {
-                case let .pen(_, color):
-                    SimpleColorPicker(color: Binding(get: {color.uiColor}, set: {colorChanged($0)}))
+                case let .pen(width, color):
+                    SimpleColorPicker(color: Binding(get: {color.uiColor}, set: {toolSelected(.pen(width, CodableColor($0)))}))
                 default:
                     EmptyView()
                 }
@@ -149,9 +147,7 @@ extension EditorScreen {
         saveAndCloseTapped: { _ in },
         
         pencilDoubleTapped: {},
-        bottomOverscrolled: {},
-        
-        colorChanged: { _ in }
+        bottomOverscrolled: {}
     )
 }
 

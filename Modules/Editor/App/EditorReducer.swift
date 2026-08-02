@@ -8,14 +8,16 @@ extension EditorFeature {
             state.note = note
             state.mode = .write
             state.isLoading = true
-            state.selectedTool = .pen(state.penSize, state.defaultColor)
-            state.previousInkTool = .pen(state.penSize, state.defaultColor)
+            state.tools = state.defaultTools
+            state.selectedTool = state.defaultTools.first!
+            state.previousInkTool = state.defaultTools.first!
         case let .openQuickNote(note):
             state.note = note
             state.mode = .focus
             state.isLoading = true
-            state.selectedTool = .pen(state.penSize, state.defaultColor)
-            state.previousInkTool = .pen(state.penSize, state.defaultColor)
+            state.tools = state.defaultTools
+            state.selectedTool = state.defaultTools.first!
+            state.previousInkTool = state.defaultTools.first!
             
         case let .documentLoaded(doc):
             state.document = doc
@@ -63,7 +65,7 @@ extension EditorFeature {
             switch(state.mode) {
             case .read:
                 state.mode = .write
-                state.selectedTool = .pen(state.penSize, state.defaultColor) // auto select pen when toggling from read to write mode
+                state.selectedTool = state.tools.first! // auto select pen when toggling from read to write mode
             case .write:
                 state.mode = .read
             case .focus:
@@ -73,9 +75,6 @@ extension EditorFeature {
             state.mode = toggleFocusMode(state.mode)
             
         // MARK: - tool
-        case let .penSizeChanged(size):
-            state.penSize = size
-            state.selectedTool = .pen(size, state.defaultColor)
         case let .toolSelected(tool):
             state.selectedTool = tool
             if tool != .eraser {
@@ -88,10 +87,11 @@ extension EditorFeature {
                 state.previousInkTool = state.selectedTool
                 state.selectedTool = .eraser
             }
-        case let .selectedColorChanged(color):
-            state.selectedTool = .pen(state.penSize, color)
-        case let .defaultColorChanged(color):
-            state.defaultColor = color
+        case let .defaultToolsChanged(tools):
+            state.defaultTools = tools
+            state.tools = tools
+            state.selectedTool = tools.first!
+            state.previousInkTool = tools.first!
             
         default: break
         }

@@ -32,14 +32,10 @@ struct SettingsContainer: View {
             switch(route) {
             case .settings:
                 SettingsScreen(
-                    saveTapped: {
-                        editor.dispatch(.penSizeChanged($0.penSize))
-                        editor.dispatch(.defaultColorChanged($0.color))
-                    },
+                    saveTapped: { editor.dispatch(.defaultToolsChanged($0)) },
                     consoleTapped: { router.sheet?.push(.settings(.console))},
                     
-                    penSize: editor.state.penSize,
-                    color: editor.state.defaultColor.uiColor
+                    tools: editor.state.defaultTools
                 )
             case .console:
                 ConsoleView(store: .shared)

@@ -10,8 +10,7 @@ nonisolated struct EditorFeature: Feature {
         var isLoading = false
         var mode: EditMode = .read
         
-        var penSize: CGFloat = 1
-        var defaultColor: CodableColor = .black
+        var defaultTools: [PencilTool] = [ .pen(1, .black), .eraser, .lasso, .marker ]
         
         var tools: [PencilTool] = [ .pen(1, .black), .eraser, .lasso, .marker ]
         var selectedTool: PencilTool = .pen(1, .black)
@@ -44,12 +43,9 @@ nonisolated struct EditorFeature: Feature {
         case toggleFocusMode
         
         // MARK: - tool
-        case penSizeChanged(CGFloat)
         case toolSelected(PencilTool)
         case pencilDoubleTap
-        
-        case selectedColorChanged(CodableColor)
-        case defaultColorChanged(CodableColor)
+        case defaultToolsChanged([PencilTool])
     }
     
     enum Route: RouteType {

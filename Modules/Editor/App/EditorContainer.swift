@@ -63,8 +63,6 @@ struct EditorContainer: View {
                     
                     pencilDoubleTapped: { store.dispatch(.pencilDoubleTap) },
                     bottomOverscrolled: { store.dispatch(.addPageTapped) },
-                    
-                    colorChanged: { store.dispatch(.selectedColorChanged(CodableColor($0))) }
                 )
                 .onChange(of: store.state.note) {
                     // guard let note = store.state.note else { return }
