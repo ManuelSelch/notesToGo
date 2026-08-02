@@ -9,6 +9,7 @@ struct EditorScreen: View {
     let document: MultiPageDocument?
     let pdf: PDFDocument?
     let mode: EditMode
+    let tools: [PencilTool]
     let selectedTool: PencilTool
     
     let editModeToggled: () -> Void
@@ -91,21 +92,12 @@ extension EditorScreen {
     func PenToolbar() -> some View {
         HStack(spacing: 20) {
             if mode == .write {
-                SimpleButton(
-                    "pencil", action: { toolSelected(.pen(1, .black)) },
-                    color: selectedTool == .eraser || selectedTool == .lasso ? .black : .blue
-                )
-                
-                
-                SimpleButton(
-                    "eraser", action: { toolSelected(.eraser) },
-                    color: selectedTool == .eraser ? .blue : .black
-                )
-                
-                SimpleButton(
-                    "lasso", action: { toolSelected(.lasso) },
-                    color: selectedTool == .lasso ? .blue : .black
-                )
+                ForEach(tools) { tool in
+                    SimpleButton(
+                        tool.symbol, action: { toolSelected(tool) },
+                        color: selectedTool == tool ? .blue : .black
+                    )
+                }
             }
         }
         .padding()
@@ -145,6 +137,7 @@ extension EditorScreen {
         document: MultiPageDocument(),
         pdf: PDFDocument(),
         mode: .write,
+        tools: [.pen(1, .black), .eraser, .lasso, .marker],
         selectedTool: .pen(1, .black),
         
         editModeToggled: {},

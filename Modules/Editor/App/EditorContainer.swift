@@ -44,6 +44,7 @@ struct EditorContainer: View {
                     document: store.state.document,
                     pdf: pdf,
                     mode: store.state.mode,
+                    tools: store.state.tools,
                     selectedTool: store.state.selectedTool,
                     
                     editModeToggled: {store.dispatch(.toggleEditMode)},

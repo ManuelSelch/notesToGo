@@ -13,6 +13,7 @@ nonisolated struct EditorFeature: Feature {
         var penSize: CGFloat = 1
         var defaultColor: CodableColor = .black
         
+        var tools: [PencilTool] = [ .pen(1, .black), .eraser, .lasso, .marker ]
         var selectedTool: PencilTool = .pen(1, .black)
         var previousInkTool: PencilTool = .pen(1, .black)
         
