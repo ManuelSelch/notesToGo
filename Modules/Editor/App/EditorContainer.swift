@@ -14,15 +14,22 @@ class LogMiddleware<F> where F:Feature {
 
 struct EditorApp {
     func build(editor: EditorConfig) -> FluxStore<EditorFeature> {
-         return .init(
+        let markup = MarkupMiddleware(editor: editor)
+        let middlewares = [
+            DocumentMiddleware().handle,
+            PageMiddleware().handle,
+            markup.handle,
+            LogMiddleware<EditorFeature>().handle
+        ]
+        
+        let store = FluxStore<EditorFeature>(
             state: .init(),
-            middlewares: [
-                DocumentMiddleware().handle,
-                PageMiddleware().handle,
-                MarkupMiddleware(editor: editor).handle,
-                LogMiddleware<EditorFeature>().handle
-            ]
+            middlewares: middlewares
         )
+        
+        markup.start(store)
+        
+        return store
     }
 }
 

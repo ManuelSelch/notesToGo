@@ -2,6 +2,21 @@ import Foundation
 import Flux
 import PaperKit
 
+nonisolated struct AppFeature: Feature {
+    
+    struct State: Equatable, Sendable {
+        
+    }
+    
+    enum Action: Equatable, Sendable {
+        
+    }
+    
+    func reduce(_ state: inout State, _ action: Action) {
+        
+    }
+}
+
 nonisolated struct EditorFeature: Feature {
     struct State: Equatable, Sendable {
         var note: Note?
@@ -55,8 +70,6 @@ nonisolated struct EditorFeature: Feature {
         
         var id: Self { self }
     }
-    
-    init() {}
     
     func reduce(_ state: inout State, _ action: Action) {
         switch action {
