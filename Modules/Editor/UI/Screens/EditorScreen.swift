@@ -10,7 +10,6 @@ struct EditorScreen: View {
     let pdf: PDFDocument?
     let mode: EditMode
     let selectedTool: PencilTool
-    @Binding var selectedColor: UIColor
     
     let editModeToggled: () -> Void
     let focusModeToggled: () -> Void
@@ -23,7 +22,7 @@ struct EditorScreen: View {
     let pencilDoubleTapped: () -> Void
     let bottomOverscrolled: () -> Void
     
-    
+    let colorChanged: (UIColor) -> Void
     
     var body: some View {
         MultiPageView(controller: multiPage)
@@ -113,7 +112,12 @@ extension EditorScreen {
             case .read:
                 SimpleButton("square.and.pencil", action: editModeToggled)
             case .write:
-                SimpleColorPicker(color: $selectedColor)
+                switch selectedTool {
+                case let .pen(_, color):
+                    SimpleColorPicker(color: Binding(get: {color.uiColor}, set: {colorChanged($0)}))
+                default:
+                    EmptyView()
+                }
                 SimpleButton("square.grid.2x2", action: {openGridTapped(multiPage.currentMarkups())})
                     .accessibilityIdentifier("editor.openGridButton")
                 SimpleButton("plus.rectangle.portrait", action: addPageTapped)
@@ -136,7 +140,6 @@ extension EditorScreen {
         pdf: PDFDocument(),
         mode: .write,
         selectedTool: .pen(1, .black),
-        selectedColor: .constant(.black),
         
         editModeToggled: {},
         focusModeToggled: {},
@@ -147,7 +150,9 @@ extension EditorScreen {
         saveAndCloseTapped: { _ in },
         
         pencilDoubleTapped: {},
-        bottomOverscrolled: {}
+        bottomOverscrolled: {},
+        
+        colorChanged: { _ in }
     )
 }
 

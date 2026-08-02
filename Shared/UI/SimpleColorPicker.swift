@@ -15,14 +15,14 @@ struct SimpleColorPicker: View {
            HStack(spacing: 12) {
                ForEach(colors.indices, id: \.self) { index in
                    let candidate = colors[index]
-                   let isSelected = color.isEqual(candidate)
+                   let isSelected = CodableColor(color) == CodableColor(candidate)
                                                                                                                                                                                                                      
                    Button {
                        color = candidate
                    } label: {
                        Circle()
                            .fill(Color(uiColor: candidate))
-                           .frame(width: 32, height: 32)
+                           .frame(width: 24, height: 24)
                            .overlay {
                                Circle()
                                    .stroke(
