@@ -93,12 +93,18 @@ extension EditorScreen {
             if mode == .write {
                 SimpleButton(
                     "pencil", action: { toolSelected(.pen(1, .black)) },
-                    color: selectedTool == .eraser ? .black : .blue
+                    color: selectedTool == .eraser || selectedTool == .lasso ? .black : .blue
                 )
+                
                 
                 SimpleButton(
                     "eraser", action: { toolSelected(.eraser) },
                     color: selectedTool == .eraser ? .blue : .black
+                )
+                
+                SimpleButton(
+                    "lasso", action: { toolSelected(.lasso) },
+                    color: selectedTool == .lasso ? .blue : .black
                 )
             }
         }

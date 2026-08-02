@@ -148,13 +148,17 @@ class PageView: UIView {
     }
     
     func selectTool(_ tool: PencilTool) {
+        guard let controller = controller else { return }
+        
         switch tool {
         case .eraser:
-            controller?.drawingTool = PKEraserTool(.bitmap, width: 50)
+            controller.drawingTool = PKEraserTool(.bitmap, width: 50)
         case let .pen(width, color):
-            controller?.drawingTool = PKInkingTool(.monoline, color: color.uiColor, width: width)
-        case .pencil, .marker, .lasso:
-            controller?.drawingTool = PKInkingTool(.monoline, color: .black, width: 1)
+            controller.drawingTool = PKInkingTool(.monoline, color: color.uiColor, width: width)
+        case .pencil, .marker:
+            controller.drawingTool = PKInkingTool(.monoline, color: .black, width: 1)
+        case .lasso:
+            controller.drawingTool = PKLassoTool()
         }
     }
     
