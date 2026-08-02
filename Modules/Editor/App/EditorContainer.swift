@@ -45,6 +45,10 @@ struct EditorContainer: View {
                     pdf: pdf,
                     mode: store.state.mode,
                     selectedTool: store.state.selectedTool,
+                    selectedColor: Binding(
+                        get: { UIColor.red },
+                        set: { store.dispatch(.selectedColorChanged(CodableColor($0))) }
+                    ),
                     
                     editModeToggled: {store.dispatch(.toggleEditMode)},
                     focusModeToggled: {store.dispatch(.toggleFocusMode)},

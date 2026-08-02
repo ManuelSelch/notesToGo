@@ -82,8 +82,12 @@ extension EditorFeature {
                 state.previousInkTool = tool
             }
         case .pencilDoubleTap:
-            state.selectedTool = state.selectedTool == .eraser ? state.previousInkTool : .eraser
-            
+            if state.selectedTool == .eraser {
+                state.selectedTool = state.previousInkTool
+            } else {
+                state.previousInkTool = state.selectedTool
+                state.selectedTool = .eraser
+            }
         case let .selectedColorChanged(color):
             state.selectedTool = .pen(state.penSize, color)
         case let .defaultColorChanged(color):
