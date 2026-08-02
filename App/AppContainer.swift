@@ -3,14 +3,12 @@ import Router
 import Dependencies
 import Flux
 
-let config = EditorConfig()
-
 struct AppContainer: View {
     @Dependency(\.router) var router
     
     @StateObject var explorer = ExplorerApp().build()
-    @StateObject var editor = EditorApp().build(editor: config)
-    @StateObject var settings = SettingsApp().build(editor: config)
+    @StateObject var editor = EditorApp().build()
+    @StateObject var settings = SettingsApp().build()
     
     var body: some View {
         StackWithSheetRouterView(router, content: { route in
@@ -18,21 +16,25 @@ struct AppContainer: View {
                 switch route {
                 case let .explorer(route):
                     ExplorerContainer(
-                        explorer, route: route,
+                        route: route,
                         openNoteTapped: { editor.dispatch(.openNote($0)) },
                         openQuickNoteTapped: { editor.dispatch(.openQuickNote($0)) }
                     )
                 case let .editor(route):
-                    EditorContainer(editor, route: route)
+                    EditorContainer(route)
                 case let .settings(route):
-                    SettingsContainer(settings, route: route)
+                    SettingsContainer(route)
                 }
             }
         })
+        .environmentObject(explorer)
+        .environmentObject(editor)
+        .environmentObject(settings)
+        
     }
 }
 
 
-#Preview {
-    AppContainer()
+extension FluxStore {
+    
 }

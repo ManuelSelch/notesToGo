@@ -18,7 +18,7 @@ struct ExplorerApp {
 struct ExplorerContainer: View {
     @Dependency(\.router) var router
     @Environment(\.scenePhase) private var scenePhase
-    @ObservedObject var store: FluxStore<ExplorerFeature>
+    @EnvironmentObject var store: FluxStore<ExplorerFeature>
     
     let route: ExplorerRoute
     
@@ -32,8 +32,10 @@ struct ExplorerContainer: View {
         }
     }
 
-    init(_ store: FluxStore<ExplorerFeature>, route: ExplorerRoute, openNoteTapped: @escaping (Note) -> Void, openQuickNoteTapped: @escaping (Note) -> Void) {
-        self.store = store
+    init(
+        route: ExplorerRoute,
+        openNoteTapped: @escaping (Note) -> Void, openQuickNoteTapped: @escaping (Note) -> Void
+    ) {
         self.route = route
         self.openNoteTapped = openNoteTapped
         self.openQuickNoteTapped = openQuickNoteTapped

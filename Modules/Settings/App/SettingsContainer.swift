@@ -6,25 +6,24 @@ import PulseUI
 import Flux
 
 struct SettingsApp {
-    func build(editor: EditorConfig) -> FluxStore<SettingsFeature> {
+    func build() -> FluxStore<SettingsFeature> {
          return .init(
             state: .init(),
             middlewares: [
-                SettingsMiddleware(editor: editor).handle,
                 LogMiddleware<SettingsFeature>().handle
             ]
         )
     }
 }
 
+
 struct SettingsContainer: View {
     @Dependency(\.router) var router
-    @ObservedObject var store: FluxStore<SettingsFeature>
+    @EnvironmentObject var editor: FluxStore<EditorFeature>
     
     let route: SettingsFeature.Route
     
-    init(_ store: FluxStore<SettingsFeature>, route: SettingsFeature.Route) {
-        self.store = store
+    init(_ route: SettingsFeature.Route) {
         self.route = route
     }
     
@@ -33,8 +32,14 @@ struct SettingsContainer: View {
             switch(route) {
             case .settings:
                 SettingsScreen(
-                    penSizeChanged: { store.dispatch(.penSizeChanged($0)) },
-                    consoleTapped: { router.sheet?.push(.settings(.console))}
+                    saveTapped: {
+                        editor.dispatch(.penSizeChanged($0.penSize))
+                        editor.dispatch(.defaultColorChanged($0.color))
+                    },
+                    consoleTapped: { router.sheet?.push(.settings(.console))},
+                    
+                    penSize: editor.state.penSize,
+                    color: editor.state.defaultColor.uiColor
                 )
             case .console:
                 ConsoleView(store: .shared)

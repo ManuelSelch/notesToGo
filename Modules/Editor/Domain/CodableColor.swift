@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 
 /// Lightweight Codable wrapper around UIColor
-struct CodableColor: Codable, Equatable, Sendable {
+nonisolated struct CodableColor: Codable, Equatable, Sendable {
     let red: CGFloat
     let green: CGFloat
     let blue: CGFloat

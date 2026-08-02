@@ -13,36 +13,27 @@ class LogMiddleware<F> where F:Feature {
 }
 
 struct EditorApp {
-    func build(editor: EditorConfig) -> FluxStore<EditorFeature> {
-        let markup = MarkupMiddleware(editor: editor)
-        let middlewares = [
-            DocumentMiddleware().handle,
-            PageMiddleware().handle,
-            markup.handle,
-            LogMiddleware<EditorFeature>().handle
-        ]
-        
-        let store = FluxStore<EditorFeature>(
+    func build() -> FluxStore<EditorFeature> {
+        return .init(
             state: .init(),
-            middlewares: middlewares
+            middlewares: [
+                DocumentMiddleware().handle,
+                PageMiddleware().handle,
+                LogMiddleware<EditorFeature>().handle
+            ]
         )
-        
-        markup.start(store)
-        
-        return store
     }
 }
 
 struct EditorContainer: View {
     @Dependency(\.router) var router
-    @ObservedObject var store: FluxStore<EditorFeature>
+    @EnvironmentObject var store: FluxStore<EditorFeature>
     
     let route: EditorFeature.Route
     var pdf: PDFDocument?
     
-    init(_ store: FluxStore<EditorFeature>, route: EditorFeature.Route) {
+    init(_ route: EditorFeature.Route) {
         self.route = route
-        self.store = store
     }
     
     var body: some View {

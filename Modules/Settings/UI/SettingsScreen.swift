@@ -1,18 +1,25 @@
 import SwiftUI
 
+struct SettingsDTO {
+    var penSize: CGFloat
+    var color: CodableColor
+}
+
 struct SettingsScreen: View {
-    let penSizeChanged: (CGFloat) -> Void
+    let saveTapped: (SettingsDTO) -> Void
     let consoleTapped: () -> Void
     
-    @State var penSize = ""
-    
+    @State var penSize: Double
+    @State var color: UIColor
+
     var body: some View {
         Form {
             Section("Editor") {
-                TextField("Pen Size", text: $penSize)
-                    .keyboardType(.numberPad)
+                NumberTextField(placeholder: "Pen Size", value: $penSize)
                 
-                Button("Save", action: { penSizeChanged(5) })
+                SimpleColorPicker(color: $color)
+                
+                Button("Save", action: { saveTapped(.init(penSize: penSize, color: CodableColor(color))) })
             }
             
             Section("Debug") {
@@ -24,7 +31,10 @@ struct SettingsScreen: View {
 
 #Preview {
     SettingsScreen(
-        penSizeChanged: { _ in },
-        consoleTapped: {}
+        saveTapped: { _ in },
+        consoleTapped: {},
+        
+        penSize: 5,
+        color: .black
     )
 }
