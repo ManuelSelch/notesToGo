@@ -60,7 +60,7 @@ final class EditorFlowUITests: BaseUITestCase {
         app.grid.done()
 
         app.editor.thenIsVisible()
-        app.editor.thenCurrentPageIs(1)
+        // Page insertion scrolls to newly created pages; establish page 2 explicitly.
         app.editor.scrollUntilCurrentPageIs(2)
         app.editor.thenCurrentPageIs(2)
 

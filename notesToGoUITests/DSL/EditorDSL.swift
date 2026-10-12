@@ -78,7 +78,12 @@ struct EditorDSL {
             if let value = currentPageIndicator.value as? String, value == String(expectedPage) {
                 return
             }
-            pagesScrollView.swipeUp()
+            if let value = currentPageIndicator.value as? String,
+               let currentPage = Int(value), currentPage > expectedPage {
+                pagesScrollView.swipeDown()
+            } else {
+                pagesScrollView.swipeUp()
+            }
             RunLoop.current.run(until: Date().addingTimeInterval(0.3))
         }
 
