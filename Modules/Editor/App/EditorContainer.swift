@@ -41,26 +41,18 @@ struct EditorContainer: View {
             switch(route) {
             case .editor:
                 if let failure = store.state.loadFailure {
-                    ContentUnavailableView {
-                        Label("Couldn’t open note", systemImage: "exclamationmark.triangle")
-                    } description: {
-                        Text(failure.message)
-                    } actions: {
-                        Button("Retry") { store.dispatch(.retryLoad) }
-                            .accessibilityIdentifier("editor.retryLoadButton")
-                        Button("Back to files") {
+                    EditorLoadErrorView(
+                        message: failure.message,
+                        retryTapped: { store.dispatch(.retryLoad) },
+                        backTapped: {
                             store.dispatch(.dismissLoadFailure)
                             router.stack.dismiss()
                         }
-                        .accessibilityIdentifier("editor.loadBackButton")
-                    }
+                    )
                     .navigationBarBackButtonHidden()
                 } else if store.state.document == nil {
-                    ProgressView("Opening note…")
+                    EditorLoadingView(backTapped: { router.stack.dismiss() })
                         .navigationBarBackButtonHidden()
-                        .toolbar {
-                            Button("Back to files") { router.stack.dismiss() }
-                        }
                 } else {
                     EditorScreen(
                         document: store.state.document,
