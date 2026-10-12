@@ -5,6 +5,7 @@ class PageMiddleware {
     init() {}
     
     func handle(state: EditorFeature.State, action: EditorFeature.Action) async -> EditorFeature.Action? {
+        guard state.document != nil, !state.isLoading else { return .none }
         switch action {
         case .addPageTapped:
             return .pageAppended(.empty(id: UUID()))

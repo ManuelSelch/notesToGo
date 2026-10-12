@@ -8,6 +8,8 @@ nonisolated struct EditorFeature: Feature {
         var document: MultiPageDocument?
         
         var isLoading = false
+        var loadFailure: OperationFailure?
+        var saveFailure: OperationFailure?
         var mode: EditMode = .read
         
         var defaultTools: [PencilTool] = [ .pen(1, .black), .eraser, .lasso, .marker ]
@@ -24,6 +26,9 @@ nonisolated struct EditorFeature: Feature {
         case openNote(Note)
         case openQuickNote(Note)
         case documentLoaded(MultiPageDocument)
+        case documentLoadFailed(OperationFailure)
+        case retryLoad
+        case dismissLoadFailure
         case addPageTapped
         case pageAppended(Page)
         case insertPageTapped(after: UUID?)
@@ -36,7 +41,8 @@ nonisolated struct EditorFeature: Feature {
         // MARK: - save
         case save([UUID:PaperMarkup])
         case saved
-        case savedFailed
+        case savedFailed(OperationFailure)
+        case dismissSaveFailure
         
         // MARK: - mode
         case toggleEditMode

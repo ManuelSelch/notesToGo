@@ -14,6 +14,16 @@ struct AppContainer: App {
     @StateObject var settings = SettingsApp().build()
     let preferences = PreferencesCoordinator()
     
+    init() {
+        #if DEBUG
+        do {
+            try UITestFixtures.prepare()
+        } catch {
+            assertionFailure("Could not prepare requested UI-test fixture: \(error)")
+        }
+        #endif
+    }
+
     var body: some Scene {
         WindowGroup {
             StackWithSheetRouterView(router, content: { route in
@@ -37,6 +47,15 @@ struct AppContainer: App {
             .environmentObject(editor)
             .environmentObject(settings)
             .statusBarHidden(preferences.statusBarHidden(editor))
+            .alert("Couldn’t save note", isPresented: Binding(
+                get: { editor.state.saveFailure != nil },
+                set: { if !$0 { editor.dispatch(.dismissSaveFailure) } }
+            )) {
+                Button("Retry") { editor.dispatch(.save([:])) }
+                Button("Keep changes", role: .cancel) { editor.dispatch(.dismissSaveFailure) }
+            } message: {
+                Text(editor.state.saveFailure?.message ?? "")
+            }
         }
     }
 }

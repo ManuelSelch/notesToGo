@@ -40,33 +40,57 @@ struct EditorContainer: View {
         VStack {
             switch(route) {
             case .editor:
-                EditorScreen(
-                    document: store.state.document,
-                    pdf: pdf,
-                    mode: store.state.mode,
-                    tools: store.state.tools,
-                    selectedTool: store.state.selectedTool,
-                    
-                    editModeToggled: {store.dispatch(.toggleEditMode)},
-                    focusModeToggled: {store.dispatch(.toggleFocusMode)},
-                    
-                    addPageTapped: {store.dispatch(.addPageTapped)},
-                    toolSelected: {store.dispatch(.toolSelected($0))},
-                    openGridTapped: {
-                        store.dispatch(.save($0))
-                        router.stack.push(.editor(.grid))
-                    },
-                    saveAndCloseTapped: {
-                        store.dispatch(.save($0))
-                        router.stack.dismiss()
-                    },
-                    
-                    pencilDoubleTapped: { store.dispatch(.pencilDoubleTap) },
-                    bottomOverscrolled: { store.dispatch(.addPageTapped) },
-                )
-                .onChange(of: store.state.note) {
-                    // guard let note = store.state.note else { return }
-                    // pdf = PDFDocument(url: note.pdf)
+                if let failure = store.state.loadFailure {
+                    ContentUnavailableView {
+                        Label("Couldn’t open note", systemImage: "exclamationmark.triangle")
+                    } description: {
+                        Text(failure.message)
+                    } actions: {
+                        Button("Retry") { store.dispatch(.retryLoad) }
+                            .accessibilityIdentifier("editor.retryLoadButton")
+                        Button("Back to files") {
+                            store.dispatch(.dismissLoadFailure)
+                            router.stack.dismiss()
+                        }
+                        .accessibilityIdentifier("editor.loadBackButton")
+                    }
+                    .navigationBarBackButtonHidden()
+                } else if store.state.document == nil {
+                    ProgressView("Opening note…")
+                        .navigationBarBackButtonHidden()
+                        .toolbar {
+                            Button("Back to files") { router.stack.dismiss() }
+                        }
+                } else {
+                    EditorScreen(
+                        document: store.state.document,
+                        pdf: pdf,
+                        mode: store.state.mode,
+                        tools: store.state.tools,
+                        selectedTool: store.state.selectedTool,
+
+                        editModeToggled: {store.dispatch(.toggleEditMode)},
+                        focusModeToggled: {store.dispatch(.toggleFocusMode)},
+
+                        addPageTapped: {store.dispatch(.addPageTapped)},
+                        toolSelected: {store.dispatch(.toolSelected($0))},
+                        openGridTapped: {
+                            store.dispatch(.save($0))
+                            router.stack.push(.editor(.grid))
+                        },
+                        saveAndCloseTapped: {
+                            store.dispatch(.save($0))
+                            router.stack.dismiss()
+                        },
+
+                        pencilDoubleTapped: { store.dispatch(.pencilDoubleTap) },
+                        bottomOverscrolled: { store.dispatch(.addPageTapped) },
+                    )
+                    .disabled(store.state.isLoading)
+                    .onChange(of: store.state.note) {
+                        // guard let note = store.state.note else { return }
+                        // pdf = PDFDocument(url: note.pdf)
+                    }
                 }
             
             case .grid:

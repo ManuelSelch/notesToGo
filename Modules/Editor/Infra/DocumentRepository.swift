@@ -23,21 +23,53 @@ class DocumentRepository: DocumentRepositoryProtocol {
     }
     
     func load(_ note: Note) async throws -> MultiPageDocument {
-        if FileManager.default.fileExists(atPath: note.markup.path) {
-            let data = try Data(contentsOf: note.markup)
-            return try JSONDecoder().decode(StoredDocument.self, from: data).document
+        let markupData: Data?
+        do {
+            markupData = try Data(contentsOf: note.markup)
+        } catch where Self.isMissingFile(error) {
+            // Only an absent sidecar permits PDF-only initialization. Read failures do not.
+            markupData = nil
         }
-        
-        guard let pdf = PDFDocument(url: note.pdf) else {
+
+        let document: MultiPageDocument?
+        if let markupData {
+            do {
+                document = try JSONDecoder().decode(StoredDocument.self, from: markupData).document
+            } catch let error as EditorError {
+                throw error
+            } catch {
+                throw EditorError.corruptDocument
+            }
+        } else {
+            document = nil
+        }
+
+        let pdfData: Data
+        do {
+            pdfData = try Data(contentsOf: note.pdf)
+        } catch where Self.isMissingFile(error) {
             throw EditorError.documentNotFound
         }
-        
-        return MultiPageDocument(
-            pages: (0..<pdf.pageCount).compactMap { index in
-                guard let page = pdf.page(at: index) else { return nil }
-                return Page(bounds: page.bounds(for: .mediaBox), background: .plain(.white))
-            }
-        )
+        guard let pdf = PDFDocument(data: pdfData), pdf.pageCount > 0 else {
+            throw EditorError.invalidPDF
+        }
+        if let document { return document }
+
+        var pages: [Page] = []
+        for index in 0..<pdf.pageCount {
+            guard let page = pdf.page(at: index) else { throw EditorError.invalidPDF }
+            let bounds = page.bounds(for: .mediaBox)
+            guard bounds.width.isFinite, bounds.height.isFinite,
+                  bounds.width > 0, bounds.height > 0 else { throw EditorError.invalidPDF }
+            pages.append(Page(bounds: bounds, background: .plain(.white)))
+        }
+        return MultiPageDocument(pages: pages)
+    }
+
+    private static func isMissingFile(_ error: Error) -> Bool {
+        let error = error as NSError
+        return error.domain == NSCocoaErrorDomain
+            && (error.code == CocoaError.fileReadNoSuchFile.rawValue || error.code == CocoaError.fileNoSuchFile.rawValue)
     }
     
     /// The only supported on-disk format. Check the version before decoding page data.

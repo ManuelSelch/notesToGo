@@ -50,6 +50,10 @@ struct ExplorerContainer: View {
                     noteTapped: openNoteTapped,
                     folderTapped: { folder in router.stack.push(.explorer(.dashboard(path: folder))) }
                 )
+                .disabled(store.state.isLoading)
+                .overlay {
+                    if store.state.isLoading { ProgressView("Loading…") }
+                }
                 .onAppear { store.dispatch(.reloadDocs(currentFolder)) }
                 .onChange(of: scenePhase) {
                     if scenePhase == .active {
@@ -79,6 +83,8 @@ struct ExplorerContainer: View {
                     onCancel: closeSheet,
                     onCreate: { store.dispatch(.createNoteTapped(currentFolder)) }
                 )
+                .disabled(store.state.isLoading)
+                .interactiveDismissDisabled(store.state.isLoading)
 
             case .createFolderSheet:
                 CreateItemSheet(
@@ -93,7 +99,21 @@ struct ExplorerContainer: View {
                     onCancel: closeSheet,
                     onCreate: { store.dispatch(.createFolderTapped(currentFolder)) }
                 )
+                .disabled(store.state.isLoading)
+                .interactiveDismissDisabled(store.state.isLoading)
             }
+        }
+        .alert(store.state.lastOperation?.title ?? "Operation failed", isPresented: Binding(
+            get: { shouldPresentFailure },
+            set: { if !$0 { store.dispatch(.dismissFailure) } }
+        )) {
+            Button("Retry") { store.dispatch(.retryOperation) }
+                .accessibilityIdentifier("explorer.retryOperationButton")
+            Button(isCreationSheet ? "Edit name" : "Cancel", role: .cancel) {
+                store.dispatch(.dismissFailure)
+            }
+        } message: {
+            Text(store.state.failure?.message ?? "")
         }
         .onChange(of: store.state.pendingDestination) {
             guard let pending = store.state.pendingDestination else { return }
@@ -110,6 +130,22 @@ struct ExplorerContainer: View {
             }
 
             store.dispatch(.pendingDestinationHandled)
+        }
+    }
+
+    private var isCreationSheet: Bool {
+        switch route {
+        case .createNoteSheet, .createFolderSheet: return true
+        case .dashboard: return false
+        }
+    }
+
+    private var shouldPresentFailure: Bool {
+        guard store.state.failure != nil, let operation = store.state.lastOperation else { return false }
+        switch (route, operation) {
+        case (.createNoteSheet, .createNote), (.createFolderSheet, .createFolder),
+             (.dashboard, .reload), (.dashboard, .createQuickNote): return true
+        default: return false
         }
     }
 
@@ -138,5 +174,6 @@ extension ExplorerContainer {
             SimpleButton("folder.badge.plus", action: { router.presentSheet(.explorer(.createFolderSheet(path: currentFolder))) })
                 .accessibilityIdentifier("explorer.createFolderButton")
         }
+        .disabled(store.state.isLoading)
     }
 }

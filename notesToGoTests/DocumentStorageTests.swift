@@ -73,6 +73,9 @@ struct DocumentStorageTests {
         let original = MultiPageDocument(pages: [first, second])
         let repository = DocumentRepository()
 
+        let pdf = PDFDocument()
+        pdf.insert(PDFPage(), at: 0)
+        try #require(pdf.write(to: note.pdf))
         try await repository.save(original, at: note.markup)
         let loaded = try await repository.load(note)
 

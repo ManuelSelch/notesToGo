@@ -46,16 +46,15 @@ class Explorer {
     func loadAllDocs(in folder: URL? = nil) async throws -> [Document] {
         var docs: [Document] = []
         
-        docs.append(contentsOf: loadNotes(in: folder).map { .note($0) })
-        docs.append(contentsOf: loadFolders(in: folder).map { .folder($0) })
+        docs.append(contentsOf: try loadNotes(in: folder).map { .note($0) })
+        docs.append(contentsOf: try loadFolders(in: folder).map { .folder($0) })
         
         return docs
     }
     
-    func loadNotes(in folder: URL? = nil) -> [Note] {
+    func loadNotes(in folder: URL? = nil) throws -> [Note] {
         let folder = folder ?? rootFolder()
-        
-        guard let files = try? fm.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil) else { return [] }
+        let files = try fm.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil)
 
         return files
             .filter { $0.pathExtension.lowercased() == "pdf" }
@@ -65,12 +64,9 @@ class Explorer {
             }
     }
     
-    func loadFolders(in folder: URL? = nil) -> [URL] {
+    func loadFolders(in folder: URL? = nil) throws -> [URL] {
         let root = folder ?? rootFolder()
-        
-        guard let folders = try? fm.contentsOfDirectory(at: root, includingPropertiesForKeys: nil, options: .skipsHiddenFiles) else {
-            return []
-        }
+        let folders = try fm.contentsOfDirectory(at: root, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)
 
         return folders.filter { url in
             var isDir: ObjCBool = false
@@ -121,8 +117,10 @@ class Explorer {
     }
     
     func addQuickNote(at folder: URL? = nil, date: Date = .now) async throws -> Note {
+        let folder = folder ?? rootFolder()
+        try ensureFolderExists(folder)
         let baseName = Self.quickNoteFormatter.string(from: date)
-        let uniqueName = uniqueNoteName(base: baseName, in: folder)
+        let uniqueName = try uniqueNoteName(base: baseName, in: folder)
         return try await addNote(at: folder, name: uniqueName)
     }
     
@@ -133,6 +131,7 @@ class Explorer {
     }
     
     func addFolder(at folder: URL? = nil, name: String) throws -> URL {
+        let name = try NoteName.validated(name)
         let parent = folder ?? rootFolder()
         try ensureFolderExists(parent)
         
@@ -141,12 +140,12 @@ class Explorer {
         return folderURL
     }
     
-    func uniqueNoteName(base: String, in folder: URL? = nil) -> String {
+    func uniqueNoteName(base: String, in folder: URL? = nil) throws -> String {
         let folder = folder ?? rootFolder()
         var candidate = base
         var index = 2
         
-        while (try? noteNameExists(candidate, in: folder)) == true {
+        while try noteNameExists(candidate, in: folder) {
             candidate = "\(base) \(index)"
             index += 1
         }

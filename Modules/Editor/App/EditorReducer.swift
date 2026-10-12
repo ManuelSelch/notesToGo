@@ -6,14 +6,22 @@ extension EditorFeature {
         // MARK: - document
         case let .openNote(note):
             state.note = note
+            state.document = nil
+            state.copiedPage = nil
             state.mode = .write
+            state.loadFailure = nil
+            state.saveFailure = nil
             state.isLoading = true
             state.tools = state.defaultTools
             state.selectedTool = state.defaultTools.first!
             state.previousInkTool = state.defaultTools.first!
         case let .openQuickNote(note):
             state.note = note
+            state.document = nil
+            state.copiedPage = nil
             state.mode = .focus
+            state.loadFailure = nil
+            state.saveFailure = nil
             state.isLoading = true
             state.tools = state.defaultTools
             state.selectedTool = state.defaultTools.first!
@@ -21,7 +29,20 @@ extension EditorFeature {
             
         case let .documentLoaded(doc):
             state.document = doc
+            state.loadFailure = nil
             state.isLoading = false
+        case let .documentLoadFailed(failure):
+            state.document = nil
+            state.copiedPage = nil
+            state.loadFailure = failure
+            state.isLoading = false
+        case .retryLoad:
+            guard state.note != nil, !state.isLoading else { break }
+            state.document = nil
+            state.loadFailure = nil
+            state.isLoading = true
+        case .dismissLoadFailure:
+            state.loadFailure = nil
         case let .pageAppended(page):
             state.document?.addPage(page)
         case let .pageInserted(after: pageID, page: page):
@@ -49,6 +70,8 @@ extension EditorFeature {
             
         // MARK: - save
         case let .save(markups):
+            guard state.document != nil, !state.isLoading else { break }
+            state.saveFailure = nil
             state.isLoading = true
             
             // sync markups
@@ -58,7 +81,13 @@ extension EditorFeature {
                 }
             }
         case .saved:
+            state.saveFailure = nil
             state.isLoading = false
+        case let .savedFailed(failure):
+            state.saveFailure = failure
+            state.isLoading = false
+        case .dismissSaveFailure:
+            state.saveFailure = nil
             
         // MARK: - mode
         case .toggleEditMode:
