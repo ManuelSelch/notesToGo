@@ -20,7 +20,22 @@ nonisolated struct Note: Identifiable, Hashable, Codable, Sendable {
 class Explorer {
     static let blankTemplatePDFCreator = "NotesToGo.BlankTemplate"
     
-    let fm = FileManager.default
+    let fm: FileManager
+    private let documentRepository: DocumentRepositoryProtocol
+    private let writePDF: (PDFDocument, URL) -> Bool
+    private let publishFile: (URL, URL) throws -> Void
+
+    init(
+        documentRepository: DocumentRepositoryProtocol = DocumentRepository(),
+        fileManager: FileManager = .default,
+        writePDF: @escaping (PDFDocument, URL) -> Bool = { $0.write(to: $1) },
+        publishFile: ((URL, URL) throws -> Void)? = nil
+    ) {
+        self.documentRepository = documentRepository
+        fm = fileManager
+        self.writePDF = writePDF
+        self.publishFile = publishFile ?? { try fileManager.moveItem(at: $0, to: $1) }
+    }
     
     static let quickNoteFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -65,15 +80,44 @@ class Explorer {
     
     // MARK: - add note
     func addNote(at folder: URL? = nil, name: String) async throws -> Note {
+        let name = try NoteName.validated(name)
         let folder = folder ?? rootFolder()
-        
         try ensureFolderExists(folder)
-        
-        let pdf = await createEmptyPDF(at: folder, name)
-        let markup = try await createEmptyMarkup(at: folder, name)
-        
-        
-        return Note(pdf: pdf, markup: markup)
+        guard try !noteNameExists(name, in: folder) else { throw EditorError.noteAlreadyExists }
+
+        let note = noteURLs(in: folder, name: name)
+        let stagingFolder = folder.appendingPathComponent(".notestogo-create-\(UUID().uuidString)", isDirectory: true)
+        try fm.createDirectory(at: stagingFolder, withIntermediateDirectories: false)
+        let stagedNote = noteURLs(in: stagingFolder, name: name)
+        var publishedMarkup = false
+
+        do {
+            // Retain the intended final URLs if an interrupted operation leaves staging artifacts.
+            try JSONEncoder().encode(note).write(to: stagingFolder.appendingPathComponent("note.json"), options: .atomic)
+            let document = MultiPageDocument(template: .empty)
+            try createEmptyPDF(at: stagedNote.pdf, document: document)
+            try await documentRepository.save(document, at: stagedNote.markup)
+
+            // moveItem refuses to replace a destination created while serialization was awaiting.
+            // Publish the PDF last so the explorer does not show an incomplete note.
+            try publishFile(stagedNote.markup, note.markup)
+            publishedMarkup = true
+            try publishFile(stagedNote.pdf, note.pdf)
+        } catch {
+            let creationError = error
+            do {
+                if publishedMarkup { try fm.removeItem(at: note.markup) }
+                try fm.removeItem(at: stagingFolder)
+            } catch {
+                throw EditorError.creationCleanupFailed(stagingFolder)
+            }
+            throw creationError
+        }
+
+        // A cleanup failure here cannot invalidate the already complete note pair.
+        // Leftovers are hidden and identified by note.json rather than exposed as notes.
+        try? fm.removeItem(at: stagingFolder)
+        return note
     }
     
     func addQuickNote(at folder: URL? = nil, date: Date = .now) async throws -> Note {
@@ -102,8 +146,7 @@ class Explorer {
         var candidate = base
         var index = 2
         
-        while fm.fileExists(atPath: folder.appendingPathComponent("\(candidate).pdf").path)
-            || fm.fileExists(atPath: folder.appendingPathComponent(".\(candidate).markup").path) {
+        while (try? noteNameExists(candidate, in: folder)) == true {
             candidate = "\(base) \(index)"
             index += 1
         }
@@ -130,28 +173,31 @@ class Explorer {
         }
     }
     
-    private func createEmptyPDF(at folder: URL, _ name: String) async -> URL {
-        let pdfURL = folder.appendingPathComponent("\(name).pdf")
-        
-        let pdf = PDFDocument()
-        pdf.insert(PDFPage(), at: 0)
-        var attributes = pdf.documentAttributes ?? [:]
-        attributes[PDFDocumentAttribute.creatorAttribute] = Self.blankTemplatePDFCreator
-        pdf.documentAttributes = attributes
-        pdf.write(to: pdfURL)
-        
-        return pdfURL
+    private func noteURLs(in folder: URL, name: String) -> Note {
+        Note(
+            pdf: folder.appendingPathComponent("\(name).pdf"),
+            markup: folder.appendingPathComponent(".\(name).markup")
+        )
     }
-    
-    private func createEmptyMarkup(at folder: URL, _ name: String) async throws -> URL {
-        // create empty markup
-        let markupURL = folder.appendingPathComponent(".\(name).markup")
-        
-        let markup = PaperMarkup(bounds: .init(origin: .zero, size: .init(width: 350, height: 670)))
-        let data = try await markup.dataRepresentation()
-        try data.write(to: markupURL)
-        
-        return markupURL
+
+    private func noteNameExists(_ name: String, in folder: URL) throws -> Bool {
+        let note = noteURLs(in: folder, name: name)
+        let filenames = try fm.contentsOfDirectory(atPath: folder.path)
+        return filenames.contains { filename in
+            filename.caseInsensitiveCompare(note.pdf.lastPathComponent) == .orderedSame
+                || filename.caseInsensitiveCompare(note.markup.lastPathComponent) == .orderedSame
+        }
+    }
+
+    private func createEmptyPDF(at url: URL, document: MultiPageDocument) throws {
+        let pdf = PDFDocument()
+        for (index, page) in document.pages.enumerated() {
+            let pdfPage = PDFPage()
+            pdfPage.setBounds(page.markup.bounds, for: .mediaBox)
+            pdf.insert(pdfPage, at: index)
+        }
+        pdf.documentAttributes = [PDFDocumentAttribute.creatorAttribute: Self.blankTemplatePDFCreator]
+        guard writePDF(pdf, url) else { throw EditorError.pdfWriteFailed }
     }
     
     

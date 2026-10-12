@@ -6,7 +6,7 @@ import PDFKit
 /// repository to load and save documents
 protocol DocumentRepositoryProtocol {
     func save(_ document: MultiPageDocument, at path: URL) async throws
-    func load(_ path: URL) async throws -> MultiPageDocument
+    func load(_ note: Note) async throws -> MultiPageDocument
 }
 
 class DocumentRepository: DocumentRepositoryProtocol {
@@ -18,17 +18,17 @@ class DocumentRepository: DocumentRepositoryProtocol {
         
         let encoder = JSONEncoder()
         encoder.userInfo[.markupDataKey] = markupDataList
-        let data = try encoder.encode(document)
+        let data = try encoder.encode(StoredDocument(document: document))
         try data.write(to: path, options: .atomic)
     }
     
-    func load(_ path: URL) async throws -> MultiPageDocument {
-        if FileManager.default.fileExists(atPath: path.path) {
-            let data = try Data(contentsOf: path)
-            return try JSONDecoder().decode(MultiPageDocument.self, from: data)
+    func load(_ note: Note) async throws -> MultiPageDocument {
+        if FileManager.default.fileExists(atPath: note.markup.path) {
+            let data = try Data(contentsOf: note.markup)
+            return try JSONDecoder().decode(StoredDocument.self, from: data).document
         }
         
-        guard let pdf = PDFDocument(url: pdfURL(forMarkupURL: path)) else {
+        guard let pdf = PDFDocument(url: note.pdf) else {
             throw EditorError.documentNotFound
         }
         
@@ -40,10 +40,32 @@ class DocumentRepository: DocumentRepositoryProtocol {
         )
     }
     
-    private func pdfURL(forMarkupURL markupURL: URL) -> URL {
-        let markupName = markupURL.deletingPathExtension().lastPathComponent
-        let pdfName = markupName.hasPrefix(".") ? String(markupName.dropFirst()) : markupName
-        return markupURL.deletingLastPathComponent().appendingPathComponent("\(pdfName).pdf")
+    /// The only supported on-disk format. Check the version before decoding page data.
+    private struct StoredDocument: Codable {
+        static let currentVersion = 1
+        let formatVersion: Int
+        let document: MultiPageDocument
+
+        init(document: MultiPageDocument) {
+            formatVersion = Self.currentVersion
+            self.document = document
+        }
+
+        private enum CodingKeys: String, CodingKey {
+            case formatVersion, document
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            guard let version = try container.decodeIfPresent(Int.self, forKey: .formatVersion) else {
+                throw EditorError.missingFormatVersion
+            }
+            guard version == Self.currentVersion else {
+                throw EditorError.unsupportedFormatVersion(version)
+            }
+            formatVersion = version
+            document = try container.decode(MultiPageDocument.self, forKey: .document)
+        }
     }
 }
 
@@ -54,8 +76,8 @@ class InMemoryDocumentRepository: DocumentRepositoryProtocol {
         documents[path] = document
     }
     
-    func load(_ path: URL) async throws -> MultiPageDocument {
-        guard let doc = documents[path] else { throw EditorError.documentNotFound }
+    func load(_ note: Note) async throws -> MultiPageDocument {
+        guard let doc = documents[note.markup] else { throw EditorError.documentNotFound }
         return doc
     }
 }

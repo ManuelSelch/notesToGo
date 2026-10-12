@@ -13,12 +13,12 @@ class DocumentMiddleware {
         switch(action) {
         case let .openNote(note):
             router.stack.push(.editor(.editor))
-            let doc = (try? await repo.load(note.markup)) ?? .empty
+            let doc = (try? await repo.load(note)) ?? .empty
             return .documentLoaded(doc)
             
         case let .openQuickNote(note):
             router.stack.push(.editor(.editor))
-            let doc = (try? await repo.load(note.markup)) ?? .empty
+            let doc = (try? await repo.load(note)) ?? .empty
             return .documentLoaded(doc)
             
         case .save:

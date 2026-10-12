@@ -32,6 +32,7 @@ struct AppContainer: App {
                     }
                 }
             })
+            .environmentObject(theme)
             .environmentObject(explorer)
             .environmentObject(editor)
             .environmentObject(settings)
