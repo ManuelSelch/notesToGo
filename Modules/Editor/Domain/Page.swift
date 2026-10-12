@@ -3,7 +3,7 @@ import PaperKit
 import PencilKit
 
 /// model to store a single page (markup and background)
-struct Page: Identifiable, Equatable {
+nonisolated struct Page: Identifiable, Equatable, Sendable {
     let id: UUID
     var markup: PaperMarkup
     var background: PageBackground

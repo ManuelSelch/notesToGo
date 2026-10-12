@@ -1,7 +1,7 @@
 import Foundation
 import PencilKit
 
-enum PencilTool: Hashable, Sendable, Identifiable, Equatable {
+nonisolated enum PencilTool: Hashable, Sendable, Identifiable, Equatable {
     case pen(_ width: CGFloat, _ color: CodableColor)
     case pencil, marker
     case eraser

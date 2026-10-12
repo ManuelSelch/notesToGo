@@ -3,7 +3,7 @@ import PaperKit
 import PencilKit
 
 /// document that stores multiple pages
-struct MultiPageDocument: Equatable {
+nonisolated struct MultiPageDocument: Equatable, Sendable {
     var pages: [Page] = []
     
     init(pages: [Page] = []) {

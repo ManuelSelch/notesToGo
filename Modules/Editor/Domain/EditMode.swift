@@ -1,6 +1,6 @@
 import Foundation
 
-enum EditMode {
+nonisolated enum EditMode: Sendable {
     case read
     case write
     case focus
