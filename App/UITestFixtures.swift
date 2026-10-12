@@ -7,12 +7,13 @@ import PDFKit
 enum UITestFixtures {
     static func prepare() throws {
         let environment = ProcessInfo.processInfo.environment
-        guard let requestedName = environment["NOTESTOGO_UI_TEST_NOTE"],
+        guard try UITestStorage().root != nil,
+              let requestedName = environment["NOTESTOGO_UI_TEST_NOTE"],
               requestedName.hasPrefix("AT Error "),
               let format = environment["NOTESTOGO_UI_TEST_MARKUP"],
               ["corrupt", "unsupported"].contains(format) else { return }
         let name = try NoteName.validated(requestedName)
-        let folder = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let folder = Explorer().rootFolder()
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         let pdfURL = folder.appendingPathComponent("\(name).pdf")
         let markupURL = folder.appendingPathComponent(".\(name).markup")

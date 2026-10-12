@@ -6,6 +6,10 @@ class BaseUITestCase: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
         app = AppDSL()
+        let testApp = app!
+        addTeardownBlock {
+            try testApp.cleanup()
+        }
         app.launch()
     }
 }

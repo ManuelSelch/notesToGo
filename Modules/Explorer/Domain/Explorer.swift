@@ -201,6 +201,13 @@ class Explorer {
     
     
     func rootFolder() -> URL {
+        #if DEBUG
+        do {
+            if let root = try UITestStorage().root { return root }
+        } catch {
+            fatalError("Invalid UI-test storage configuration: \(error)")
+        }
+        #endif
         return fm.urls(for: .documentDirectory, in: .userDomainMask)[0]
     }
 }
