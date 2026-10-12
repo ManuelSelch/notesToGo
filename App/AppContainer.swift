@@ -2,39 +2,40 @@ import SwiftUI
 import Router
 import Dependencies
 import Flux
+import Combine
 
-struct AppContainer: View {
+@main
+struct AppContainer: App {
     @Dependency(\.router) var router
     
+    @StateObject var theme = Theme()
     @StateObject var explorer = ExplorerApp().build()
     @StateObject var editor = EditorApp().build()
     @StateObject var settings = SettingsApp().build()
+    let preferences = PreferencesCoordinator()
     
-    var body: some View {
-        StackWithSheetRouterView(router, content: { route in
-            VStack {
-                switch route {
-                case let .explorer(route):
-                    ExplorerContainer(
-                        route: route,
-                        openNoteTapped: { editor.dispatch(.openNote($0)) },
-                        openQuickNoteTapped: { editor.dispatch(.openQuickNote($0)) }
-                    )
-                case let .editor(route):
-                    EditorContainer(route)
-                case let .settings(route):
-                    SettingsContainer(route)
+    var body: some Scene {
+        WindowGroup {
+            StackWithSheetRouterView(router, content: { route in
+                VStack {
+                    switch route {
+                    case let .explorer(route):
+                        ExplorerContainer(
+                            route: route,
+                            openNoteTapped: { editor.dispatch(.openNote($0)) },
+                            openQuickNoteTapped: { editor.dispatch(.openQuickNote($0)) }
+                        )
+                    case let .editor(route):
+                        EditorContainer(route)
+                    case let .settings(route):
+                        SettingsContainer(route)
+                    }
                 }
-            }
-        })
-        .environmentObject(explorer)
-        .environmentObject(editor)
-        .environmentObject(settings)
-        
+            })
+            .environmentObject(explorer)
+            .environmentObject(editor)
+            .environmentObject(settings)
+            .statusBarHidden(preferences.statusBarHidden(editor))
+        }
     }
-}
-
-
-extension FluxStore {
-    
 }
