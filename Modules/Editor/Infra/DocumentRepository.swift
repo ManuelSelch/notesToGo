@@ -23,38 +23,52 @@ class DocumentRepository: DocumentRepositoryProtocol {
     }
     
     func load(_ note: Note) async throws -> MultiPageDocument {
-        let markupData: Data?
+        let storedDocument = try loadMarkupIfPresent(at: note.markup)
+        let pdf = try loadRequiredPDF(at: note.pdf)
+
+        if let storedDocument {
+            return storedDocument
+        }
+
+        return try createDocumentFromPDF(pdf)
+    }
+
+    /// Returns nil only when the sidecar is absent. Read and decoding failures throw.
+    private func loadMarkupIfPresent(at url: URL) throws -> MultiPageDocument? {
+        let data: Data
         do {
-            markupData = try Data(contentsOf: note.markup)
+            data = try Data(contentsOf: url)
         } catch where Self.isMissingFile(error) {
-            // Only an absent sidecar permits PDF-only initialization. Read failures do not.
-            markupData = nil
+            return nil
         }
+        return try decodeMarkup(data)
+    }
 
-        let document: MultiPageDocument?
-        if let markupData {
-            do {
-                document = try JSONDecoder().decode(StoredDocument.self, from: markupData).document
-            } catch let error as EditorError {
-                throw error
-            } catch {
-                throw EditorError.corruptDocument
-            }
-        } else {
-            document = nil
-        }
-
-        let pdfData: Data
+    private func decodeMarkup(_ data: Data) throws -> MultiPageDocument {
         do {
-            pdfData = try Data(contentsOf: note.pdf)
+            return try JSONDecoder().decode(StoredDocument.self, from: data).document
+        } catch let error as EditorError {
+            throw error
+        } catch {
+            throw EditorError.corruptDocument
+        }
+    }
+
+    /// Required even when the note already has an editable document.
+    private func loadRequiredPDF(at url: URL) throws -> PDFDocument {
+        let data: Data
+        do {
+            data = try Data(contentsOf: url)
         } catch where Self.isMissingFile(error) {
             throw EditorError.documentNotFound
         }
-        guard let pdf = PDFDocument(data: pdfData), pdf.pageCount > 0 else {
+        guard let pdf = PDFDocument(data: data), pdf.pageCount > 0 else {
             throw EditorError.invalidPDF
         }
-        if let document { return document }
+        return pdf
+    }
 
+    private func createDocumentFromPDF(_ pdf: PDFDocument) throws -> MultiPageDocument {
         var pages: [Page] = []
         for index in 0..<pdf.pageCount {
             guard let page = pdf.page(at: index) else { throw EditorError.invalidPDF }
