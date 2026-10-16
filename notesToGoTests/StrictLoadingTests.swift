@@ -4,7 +4,7 @@ import Testing
 
 @testable import notesToGo
 
-@Suite(.serialized)
+@Suite
 @MainActor
 struct StrictLoadingTests {
     @Test

@@ -5,7 +5,7 @@ import Testing
 
 @testable import notesToGo
 
-@Suite(.serialized)
+@Suite
 @MainActor
 struct DocumentStorageTests {
     @Test

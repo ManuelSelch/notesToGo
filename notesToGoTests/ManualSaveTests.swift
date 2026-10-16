@@ -5,7 +5,7 @@ import PaperKit
 import Testing
 @testable import notesToGo
 
-@Suite(.serialized, .container)
+@Suite(.container)
 @MainActor
 struct ManualSaveTests {
     let feature = EditorFeature()

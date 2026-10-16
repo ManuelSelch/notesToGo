@@ -5,7 +5,7 @@ import Testing
 
 @testable import notesToGo
 
-@Suite(.serialized, .container)
+@Suite(.container)
 @MainActor
 struct OperationFailureTests {
     @Test
