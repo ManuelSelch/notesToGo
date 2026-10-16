@@ -6,12 +6,15 @@ import PDFKit
 // MARK: - SwiftUI Wrapper with VC Reference
 struct MultiPageView: UIViewControllerRepresentable {
     let controller: MultiPageController
-    
+    var isInteractionEnabled = true
+
     func makeUIViewController(context: Context) -> MultiPageController {
         return controller
     }
     
-    func updateUIViewController(_ uiViewController: MultiPageController, context: Context) { }
+    func updateUIViewController(_ uiViewController: MultiPageController, context: Context) {
+        uiViewController.view.isUserInteractionEnabled = isInteractionEnabled
+    }
 }
 
 
@@ -33,6 +36,7 @@ class MultiPageController: UIViewController {
     private var didTriggerBottomOverscroll = false
     private var shouldScrollToNewPageAfterRebuild = false
     
+    var onCanvasChanged: ((UUID) -> Void)?
     var onPageChanged: ((UUID) -> Void)?
     var onPencilDoubleTap: (() -> Void)?
     var onScreenWidthChanged: (() -> Void)?
@@ -130,6 +134,7 @@ extension MultiPageController {
         )
        
         let view = PageView(frame: pageFrame)
+        view.onContentChanged = { [weak self] in self?.onCanvasChanged?(page.id) }
         view.configure(with: page, pdfPage: pdf?.page(at: pageIndex), parentViewController: self)
         contentView.addSubview(view)
         

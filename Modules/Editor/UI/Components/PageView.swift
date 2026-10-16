@@ -9,6 +9,8 @@ private let blankTemplatePDFCreator = "NotesToGo.BlankTemplate"
 class PageView: UIView {
     private var backgroundImageView: PDFPageBackgroundView!
     private var controller: PaperMarkupViewController?
+    private var lastObservedMarkup: PaperMarkup?
+    var onContentChanged: (() -> Void)?
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -39,6 +41,7 @@ class PageView: UIView {
     func configure(with page: Page, pdfPage: PDFPage?, parentViewController: UIViewController) {
         // remove existing paper view controller
         if let existingVC = controller {
+            existingVC.delegate = nil
             if existingVC.parent != nil {
                 existingVC.willMove(toParent: nil)
             }
@@ -98,6 +101,16 @@ class PageView: UIView {
         paperVC.contentView = contentBackgroundView
         
         controller = paperVC
+        lastObservedMarkup = paperVC.markup
+        paperVC.delegate = self
+        #if DEBUG
+        // Exercise real PaperKit drawing callbacks with XCTest's finger gestures.
+        if (try? UITestStorage().root) != nil,
+           ProcessInfo.processInfo.environment["NOTESTOGO_UI_TEST_DRAW_WITH_TOUCH"] == "1" {
+            paperVC.directTouchMode = .drawing
+            paperVC.directTouchAutomaticallyDraws = true
+        }
+        #endif
     }
     
     private func shouldShowPDFPage(_ pdfPage: PDFPage?) -> Bool {
@@ -107,10 +120,14 @@ class PageView: UIView {
     }
     
     public func transform(_ scale: CGFloat, to size: CGSize) {
-        // controller?.markup?.transformContent(.identity) // reset to transform relativly to original content
-        
-        controller?.markup?.transformContent(CGAffineTransform(scaleX: scale, y: scale))
-        controller?.markup?.bounds = CGRect(origin: .zero, size: size)
+        guard let controller else { return }
+        // Programmatic display transforms are not user edits. Refresh the baseline
+        // before restoring the delegate, including for a deferred notification.
+        controller.delegate = nil
+        controller.markup?.transformContent(CGAffineTransform(scaleX: scale, y: scale))
+        controller.markup?.bounds = CGRect(origin: .zero, size: size)
+        lastObservedMarkup = controller.markup
+        controller.delegate = self
     }
     
     /// Recursively find and disable scroll views within the PaperMarkupViewController
@@ -138,6 +155,7 @@ class PageView: UIView {
         guard let controller = controller else { return }
         let isActiveDrawingPage = mode.isDrawing && isCurrentPage
         
+        controller.isEditable = mode.isDrawing
         controller.view.isUserInteractionEnabled = mode.isDrawing
         
         if(isActiveDrawingPage) {
@@ -154,7 +172,9 @@ class PageView: UIView {
     
     func cleanup() {
         guard let controller = controller else { return }
-        
+        controller.delegate = nil
+        lastObservedMarkup = nil
+
         if controller.parent != nil {
             controller.willMove(toParent: nil)
         }
@@ -169,4 +189,18 @@ class PageView: UIView {
     func currentMarkup() -> PaperMarkup? {
         return controller?.markup
     }
+}
+
+extension PageView: PaperMarkupViewController.Delegate {
+    func paperMarkupViewControllerDidChangeMarkup(_ paperMarkupViewController: PaperMarkupViewController) {
+        guard paperMarkupViewController === controller,
+              let markup = paperMarkupViewController.markup,
+              markup != lastObservedMarkup else { return }
+        lastObservedMarkup = markup
+        onContentChanged?()
+    }
+
+    func paperMarkupViewControllerDidChangeSelection(_ paperMarkupViewController: PaperMarkupViewController) {}
+    func paperMarkupViewControllerDidBeginDrawing(_ paperMarkupViewController: PaperMarkupViewController) {}
+    func paperMarkupViewControllerDidChangeContentVisibleFrame(_ paperMarkupViewController: PaperMarkupViewController) {}
 }

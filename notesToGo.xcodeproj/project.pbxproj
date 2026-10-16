@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		97C63C922F35F5BA007C45B7 /* Flux in Frameworks */ = {isa = PBXBuildFile; productRef = 97C63C912F35F5BA007C45B7 /* Flux */; };
 		97C63CA82F35F8FF007C45B7 /* FluxTestStore in Frameworks */ = {isa = PBXBuildFile; productRef = 97C63CA72F35F8FF007C45B7 /* FluxTestStore */; };
+		97C8D8B330822B0000131CBE /* FactoryKit in Frameworks */ = {isa = PBXBuildFile; productRef = 97C8D8B230822B0000131CBE /* FactoryKit */; };
+		97C8D8B530822B0000131CBE /* FactoryTesting in Frameworks */ = {isa = PBXBuildFile; productRef = 97C8D8B430822B0000131CBE /* FactoryTesting */; };
 		97F710B5300BD54900BCD806 /* Dependencies in Frameworks */ = {isa = PBXBuildFile; productRef = 97F710B4300BD54900BCD806 /* Dependencies */; };
 		97F710B7300BD54E00BCD806 /* Router in Frameworks */ = {isa = PBXBuildFile; productRef = 97F710B6300BD54E00BCD806 /* Router */; };
 		97F710B9300BD55300BCD806 /* PulseUI in Frameworks */ = {isa = PBXBuildFile; productRef = 97F710B8300BD55300BCD806 /* PulseUI */; };
@@ -89,6 +91,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				97C8D8B330822B0000131CBE /* FactoryKit in Frameworks */,
 				97C63C922F35F5BA007C45B7 /* Flux in Frameworks */,
 				97F710B7300BD54E00BCD806 /* Router in Frameworks */,
 				97F710BB300BD5A400BCD806 /* Pulse in Frameworks */,
@@ -101,6 +104,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				97C8D8B530822B0000131CBE /* FactoryTesting in Frameworks */,
 				97C63CA82F35F8FF007C45B7 /* FluxTestStore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -174,6 +178,7 @@
 				97F710B6300BD54E00BCD806 /* Router */,
 				97F710B8300BD55300BCD806 /* PulseUI */,
 				97F710BA300BD5A400BCD806 /* Pulse */,
+				97C8D8B230822B0000131CBE /* FactoryKit */,
 			);
 			productName = notesToGo;
 			productReference = 97192D032EF32240000C9F6A /* notesToGo.app */;
@@ -198,6 +203,7 @@
 			name = notesToGoTests;
 			packageProductDependencies = (
 				97C63CA72F35F8FF007C45B7 /* FluxTestStore */,
+				97C8D8B430822B0000131CBE /* FactoryTesting */,
 			);
 			productName = notesToGoTests;
 			productReference = 97C63C9C2F35F79E007C45B7 /* notesToGoTests.xctest */;
@@ -263,6 +269,7 @@
 				97F710B1300BD4E400BCD806 /* XCRemoteSwiftPackageReference "Pulse" */,
 				97F710B2300BD52200BCD806 /* XCRemoteSwiftPackageReference "Router" */,
 				97F710B3300BD53E00BCD806 /* XCRemoteSwiftPackageReference "Dependencies" */,
+				97C8D8B130822B0000131CBE /* XCRemoteSwiftPackageReference "Factory" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 97192D042EF32240000C9F6A /* Products */;
@@ -706,6 +713,14 @@
 				minimumVersion = 1.0.10;
 			};
 		};
+		97C8D8B130822B0000131CBE /* XCRemoteSwiftPackageReference "Factory" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/hmlongco/Factory";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.5.0;
+			};
+		};
 		97F710B1300BD4E400BCD806 /* XCRemoteSwiftPackageReference "Pulse" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/kean/Pulse";
@@ -742,6 +757,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 97C63C902F35F5BA007C45B7 /* XCRemoteSwiftPackageReference "Flux" */;
 			productName = FluxTestStore;
+		};
+		97C8D8B230822B0000131CBE /* FactoryKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 97C8D8B130822B0000131CBE /* XCRemoteSwiftPackageReference "Factory" */;
+			productName = FactoryKit;
+		};
+		97C8D8B430822B0000131CBE /* FactoryTesting */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 97C8D8B130822B0000131CBE /* XCRemoteSwiftPackageReference "Factory" */;
+			productName = FactoryTesting;
 		};
 		97F710B4300BD54900BCD806 /* Dependencies */ = {
 			isa = XCSwiftPackageProductDependency;

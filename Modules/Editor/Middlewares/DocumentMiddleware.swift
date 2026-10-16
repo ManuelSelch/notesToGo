@@ -17,19 +17,21 @@ class DocumentMiddleware {
         let repo = repositoryOverride ?? self.repo
         switch(action) {
         case let .openNote(note), let .openQuickNote(note):
+            guard !state.isSaving else { return .none }
             router.stack.push(.editor(.editor))
             return await load(note, using: repo)
         case .retryLoad:
             guard let note = state.note else { return .none }
             return await load(note, using: repo)
             
-        case .save:
-            guard let doc = state.document, let path = state.note?.markup else { break }
-            
+        case let .save(_, requestID):
+            // Flux middleware receives post-reducer state. Only the accepted request
+            // may write; a rapid second tap must not replay the active snapshot.
+            guard let request = state.saveRequest, request.id == requestID else { break }
             do {
-                try await repo.save(doc, at: path)
-                return .saved
-            } catch { return .savedFailed(OperationFailure(error)) }
+                try await repo.save(request.document, at: request.note.markup)
+                return .saved(request.id)
+            } catch { return .savedFailed(request.id, OperationFailure(error)) }
         
         default: break
         }

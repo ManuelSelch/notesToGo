@@ -13,11 +13,11 @@ class LogMiddleware<F> where F:Feature {
 }
 
 struct EditorApp {
-    func build() -> FluxStore<EditorFeature> {
+    func build(repository: DocumentRepositoryProtocol? = nil) -> FluxStore<EditorFeature> {
         return .init(
             state: .init(),
             middlewares: [
-                DocumentMiddleware().handle,
+                DocumentMiddleware(repository: repository).handle,
                 PageMiddleware().handle,
                 LogMiddleware<EditorFeature>().handle
             ]
@@ -60,14 +60,18 @@ struct EditorContainer: View {
                         mode: store.state.mode,
                         tools: store.state.tools,
                         selectedTool: store.state.selectedTool,
+                        canSave: store.state.canSave,
+                        isSaving: store.state.isSaving,
 
                         editModeToggled: {store.dispatch(.toggleEditMode)},
                         focusModeToggled: {store.dispatch(.toggleFocusMode)},
 
                         addPageTapped: {store.dispatch(.addPageTapped)},
                         toolSelected: {store.dispatch(.toolSelected($0))},
+                        contentChanged: { store.dispatch(.canvasChanged($0)) },
+                        saveTapped: { store.dispatch(.save($0)) },
                         openGridTapped: {
-                            store.dispatch(.save($0))
+                            store.dispatch(.captureMarkups($0))
                             router.stack.push(.editor(.grid))
                         },
                         saveAndCloseTapped: {
@@ -95,6 +99,7 @@ struct EditorContainer: View {
                     onMovePage: { store.dispatch(.movePage(source: $0, destination: $1)) },
                     onDone: { router.stack.dismiss() }
                 )
+                .disabled(store.state.isLoading || store.state.isSaving)
             }
             
         }

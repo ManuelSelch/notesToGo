@@ -11,12 +11,16 @@ struct EditorScreen: View {
     let mode: EditMode
     let tools: [PencilTool]
     let selectedTool: PencilTool
+    let canSave: Bool
+    let isSaving: Bool
     
     let editModeToggled: () -> Void
     let focusModeToggled: () -> Void
     
     let addPageTapped: () -> Void
     let toolSelected: (PencilTool) -> Void
+    let contentChanged: (UUID) -> Void
+    let saveTapped: ([UUID: PaperMarkup]) -> Void
     let openGridTapped: ([UUID: PaperMarkup]) -> Void
     let saveAndCloseTapped: ([UUID: PaperMarkup]) -> Void
     
@@ -24,7 +28,7 @@ struct EditorScreen: View {
     let bottomOverscrolled: () -> Void
     
     var body: some View {
-        MultiPageView(controller: multiPage)
+        MultiPageView(controller: multiPage, isInteractionEnabled: !isSaving)
             .navigationBarBackButtonHidden() // hide native backup button to be able to save note when user clicks back
             .ignoresSafeArea(.all)
             .onAppear {
@@ -34,8 +38,8 @@ struct EditorScreen: View {
                 if mode != .focus {
                     ToolbarItem(placement: .topBarLeading) { SaveToolbar() }
                 }                                                                                                                                                   
-                ToolbarItem(placement: .principal) { PenToolbar() }
-                ToolbarItem(placement: .topBarTrailing) { EditToolbar() }
+                ToolbarItem(placement: .principal) { PenToolbar().disabled(isSaving) }
+                ToolbarItem(placement: .topBarTrailing) { EditToolbar().disabled(isSaving) }
             }
             .onAppear(perform: bindControllerCallbacks)
             .onChange(of: document) {
@@ -58,6 +62,7 @@ struct EditorScreen: View {
 // MARK: controller binding
 extension EditorScreen {
     func bindControllerCallbacks() {
+        multiPage.onCanvasChanged = contentChanged
         multiPage.onPageChanged = { _ in
             multiPage.selectTool(selectedTool)
         }
@@ -83,6 +88,10 @@ extension EditorScreen {
         HStack {
             SimpleButton("chevron.left", action: { saveAndCloseTapped(multiPage.currentMarkups()) })
                 .accessibilityIdentifier("editor.closeButton")
+                .disabled(isSaving)
+            EditorSaveButton(canSave: canSave, isSaving: isSaving) {
+                saveTapped(multiPage.currentMarkups())
+            }
         }
     }
     
@@ -117,6 +126,7 @@ extension EditorScreen {
                 SimpleButton("square.grid.2x2", action: {openGridTapped(multiPage.currentMarkups())})
                     .accessibilityIdentifier("editor.openGridButton")
                 SimpleButton("plus.rectangle.portrait", action: addPageTapped)
+                    .accessibilityIdentifier("editor.addPageButton")
                 SimpleButton("viewfinder", action: focusModeToggled)
                     .accessibilityIdentifier("editor.enterFocusModeButton")
                 SimpleButton("checkmark", action: editModeToggled)
@@ -137,12 +147,16 @@ extension EditorScreen {
         mode: .write,
         tools: [.pen(1, .black), .eraser, .lasso, .marker],
         selectedTool: .pen(1, .black),
+        canSave: false,
+        isSaving: false,
         
         editModeToggled: {},
         focusModeToggled: {},
         
         addPageTapped: {},
         toolSelected: { _ in },
+        contentChanged: { _ in },
+        saveTapped: { _ in },
         openGridTapped: { _ in },
         saveAndCloseTapped: { _ in },
         

@@ -1,0 +1,6 @@
+{
+  "name": "notestogo-mockups",
+  "private": true,
+  "scripts": { "dev": "vite --host 127.0.0.1" },
+  "devDependencies": { "vite": "7.3.1" }
+}

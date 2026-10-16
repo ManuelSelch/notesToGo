@@ -46,12 +46,10 @@ class EditorTests {
     }
     
     @Test
-    func save_whenDocWasLoaded_savesDocToRepo() async throws {
+    func save_whenContentChanged_savesDocToRepo() async throws {
         try await givenDocumentWasLoaded(ANY_DOCUMENT, at: ANY_NOTE.markup)
-        
-        store.dispatch(.save(.init())) { $0.isLoading = true }
-        
-        await store.receive(.saved) { $0.isLoading = false }
+        store.dispatch(.canvasChanged(ANY_DOCUMENT.pages[0].id)) { $0.hasUnsavedChanges = true }
+        await save()
     }
     
     @Test
@@ -61,6 +59,7 @@ class EditorTests {
         
         store.dispatch(.pageAppended(page)) {
             $0.document?.pages.append(page)
+            $0.hasUnsavedChanges = true
         }
         
         await save()
@@ -83,6 +82,7 @@ class EditorTests {
         let pastedPage = try #require(doc.pages.first?.duplicated(id: UUID()))
         store.dispatch(.pagePasted(after: secondID, page: pastedPage)) {
             $0.document?.pages.append(pastedPage)
+            $0.hasUnsavedChanges = true
         }
         #expect(store.state.document?.pages.count == oldCount + 1)
         
@@ -119,8 +119,14 @@ class EditorTests {
  
     
     func save() async {
-        store.dispatch(.save(.init())) { $0.isLoading = true }
-        await store.receive(.saved) { $0.isLoading = false }
+        let id = UUID()
+        store.dispatch(.save([:], requestID: id)) {
+            $0.saveRequest = .init(id: id, note: self.ANY_NOTE, document: $0.document!)
+        }
+        await store.receive(.saved(id)) {
+            $0.saveRequest = nil
+            $0.hasUnsavedChanges = false
+        }
     }
     
     // MARK: - editor mode

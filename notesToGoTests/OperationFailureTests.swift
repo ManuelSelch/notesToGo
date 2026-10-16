@@ -38,12 +38,15 @@ struct OperationFailureTests {
     func saveFailureStopsBusyStateAndPreservesDocument() {
         var state = EditorFeature.State()
         state.document = .empty
-        state.isLoading = true
+        state.note = missingNote()
+        state.hasUnsavedChanges = true
+        let id = UUID()
+        EditorFeature().reduce(&state, .save([:], requestID: id))
         let original = state.document
 
-        EditorFeature().reduce(&state, .savedFailed(OperationFailure(CocoaError(.fileWriteUnknown))))
+        EditorFeature().reduce(&state, .savedFailed(id, OperationFailure(CocoaError(.fileWriteUnknown))))
 
-        #expect(!state.isLoading)
+        #expect(!state.isSaving)
         #expect(state.document == original)
     }
 
@@ -165,21 +168,27 @@ struct OperationFailureTests {
         var state = EditorFeature.State()
         state.note = missingNote()
         state.document = .empty
+        state.hasUnsavedChanges = true
         let original = state.document
-        feature.reduce(&state, .save([:]))
-        let failed = try #require(await middleware.handle(state: state, action: .save([:])))
+        let first = EditorFeature.Action.save([:])
+        feature.reduce(&state, first)
+        let failed = try #require(await middleware.handle(state: state, action: first))
         feature.reduce(&state, failed)
 
         #expect(state.saveFailure == OperationFailure(CocoaError(.fileWriteNoPermission)))
         #expect(state.document == original)
-        #expect(!state.isLoading)
+        #expect(!state.isSaving)
+        #expect(state.hasUnsavedChanges)
         repository.shouldFail = false
-        feature.reduce(&state, .save([:]))
-        let saved = try #require(await middleware.handle(state: state, action: .save([:])))
-        #expect(saved == .saved)
+        let retryID = UUID()
+        let retry = EditorFeature.Action.save([:], requestID: retryID)
+        feature.reduce(&state, retry)
+        let saved = try #require(await middleware.handle(state: state, action: retry))
+        #expect(saved == .saved(retryID))
         feature.reduce(&state, saved)
         #expect(state.saveFailure == nil)
-        #expect(!state.isLoading)
+        #expect(!state.isSaving)
+        #expect(!state.hasUnsavedChanges)
     }
 
     private func missingNote() -> Note {

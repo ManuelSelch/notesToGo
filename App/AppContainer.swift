@@ -10,7 +10,7 @@ struct AppContainer: App {
     
     @StateObject var theme = Theme()
     @StateObject var explorer = ExplorerApp().build()
-    @StateObject var editor = EditorApp().build()
+    @StateObject var editor: FluxStore<EditorFeature>
     @StateObject var settings = SettingsApp().build()
     let preferences = PreferencesCoordinator()
     #if DEBUG
@@ -28,9 +28,13 @@ struct AppContainer: App {
                 try storage.prepare()
                 try UITestFixtures.prepare()
             }
+            let repository = try UITestFixtures.editorRepository()
+            _editor = StateObject(wrappedValue: EditorApp().build(repository: repository))
         } catch {
             fatalError("Could not prepare or clean up UI-test storage: \(error)")
         }
+        #else
+        _editor = StateObject(wrappedValue: EditorApp().build())
         #endif
     }
 

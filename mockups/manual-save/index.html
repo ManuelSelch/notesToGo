@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NotesToGo · Manual Save review</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="review">
+    <div><strong>NotesToGo / Manual Save</strong><span>iPad approximation · revision 2</span></div>
+    <label>Review state <select id="state"><option value="clean">Clean</option><option value="dirty">Unsaved changes</option><option value="saving">Saving</option><option value="error">Save failed</option><option value="loading">Opening note</option></select></label>
+  </header>
+  <main class="ipad" aria-label="iPad editor mockup">
+    <div class="systembar"><span>9:41</span><span>Wi-Fi ▰</span></div>
+    <nav class="toolbar" aria-label="Editor toolbar">
+      <div class="save-group">
+        <button id="back" class="round" aria-label="Back to files">‹</button>
+        <button id="save" class="save" aria-label="Save" title="Save"></button>
+      </div>
+      <div class="pens" aria-label="Drawing tools">
+        <button class="tool selected" aria-label="Pen">✎</button><button class="tool" aria-label="Eraser">▱</button><button class="tool" aria-label="Lasso">◌</button><button class="tool" aria-label="Marker">▰</button>
+      </div>
+      <div class="edit-tools"><span class="ink" aria-label="Black ink"></span><button id="grid" class="tool" aria-label="Simulate page edit">▦</button><button id="add" class="tool" aria-label="Add page">＋</button><button id="focus" class="tool" aria-label="Enter focus mode">⌗</button><button class="tool" id="read" aria-label="Toggle read mode">✓</button></div>
+      <button id="exit-focus" class="round" hidden aria-label="Exit focus mode">↙</button>
+    </nav>
+    <section class="workspace" aria-label="Note workspace">
+      <button class="paper" id="paper" aria-label="Simulate handwriting change">
+        <svg viewBox="0 0 760 940" aria-hidden="true"><g id="strokes" fill="none" stroke="#20232a" stroke-width="3" stroke-linecap="round"><path d="M94 128 Q115 91 130 127 T167 123 M185 112 L245 112 M93 162 Q187 154 287 160"/></g></svg>
+      </button>
+      <div id="loading" hidden><span class="spinner"></span><span>Opening note…</span></div>
+      <span class="page-number" id="page-number">1 / 1</span>
+    </section>
+    <div class="home-indicator"></div>
+    <div id="failure" class="scrim" hidden>
+      <section role="alertdialog" aria-modal="true" aria-labelledby="error-title" aria-describedby="error-description" class="alert">
+        <h2 id="error-title">Couldn’t save note</h2>
+        <p id="error-description">The note could not be saved. Your changes are still here. Try again.</p>
+        <button id="retry">Retry</button><button id="keep">Keep changes</button>
+      </section>
+    </div>
+  </main>
+  <footer class="instructions">
+    <p><strong>Try it:</strong> tap the paper or ＋ to make a change, then Save. Save stays in the editor; edits pause while saving. No autosave.</p>
+    <div><label>Next save <select id="outcome"><option value="success">Succeeds</option><option value="failure">Fails</option></select></label><button id="reset">Reset note</button></div>
+    <p class="muted">Focus mode keeps the existing minimal toolbar: exit focus to access Save. Back/close lifecycle is slice 4, not simulated here. ▦ simulates a grid page edit without leaving this mockup.</p>
+  </footer>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
