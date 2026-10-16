@@ -2,20 +2,6 @@ import Foundation
 import PDFKit
 import PaperKit
 
-nonisolated enum Document: Identifiable, Hashable, Sendable {
-    case note(Note)
-    case folder(URL)
-    
-    var id: Self { self }
-}
-
-nonisolated struct Note: Identifiable, Hashable, Codable, Sendable {
-    let pdf: URL
-    let markup: URL
-    
-    var id: URL { markup.absoluteURL }
-}
-
 /// load & save documents & folders
 class Explorer {
     static let blankTemplatePDFCreator = "NotesToGo.BlankTemplate"
