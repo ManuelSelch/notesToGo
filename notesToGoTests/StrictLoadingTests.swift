@@ -11,7 +11,7 @@ struct StrictLoadingTests {
     func validSidecarDoesNotHideMissingPDF() async throws {
         let folder = try temporaryFolder()
         defer { try? FileManager.default.removeItem(at: folder) }
-        let note = try await Explorer().addNote(at: folder, name: "Missing PDF")
+        let note = try await ExplorerService(repository: ExplorerRepository()).addNote(at: folder, name: "Missing PDF")
         try FileManager.default.removeItem(at: note.pdf)
 
         await #expect(throws: EditorError.documentNotFound) {
@@ -24,7 +24,7 @@ struct StrictLoadingTests {
     func validSidecarDoesNotHideDamagedPDF() async throws {
         let folder = try temporaryFolder()
         defer { try? FileManager.default.removeItem(at: folder) }
-        let note = try await Explorer().addNote(at: folder, name: "Damaged PDF")
+        let note = try await ExplorerService(repository: ExplorerRepository()).addNote(at: folder, name: "Damaged PDF")
         let source = try Data(contentsOf: note.markup)
         try Data("Not a PDF".utf8).write(to: note.pdf)
 
@@ -39,7 +39,7 @@ struct StrictLoadingTests {
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
 
         await #expect(throws: (any Error).self) {
-            try await Explorer().loadAllDocs(in: folder)
+            try await ExplorerService(repository: ExplorerRepository()).loadAllDocs(in: folder)
         }
     }
 
@@ -76,7 +76,7 @@ struct StrictLoadingTests {
     func corruptSidecarsAreReportedAndNeverReplaced(content: String) async throws {
         let folder = try temporaryFolder()
         defer { try? FileManager.default.removeItem(at: folder) }
-        let note = try await Explorer().addNote(at: folder, name: "Corrupt")
+        let note = try await ExplorerService(repository: ExplorerRepository()).addNote(at: folder, name: "Corrupt")
         let original = Data(content.utf8)
         try original.write(to: note.markup)
 
@@ -90,7 +90,7 @@ struct StrictLoadingTests {
     func unreadableSidecarDoesNotFallBackToPDFOnlyDocument() async throws {
         let folder = try temporaryFolder()
         defer { try? FileManager.default.removeItem(at: folder) }
-        let note = try await Explorer().addNote(at: folder, name: "Unreadable")
+        let note = try await ExplorerService(repository: ExplorerRepository()).addNote(at: folder, name: "Unreadable")
         try FileManager.default.removeItem(at: note.markup)
         try FileManager.default.createDirectory(at: note.markup, withIntermediateDirectories: false)
 

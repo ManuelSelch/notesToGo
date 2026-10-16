@@ -18,7 +18,7 @@ struct OperationFailureTests {
     @Test
     func listingFailureDoesNotReturnAnEmptySuccess() async {
         let missing = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        let result = await ExplorerMiddleware().handle(state: .init(), action: .reloadDocs(missing))
+        let result = await ExplorerMiddleware(explorer: ExplorerService(repository: ExplorerRepository())).handle(state: .init(), action: .reloadDocs(missing))
 
         #expect(result != nil)
         #expect(result != .docsLoaded([]))
@@ -28,7 +28,7 @@ struct OperationFailureTests {
     func creationFailureReturnsAnActionInsteadOfSilentlyDoingNothing() async {
         var state = ExplorerFeature.State()
         state.newItemName = "../Invalid"
-        let result = await ExplorerMiddleware().handle(state: state, action: .createNoteTapped(nil))
+        let result = await ExplorerMiddleware(explorer: ExplorerService(repository: ExplorerRepository())).handle(state: state, action: .createNoteTapped(nil))
 
         #expect(result != nil)
         #expect(state.newItemName == "../Invalid")
@@ -52,7 +52,7 @@ struct OperationFailureTests {
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: folder) }
-        let note = try await Explorer().addNote(at: folder, name: "Retry")
+        let note = try await ExplorerService(repository: ExplorerRepository()).addNote(at: folder, name: "Retry")
         let goodData = try Data(contentsOf: note.markup)
         let damagedData = Data("Damaged editable data".utf8)
         try damagedData.write(to: note.markup)
@@ -89,7 +89,7 @@ struct OperationFailureTests {
         var state = ExplorerFeature.State()
         state.docs = previous
         let feature = ExplorerFeature()
-        let middleware = ExplorerMiddleware()
+        let middleware = ExplorerMiddleware(explorer: ExplorerService(repository: ExplorerRepository()))
         feature.reduce(&state, .reloadDocs(folder))
         let failure = try #require(await middleware.handle(state: state, action: .reloadDocs(folder)))
         feature.reduce(&state, failure)
@@ -114,7 +114,7 @@ struct OperationFailureTests {
         var state = ExplorerFeature.State()
         state.newItemName = "../Invalid"
         let feature = ExplorerFeature()
-        let middleware = ExplorerMiddleware()
+        let middleware = ExplorerMiddleware(explorer: ExplorerService(repository: ExplorerRepository()))
         feature.reduce(&state, .createNoteTapped(folder))
         let failure = try #require(await middleware.handle(state: state, action: .createNoteTapped(folder)))
         feature.reduce(&state, failure)
@@ -141,7 +141,9 @@ struct OperationFailureTests {
     func quickNoteCreationFailureIsActionable() async {
         var state = ExplorerFeature.State()
         ExplorerFeature().reduce(&state, .createQuickNoteTapped)
-        let result = await ExplorerMiddleware(explorer: DeniedInboxExplorer()).handle(state: state, action: .createQuickNoteTapped)
+        let repository = ExplorerRepositoryStub()
+        repository.failure = CocoaError(.fileWriteNoPermission)
+        let result = await ExplorerMiddleware(explorer: ExplorerService(repository: repository)).handle(state: state, action: .createQuickNoteTapped)
 
         #expect(result == .operationFailed(OperationFailure(CocoaError(.fileWriteNoPermission))))
     }
@@ -151,7 +153,7 @@ struct OperationFailureTests {
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         var state = ExplorerFeature.State()
         state.newItemName = "../Escape"
-        let result = await ExplorerMiddleware().handle(state: state, action: .createFolderTapped(folder))
+        let result = await ExplorerMiddleware(explorer: ExplorerService(repository: ExplorerRepository())).handle(state: state, action: .createFolderTapped(folder))
 
         #expect(result == .operationFailed(OperationFailure(EditorError.invalidNoteName)))
         #expect(!FileManager.default.fileExists(atPath: folder.path))
@@ -185,13 +187,6 @@ struct OperationFailureTests {
     private func missingNote() -> Note {
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         return Note(pdf: folder.appendingPathComponent("Missing.pdf"), markup: folder.appendingPathComponent(".Missing.markup"))
-    }
-}
-
-@MainActor
-private final class DeniedInboxExplorer: Explorer {
-    override func inboxFolder() throws -> URL {
-        throw CocoaError(.fileWriteNoPermission)
     }
 }
 

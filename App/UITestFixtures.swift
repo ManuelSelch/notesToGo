@@ -13,7 +13,7 @@ enum UITestFixtures {
               let format = environment["NOTESTOGO_UI_TEST_MARKUP"],
               ["corrupt", "unsupported"].contains(format) else { return }
         let name = try NoteName.validated(requestedName)
-        let folder = Explorer().rootFolder()
+        let folder = ExplorerRepository().rootFolder()
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         let pdfURL = folder.appendingPathComponent("\(name).pdf")
         let markupURL = folder.appendingPathComponent(".\(name).markup")
