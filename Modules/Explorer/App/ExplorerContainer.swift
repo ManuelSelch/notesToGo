@@ -1,6 +1,6 @@
 import SwiftUI
 import Router
-import Dependencies
+import FactoryKit
 import Flux
 
 struct ExplorerApp {
@@ -16,7 +16,7 @@ struct ExplorerApp {
 }
 
 struct ExplorerContainer: View {
-    @Dependency(\.router) var router
+    @Injected(\.router) var router
     @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject var store: FluxStore<ExplorerFeature>
     

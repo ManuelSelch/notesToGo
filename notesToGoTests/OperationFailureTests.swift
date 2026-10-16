@@ -1,15 +1,18 @@
+import FactoryKit
+import FactoryTesting
 import Foundation
 import Testing
 
 @testable import notesToGo
 
-@Suite(.serialized)
+@Suite(.serialized, .container)
 @MainActor
 struct OperationFailureTests {
     @Test
     func openingMissingNoteReturnsAnErrorInsteadOfEmptyDocument() async {
         let note = missingNote()
-        let result = await DocumentMiddleware(repository: InMemoryDocumentRepository()).handle(state: .init(), action: .openNote(note))
+        Container.shared.documentRepository.register { InMemoryDocumentRepository() }
+        let result = await DocumentMiddleware().handle(state: .init(), action: .openNote(note))
 
         #expect(result != nil)
         #expect(result != .documentLoaded(.empty))
@@ -61,7 +64,7 @@ struct OperationFailureTests {
         try damagedData.write(to: note.markup)
         var state = EditorFeature.State()
         let feature = EditorFeature()
-        let middleware = DocumentMiddleware(repository: DocumentRepository())
+        let middleware = DocumentMiddleware()
         feature.reduce(&state, .openNote(note))
 
         let failed = try #require(await middleware.handle(state: state, action: .retryLoad))
@@ -163,7 +166,8 @@ struct OperationFailureTests {
     @Test
     func saveFailurePreservesSnapshotAndRetryClearsErrorOnSuccess() async throws {
         let repository = RetryableSaveRepository()
-        let middleware = DocumentMiddleware(repository: repository)
+        Container.shared.documentRepository.register { repository }
+        let middleware = DocumentMiddleware()
         let feature = EditorFeature()
         var state = EditorFeature.State()
         state.note = missingNote()

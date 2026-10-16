@@ -1,5 +1,5 @@
 import SwiftUI
-import Dependencies
+import FactoryKit
 import Router
 import Pulse
 import PulseUI
@@ -18,7 +18,7 @@ struct SettingsApp {
 
 
 struct SettingsContainer: View {
-    @Dependency(\.router) var router
+    @Injected(\.router) var router
     @EnvironmentObject var editor: FluxStore<EditorFeature>
     
     let route: SettingsFeature.Route

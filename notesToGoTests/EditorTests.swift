@@ -1,30 +1,27 @@
 import Foundation
 import Testing
-import Dependencies
+import FactoryKit
+import FactoryTesting
 import FluxTestStore
 
 @testable import notesToGo
 
-@Suite(.serialized)
+@Suite(.serialized, .container { @MainActor container in
+    container.documentRepository.register { InMemoryDocumentRepository() }
+})
 @MainActor
 class EditorTests {
     // MARK: - setup
     let ANY_DOCUMENT = MultiPageDocument(template: .empty)
     let ANY_NOTE = Note(pdf: URL(string: "MyFile.pdf")!, markup: URL(string: ".MyFile.markup")!)
     
-    @Dependency(\.documentRepository) var repo
+    // Resolve inside each test, after its container trait has registered the mock.
+    lazy var repo = Container.shared.documentRepository()
+    lazy var store: TestStore<EditorFeature> = .init(state: .init(), middlewares: [
+        DocumentMiddleware().handle
+    ])
     
-    let store: TestStore<EditorFeature>
-    
-    init() {
-        DependencyValues.setMode(.mock)
-        
-        store = .init(state: .init(), middlewares: [
-            DocumentMiddleware().handle
-        ])
-    }
-    
-    deinit {
+    isolated deinit {
         store.tearDown()
     }
     

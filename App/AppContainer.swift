@@ -1,12 +1,12 @@
 import SwiftUI
 import Router
-import Dependencies
+import FactoryKit
 import Flux
 import Combine
 
 @main
 struct AppContainer: App {
-    @Dependency(\.router) var router
+    @Injected(\.router) var router
     
     @StateObject var theme = Theme()
     @StateObject var explorer = ExplorerApp().build()
@@ -27,9 +27,9 @@ struct AppContainer: App {
             } else {
                 try storage.prepare()
                 try UITestFixtures.prepare()
+                try UITestFixtures.registerEditorRepository()
             }
-            let repository = try UITestFixtures.editorRepository()
-            _editor = StateObject(wrappedValue: EditorApp().build(repository: repository))
+            _editor = StateObject(wrappedValue: EditorApp().build())
         } catch {
             fatalError("Could not prepare or clean up UI-test storage: \(error)")
         }

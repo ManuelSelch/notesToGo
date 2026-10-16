@@ -1,20 +1,13 @@
 import Foundation
-import Dependencies
+import FactoryKit
 import Flux
 import Router
 
 class DocumentMiddleware {
-    @Dependency(\.documentRepository) var repo
-    @Dependency(\.router) var router
-    
-    private let repositoryOverride: DocumentRepositoryProtocol?
-
-    init(repository: DocumentRepositoryProtocol? = nil) {
-        repositoryOverride = repository
-    }
+    @Injected(\.documentRepository) var repo
+    @Injected(\.router) var router
     
     func handle(state: EditorFeature.State, action: EditorFeature.Action) async -> EditorFeature.Action? {
-        let repo = repositoryOverride ?? self.repo
         switch(action) {
         case let .openNote(note), let .openQuickNote(note):
             guard !state.isSaving else { return .none }

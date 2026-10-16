@@ -1,9 +1,11 @@
+import FactoryKit
+import FactoryTesting
 import Foundation
 import PaperKit
 import Testing
 @testable import notesToGo
 
-@Suite(.serialized)
+@Suite(.serialized, .container)
 @MainActor
 struct ManualSaveTests {
     let feature = EditorFeature()
@@ -106,7 +108,8 @@ struct ManualSaveTests {
 
     @Test func cleanSaveAndGridCaptureDoNotWrite() async throws {
         let repo = RecordingSaveRepository()
-        let middleware = DocumentMiddleware(repository: repo)
+        Container.shared.documentRepository.register { repo }
+        let middleware = DocumentMiddleware()
         var state = loadedState()
         let cleanSave = EditorFeature.Action.save([:])
         feature.reduce(&state, cleanSave)
@@ -133,7 +136,8 @@ struct ManualSaveTests {
         feature.reduce(&state, first)
         feature.reduce(&state, second)
         let repo = RecordingSaveRepository()
-        let middleware = DocumentMiddleware(repository: repo)
+        Container.shared.documentRepository.register { repo }
+        let middleware = DocumentMiddleware()
         #expect(await middleware.handle(state: state, action: second) == nil)
         #expect(await middleware.handle(state: state, action: first) != nil)
         #expect(repo.snapshots.count == 1)

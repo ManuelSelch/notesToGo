@@ -1,6 +1,6 @@
 import SwiftUI
 import Flux
-import Dependencies
+import FactoryKit
 import Router
 import PDFKit
 import Pulse
@@ -13,11 +13,11 @@ class LogMiddleware<F> where F:Feature {
 }
 
 struct EditorApp {
-    func build(repository: DocumentRepositoryProtocol? = nil) -> FluxStore<EditorFeature> {
+    func build() -> FluxStore<EditorFeature> {
         return .init(
             state: .init(),
             middlewares: [
-                DocumentMiddleware(repository: repository).handle,
+                DocumentMiddleware().handle,
                 PageMiddleware().handle,
                 LogMiddleware<EditorFeature>().handle
             ]
@@ -26,7 +26,7 @@ struct EditorApp {
 }
 
 struct EditorContainer: View {
-    @Dependency(\.router) var router
+    @Injected(\.router) var router
     @EnvironmentObject var store: FluxStore<EditorFeature>
     
     let route: EditorFeature.Route

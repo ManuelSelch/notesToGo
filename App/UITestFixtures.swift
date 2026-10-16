@@ -1,15 +1,22 @@
 #if DEBUG
+import FactoryKit
 import Foundation
 import PDFKit
 
 /// Debug-only real-file fixtures requested explicitly by error-flow UI tests.
 /// Normal launches and Release builds never create these files.
 enum UITestFixtures {
-    static func editorRepository() throws -> DocumentRepositoryProtocol? {
-        guard try UITestStorage().root != nil,
-              let mode = ProcessInfo.processInfo.environment["NOTESTOGO_UI_TEST_SAVE_MODE"],
-              ["delayed", "failOnce"].contains(mode) else { return nil }
-        return UITestSaveRepository(failFirstSave: mode == "failOnce")
+    /// Register before creating the editor store: @Injected captures its services eagerly.
+    static func registerEditorRepository(
+        environment: [String: String] = ProcessInfo.processInfo.environment
+    ) throws {
+        let storage = try UITestStorage(environment: environment)
+        guard storage.root != nil, !storage.isCleanup,
+              let mode = environment["NOTESTOGO_UI_TEST_SAVE_MODE"],
+              ["delayed", "failOnce"].contains(mode) else { return }
+        Container.shared.documentRepository.register {
+            UITestSaveRepository(failFirstSave: mode == "failOnce")
+        }
     }
 
     static func prepare() throws {
