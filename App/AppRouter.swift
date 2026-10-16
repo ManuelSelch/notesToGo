@@ -1,3 +1,4 @@
+import FactoryKit
 import Foundation
 import Router
 import Dependencies
@@ -11,6 +12,13 @@ enum AppRoute: RouteType {
     case settings(SettingsFeature.Route)
     
     var id: Self { self }
+}
+
+@MainActor
+extension Container {
+    var router: Factory<MyRouter> {
+        self { MyRouter(root: .explorer(.dashboard(path: nil))) }.cached
+    }
 }
 
 struct RouterKey: DependencyKey {

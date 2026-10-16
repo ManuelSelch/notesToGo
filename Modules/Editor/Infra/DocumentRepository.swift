@@ -1,3 +1,4 @@
+import FactoryKit
 import Foundation
 import Dependencies
 import PaperKit
@@ -112,6 +113,13 @@ class DocumentRepository: DocumentRepositoryProtocol {
             formatVersion = version
             document = try container.decode(MultiPageDocument.self, forKey: .document)
         }
+    }
+}
+
+@MainActor
+extension Container {
+    var documentRepository: Factory<DocumentRepositoryProtocol> {
+        self { DocumentRepository() }.cached
     }
 }
 
