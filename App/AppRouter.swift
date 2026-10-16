@@ -20,11 +20,3 @@ extension Container {
         self { MyRouter(root: .explorer(.dashboard(path: nil))) }.cached
     }
 }
-
-struct RouterKey: DependencyKey {
-    static var liveValue: MyRouter = .init(root: .explorer(.dashboard(path: nil)))
-}
-
-extension DependencyValues {
-    var router: MyRouter { Self[RouterKey.self] }
-}

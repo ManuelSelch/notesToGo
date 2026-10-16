@@ -136,15 +136,6 @@ class InMemoryDocumentRepository: DocumentRepositoryProtocol {
     }
 }
 
-struct DocumentRepositoryKey: DependencyKey {
-    static var liveValue: DocumentRepositoryProtocol = DocumentRepository()
-    static var mockValue: DocumentRepositoryProtocol = InMemoryDocumentRepository()
-}
-
-extension DependencyValues {
-    var documentRepository: DocumentRepositoryProtocol { Self[DocumentRepositoryKey.self] }
-}
-
 extension CodingUserInfoKey {
     static let markupDataKey = CodingUserInfoKey(rawValue: "markupData")!
 }
