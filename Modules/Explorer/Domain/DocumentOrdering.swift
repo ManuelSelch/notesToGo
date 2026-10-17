@@ -14,7 +14,7 @@ nonisolated struct DocumentOrdering {
     }
 }
 
-private extension Document {
+nonisolated private extension Document {
     var isFolder: Bool {
         if case .folder = self { return true }
         return false
