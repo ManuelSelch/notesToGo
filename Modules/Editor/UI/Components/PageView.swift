@@ -103,14 +103,6 @@ class PageView: UIView {
         controller = paperVC
         lastObservedMarkup = paperVC.markup
         paperVC.delegate = self
-        #if DEBUG
-        // Exercise real PaperKit drawing callbacks with XCTest's finger gestures.
-        if (try? UITestStorage().root) != nil,
-           ProcessInfo.processInfo.environment["NOTESTOGO_UI_TEST_DRAW_WITH_TOUCH"] == "1" {
-            paperVC.directTouchMode = .drawing
-            paperVC.directTouchAutomaticallyDraws = true
-        }
-        #endif
     }
     
     private func shouldShowPDFPage(_ pdfPage: PDFPage?) -> Bool {

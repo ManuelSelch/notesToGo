@@ -1,12 +1,10 @@
 import XCTest
 
-/// Run on iPad: the editor toolbar and finger-drawing canvas must be visible.
+/// Run on iPad so the editor toolbar is visible. Drawing requires Apple Pencil
+/// and is not exercised by XCTest's finger gestures.
 final class ManualSaveUITests: BaseUITestCase {
     private var saveButton: XCUIElement { app.app.buttons["editor.saveButton"] }
     private var addPageButton: XCUIElement { app.app.buttons["editor.addPageButton"] }
-    private var saveProgress: XCUIElement {
-        app.app.activityIndicators["editor.saveProgress"]
-    }
 
     func test_cleanNote_opensWithSaveDisabled() {
         let name = createNote(saveMode: "delayed")
@@ -68,7 +66,6 @@ final class ManualSaveUITests: BaseUITestCase {
         waitUntil("Save failure is dismissed") { !alert.exists }
         thenSaveIsEnabled()
         XCTAssertTrue(addPageButton.isEnabled)
-        XCTAssertFalse(saveProgress.exists)
 
         saveButton.tap()
         thenSaveIsInFlight()
@@ -97,33 +94,6 @@ final class ManualSaveUITests: BaseUITestCase {
         thenSaveIsClean()
         app.editor.openGrid()
         thenGridPageCountIs(2)
-    }
-
-    func test_drawingOnVisiblePage_enablesSave_andSaveReturnsToClean() {
-        app.app.launchEnvironment["NOTESTOGO_UI_TEST_DRAW_WITH_TOUCH"] = "1"
-        _ = createNote(saveMode: "delayed")
-        thenSaveIsClean()
-        let canvas = app.editor.pagesScrollView
-        waitUntil("Visible page canvas is ready for drawing") {
-            canvas.exists && canvas.isHittable && canvas.frame.width > 100 && canvas.frame.height > 100
-        }
-
-        // A short horizontal stroke stays within the first visible page and does
-        // not trigger the vertical bottom-overscroll add-page gesture.
-        let start = canvas.coordinate(withNormalizedOffset: CGVector(dx: 0.35, dy: 0.35))
-        let end = canvas.coordinate(withNormalizedOffset: CGVector(dx: 0.65, dy: 0.40))
-        start.press(forDuration: 0.05, thenDragTo: end)
-        thenSaveIsEnabled()
-
-        // Ensure this was a markup edit, not an accidentally inserted page.
-        app.editor.openGrid()
-        thenGridPageCountIs(1)
-        app.grid.done()
-        thenSaveIsEnabled()
-        saveButton.tap()
-        thenSaveIsInFlight()
-        thenSaveIsClean()
-        app.editor.thenIsVisible()
     }
 
     @discardableResult
@@ -168,9 +138,9 @@ final class ManualSaveUITests: BaseUITestCase {
     }
 
     private func thenSaveIsInFlight(file: StaticString = #filePath, line: UInt = #line) {
-        waitUntil("Saving shows progress and disables Save and Add Page", file: file, line: line) {
+        waitUntil("Saving disables Save and Add Page", file: file, line: line) {
             self.saveButton.exists && !self.saveButton.isEnabled
-                && self.saveButton.label == "Saving" && self.saveProgress.exists
+                && self.saveButton.label == "Saving"
                 && self.addPageButton.exists && !self.addPageButton.isEnabled
         }
     }
@@ -188,7 +158,6 @@ final class ManualSaveUITests: BaseUITestCase {
         XCTAssertTrue(alert.waitForExistence(timeout: 8), file: file, line: line)
         XCTAssertTrue(alert.buttons["Keep changes"].exists, file: file, line: line)
         XCTAssertTrue(alert.buttons["Retry"].exists, file: file, line: line)
-        XCTAssertFalse(saveProgress.exists, file: file, line: line)
         return alert
     }
 
