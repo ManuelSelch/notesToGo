@@ -265,7 +265,7 @@
 			mainGroup = 97192CFA2EF32240000C9F6A;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				97C63C902F35F5BA007C45B7 /* XCRemoteSwiftPackageReference "Flux" */,
+				97C63C902F35F5BA007C45B7 /* XCLocalSwiftPackageReference "Flux" */,
 				97F710B1300BD4E400BCD806 /* XCRemoteSwiftPackageReference "Pulse" */,
 				97F710B2300BD52200BCD806 /* XCRemoteSwiftPackageReference "Router" */,
 				97F710B3300BD53E00BCD806 /* XCRemoteSwiftPackageReference "Dependencies" */,
@@ -704,15 +704,14 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCRemoteSwiftPackageReference section */
-		97C63C902F35F5BA007C45B7 /* XCRemoteSwiftPackageReference "Flux" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/ManuelSelch/Flux";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.10;
-			};
+/* Begin XCLocalSwiftPackageReference section */
+		97C63C902F35F5BA007C45B7 /* XCLocalSwiftPackageReference "Flux" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../../../50 Coding/52 iOS/52.01 Packages/Flux";
 		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCRemoteSwiftPackageReference section */
 		97C8D8B130822B0000131CBE /* XCRemoteSwiftPackageReference "Factory" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/hmlongco/Factory";
@@ -750,12 +749,12 @@
 /* Begin XCSwiftPackageProductDependency section */
 		97C63C912F35F5BA007C45B7 /* Flux */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 97C63C902F35F5BA007C45B7 /* XCRemoteSwiftPackageReference "Flux" */;
+			package = 97C63C902F35F5BA007C45B7 /* XCLocalSwiftPackageReference "Flux" */;
 			productName = Flux;
 		};
 		97C63CA72F35F8FF007C45B7 /* FluxTestStore */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 97C63C902F35F5BA007C45B7 /* XCRemoteSwiftPackageReference "Flux" */;
+			package = 97C63C902F35F5BA007C45B7 /* XCLocalSwiftPackageReference "Flux" */;
 			productName = FluxTestStore;
 		};
 		97C8D8B230822B0000131CBE /* FactoryKit */ = {

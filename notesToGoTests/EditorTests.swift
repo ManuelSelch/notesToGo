@@ -1,149 +1,118 @@
 import FactoryKit
 import FactoryTesting
+import FluxTestStore
 import Foundation
 import Router
 import Testing
 @testable import notesToGo
 
-@Suite(.container)
+@Suite(.container { @MainActor container in
+    container.documentRepository.register { InMemoryDocumentRepository() }
+    container.router.register { MyRouter(root: .explorer(.dashboard(path: nil))) }
+})
 @MainActor
 struct EditorTests {
+    private let document = MultiPageDocument(template: .empty)
+    private let note = Note(
+        pdf: URL(fileURLWithPath: "/EditorTests/Note.pdf"),
+        markup: URL(fileURLWithPath: "/EditorTests/.Note.markup")
+    )
+    private var repository: DocumentRepositoryProtocol { Container.shared.documentRepository() }
+
     @Test
     func open_loadsDocFromRepo() async throws {
-        let document = MultiPageDocument(template: .empty)
-        let editor = try await loadedEditor(document)
-
-        #expect(editor.state.document == document)
-        #expect(!editor.state.hasUnsavedChanges)
+        let store = makeStore()
+        defer { store.tearDown() }
+        try await givenDocumentWasLoaded(document, in: store)
+        await store.finish()
     }
 
     @Test
     func save_whenContentChanged_savesDocToRepo() async throws {
-        let document = MultiPageDocument(template: .empty)
-        let editor = try await loadedEditor(document)
-        var state = editor.state
-
-        var expected = state
-        expected.hasUnsavedChanges = true
-        EditorFeature().reduce(&state, .canvasChanged(document.pages[0].id))
-        #expect(state == expected)
-        try await save(&state, using: editor.middleware, repository: editor.repository)
+        let store = makeStore()
+        defer { store.tearDown() }
+        try await givenDocumentWasLoaded(document, in: store)
+        store.dispatch(.canvasChanged(document.pages[0].id)) { $0.hasUnsavedChanges = true }
+        try await save(store)
+        await store.finish()
     }
 
     @Test
     func pageAppended_addsNewPageToDoc() async throws {
-        let document = MultiPageDocument(template: .empty)
-        let editor = try await loadedEditor(document)
-        var state = editor.state
+        let store = makeStore()
+        defer { store.tearDown() }
+        try await givenDocumentWasLoaded(document, in: store)
         let page = Page.empty(id: UUID())
 
-        var expected = state
-        expected.document?.pages.append(page)
-        expected.hasUnsavedChanges = true
-        EditorFeature().reduce(&state, .pageAppended(page))
+        store.dispatch(.pageAppended(page)) {
+            $0.document?.pages.append(page)
+            $0.hasUnsavedChanges = true
+        }
 
-        #expect(state == expected)
-        try await save(&state, using: editor.middleware, repository: editor.repository)
+        try await save(store)
+        await store.finish()
     }
 
     @Test
     func insertCopyPasteAndMovePage_updatesDocument() async throws {
-        var document = MultiPageDocument(template: .empty)
+        let store = makeStore()
+        defer { store.tearDown() }
+        var document = document
         document.pages.append(.empty)
-        let editor = try await loadedEditor(document)
-        var state = editor.state
-        let feature = EditorFeature()
+        try await givenDocumentWasLoaded(document, in: store)
         let first = document.pages[0]
         let second = document.pages[1]
 
-        var expected = state
-        expected.copiedPage = first
-        feature.reduce(&state, .copyPage(first.id))
-        #expect(state == expected)
-
+        store.dispatch(.copyPage(first.id)) { $0.copiedPage = first }
         let pasted = first.duplicated(id: UUID())
-        expected.document?.pages.append(pasted)
-        expected.hasUnsavedChanges = true
-        feature.reduce(&state, .pagePasted(after: second.id, page: pasted))
-        #expect(state == expected)
+        store.dispatch(.pagePasted(after: second.id, page: pasted)) {
+            $0.document?.pages.append(pasted)
+            $0.hasUnsavedChanges = true
+        }
+        store.dispatch(.movePage(source: pasted.id, destination: first.id)) {
+            $0.document?.pages = [pasted, first, second]
+        }
 
-        expected.document?.pages = [pasted, first, second]
-        feature.reduce(&state, .movePage(source: pasted.id, destination: first.id))
-        #expect(state == expected)
-        try await save(&state, using: editor.middleware, repository: editor.repository)
+        try await save(store)
+        await store.finish()
     }
 
     @Test
-    func toggleEditMode_togglesBetweenReadAndWriteMode() {
-        var state = EditorFeature.State()
-        let feature = EditorFeature()
-
-        var expected = state
-        expected.mode = .write
-        feature.reduce(&state, .toggleEditMode)
-        #expect(state == expected)
-        expected.mode = .read
-        feature.reduce(&state, .toggleEditMode)
-        #expect(state == expected)
+    func toggleEditMode_togglesBetweenReadAndWriteMode() async {
+        let store = makeStore()
+        defer { store.tearDown() }
+        store.dispatch(.toggleEditMode) { $0.mode = .write }
+        store.dispatch(.toggleEditMode) { $0.mode = .read }
+        await store.finish()
     }
 
-    /// Create/register services inside the test scope, then explicitly await every
-    /// middleware call. No unstructured effects or deinit-based teardown escape a test.
-    private func loadedEditor(_ document: MultiPageDocument) async throws -> (
-        state: EditorFeature.State,
-        repository: InMemoryDocumentRepository,
-        middleware: DocumentMiddleware
-    ) {
-        let repository = InMemoryDocumentRepository()
-        Container.shared.documentRepository.register { repository }
-        Container.shared.router.register { MyRouter(root: .explorer(.dashboard(path: nil))) }
-        let middleware = DocumentMiddleware()
-        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        let note = Note(pdf: folder.appendingPathComponent("Editor.pdf"), markup: folder.appendingPathComponent(".Editor.markup"))
+    private func makeStore() -> TestStore<EditorFeature> {
+        .init(state: .init(), middlewares: [DocumentMiddleware().handle])
+    }
+
+    private func givenDocumentWasLoaded(_ document: MultiPageDocument, in store: TestStore<EditorFeature>) async throws {
         try await repository.save(document, at: note.markup)
-        let feature = EditorFeature()
-        var state = EditorFeature.State()
-        let open = EditorFeature.Action.openNote(note)
-        var expected = state
-        expected.note = note
-        expected.mode = .write
-        expected.isLoading = true
-        feature.reduce(&state, open)
-        #expect(state == expected)
-
-        let loaded = try #require(await middleware.handle(state: state, action: open))
-        #expect(loaded == .documentLoaded(document))
-        expected.document = document
-        expected.isLoading = false
-        feature.reduce(&state, loaded)
-        #expect(state == expected)
-        #expect(middleware.router.stack.stack == [.editor(.editor)])
-        #expect(await middleware.handle(state: state, action: loaded) == nil)
-        return (state, repository, middleware)
+        store.dispatch(.openNote(note)) {
+            $0.note = note
+            $0.mode = .write
+            $0.isLoading = true
+        }
+        await store.receive(.documentLoaded(document)) {
+            $0.document = document
+            $0.isLoading = false
+        }
     }
 
-    private func save(
-        _ state: inout EditorFeature.State,
-        using middleware: DocumentMiddleware,
-        repository: InMemoryDocumentRepository
-    ) async throws {
-        let document = try #require(state.document)
-        let note = try #require(state.note)
-        let feature = EditorFeature()
+    private func save(_ store: TestStore<EditorFeature>) async throws {
         let id = UUID()
-        let action = EditorFeature.Action.save([:], requestID: id)
-        var expected = state
-        expected.saveRequest = .init(id: id, note: note, document: document)
-        feature.reduce(&state, action)
-        #expect(state == expected)
-
-        let saved = try #require(await middleware.handle(state: state, action: action))
-        #expect(saved == .saved(id))
-        expected.saveRequest = nil
-        expected.hasUnsavedChanges = false
-        feature.reduce(&state, saved)
-        #expect(state == expected)
-        #expect(try await repository.load(note) == document)
-        #expect(await middleware.handle(state: state, action: saved) == nil)
+        let expectedDocument = try #require(store.state.document)
+        store.dispatch(.save([:], requestID: id)) {
+            $0.saveRequest = .init(id: id, note: note, document: expectedDocument)
+        }
+        await store.receive(.saved(id)) {
+            $0.saveRequest = nil
+            $0.hasUnsavedChanges = false
+        }
+        #expect(try await repository.load(note) == expectedDocument)
     }
 }

@@ -9,13 +9,20 @@
 - UI-test configuration remains explicit launch-environment data consumed in the app process. Unit tests pass environment dictionaries directly; they do not mutate the runner's process environment.
 
 ## Async lifecycle
-`EditorTests` are reducer/middleware tests. They create local fixtures, explicitly reduce requests and responses, await middleware calls, and verify persisted repository contents. They no longer depend on lazy suite properties, `FluxTestStore`'s unstructured effects, or its synchronous deinit teardown, which could block main-actor progress.
+`EditorTests` use a local `TestStore` per test with the usual dispatch/receive assertions and repository roundtrip checks. The `.container` trait registers fresh services before the store captures its middleware. Each test calls `await store.finish()` before returning and uses `defer { store.tearDown() }` as a nonblocking safety check; no lazy suite properties or deinit-based effect draining are needed.
+
+`FluxTestStore` tracks its middleware tasks, including follow-up actions, on the main actor. `finish()` yields while waiting for all tasks, then checks unreceived actions. Its default timeout is five seconds; timeout or cancellation reports pending work and requests task cancellation. Middleware must cooperate with cancellation; work that ignores it cannot be forcibly stopped. Cancelled responses are not dispatched. `tearDown()` only checks and never waits.
 
 `FactoryIsolationTests` additionally exercises dispatch-style `Task { ... }` inheritance in overlapping container scopes. Each child task is retained and awaited, with parent cancellation forwarded to the child. A cancellation-aware rendezvous prevents either save completing before both have started. Both repositories deliberately use the same note URL and different documents, detecting service leakage independently of filesystem-path isolation. The parent container is checked after both scopes finish.
 
-This tests the Factory scoping and reducer/middleware boundary without modifying Flux. Full app-store and UI behavior still require the iPad verification in migration slice 4.
+These isolation regressions exercise Factory scoping and the reducer/middleware boundary. Production Flux dispatch and its Action-based API are unchanged; the async lifecycle changes are confined to FluxTestStore. Full app-store and UI behavior still require the iPad verification in migration slice 4.
+
+## Local Flux development
+The Xcode project currently uses the editable Flux package at `../../../50 Coding/52 iOS/52.01 Packages/Flux`, relative to the NotesToGo project directory. The published Flux 1.0.10 does not provide async `finish()`; keep this local reference until a release containing the change is available. Other developer checkouts need the same relative layout or an updated package reference. The Action-based API is unchanged.
 
 ## Verification
+Flux's package-level finish/teardown regression tests can run on macOS with `swift test` in its checkout, without starting an iOS simulator.
+
 The existing simulator-testing pause still applies. Build-only checks compile these tests but do not execute their assertions or prove a successful parallel run.
 
 After explicit authorization, run unit tests on an iPad destination with parallel testing enabled, for example:
