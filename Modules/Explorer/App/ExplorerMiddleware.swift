@@ -2,9 +2,9 @@ import Foundation
 import Flux
 
 final class ExplorerMiddleware {
-    private let explorer: Explorer
+    private let explorer: ExplorerService
 
-    init(explorer: Explorer = Explorer()) {
+    init(explorer: ExplorerService) {
         self.explorer = explorer
     }
 

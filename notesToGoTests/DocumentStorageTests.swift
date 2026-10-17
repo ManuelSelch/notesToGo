@@ -13,7 +13,7 @@ struct DocumentStorageTests {
         let folder = try temporaryFolder()
         defer { try? FileManager.default.removeItem(at: folder) }
 
-        let note = try await Explorer().addNote(at: folder, name: "New Note")
+        let note = try await ExplorerService(repository: ExplorerRepository()).addNote(at: folder, name: "New Note")
         let document = try await DocumentRepository().load(note)
 
         #expect(document.pages.count == 1)
@@ -42,7 +42,7 @@ struct DocumentStorageTests {
         defer { try? FileManager.default.removeItem(at: folder) }
 
         await #expect(throws: (any Error).self) {
-            try await Explorer().addNote(at: folder, name: name)
+            try await ExplorerService(repository: ExplorerRepository()).addNote(at: folder, name: name)
         }
         #expect(try FileManager.default.contentsOfDirectory(atPath: folder.path).isEmpty)
     }
@@ -56,7 +56,7 @@ struct DocumentStorageTests {
         try original.write(to: existing)
 
         await #expect(throws: (any Error).self) {
-            try await Explorer().addNote(at: folder, name: "Existing")
+            try await ExplorerService(repository: ExplorerRepository()).addNote(at: folder, name: "Existing")
         }
         #expect(try Data(contentsOf: existing) == original)
         #expect(try FileManager.default.contentsOfDirectory(atPath: folder.path) == [filename])
@@ -152,7 +152,7 @@ struct DocumentStorageTests {
     func quickNotesUseCanonicalFormatAndUniqueNames() async throws {
         let folder = try temporaryFolder()
         defer { try? FileManager.default.removeItem(at: folder) }
-        let explorer = Explorer()
+        let explorer = ExplorerService(repository: ExplorerRepository())
         let date = Date(timeIntervalSince1970: 1_700_000_000)
         let first = try await explorer.addQuickNote(at: folder, date: date)
         let second = try await explorer.addQuickNote(at: folder, date: date)
@@ -168,10 +168,11 @@ struct DocumentStorageTests {
     func pdfWriteFailureLeavesNoPartialNote() async throws {
         let folder = try temporaryFolder()
         defer { try? FileManager.default.removeItem(at: folder) }
-        let explorer = Explorer(writePDF: { _, path in
+        let generator = BlankPDFGenerator(writePDF: { _, path in
             try? Data("Partial PDF".utf8).write(to: path)
             return false
         })
+        let explorer = ExplorerService(repository: ExplorerRepository(pdfGenerator: generator))
 
         await #expect(throws: EditorError.pdfWriteFailed) {
             try await explorer.addNote(at: folder, name: "Failed")
@@ -183,7 +184,7 @@ struct DocumentStorageTests {
     func sidecarWriteFailureLeavesNoPartialNote() async throws {
         let folder = try temporaryFolder()
         defer { try? FileManager.default.removeItem(at: folder) }
-        let explorer = Explorer(documentRepository: FailingDocumentRepository())
+        let explorer = ExplorerService(repository: ExplorerRepository(documentRepository: FailingDocumentRepository()))
 
         await #expect(throws: CocoaError(.fileWriteUnknown)) {
             try await explorer.addNote(at: folder, name: "Failed")
@@ -195,10 +196,11 @@ struct DocumentStorageTests {
     func publishFailureRollsBackTheNotePair(extensionToFail: String) async throws {
         let folder = try temporaryFolder()
         defer { try? FileManager.default.removeItem(at: folder) }
-        let explorer = Explorer(publishFile: { source, destination in
+        let repository = ExplorerRepository(publishFile: { source, destination in
             if destination.pathExtension == extensionToFail { throw CocoaError(.fileWriteUnknown) }
             try FileManager.default.moveItem(at: source, to: destination)
         })
+        let explorer = ExplorerService(repository: repository)
 
         await #expect(throws: CocoaError(.fileWriteUnknown)) {
             try await explorer.addNote(at: folder, name: "Failed")
@@ -211,10 +213,11 @@ struct DocumentStorageTests {
         let folder = try temporaryFolder()
         defer { try? FileManager.default.removeItem(at: folder) }
         let original = Data("Created by another operation".utf8)
-        let explorer = Explorer(publishFile: { source, destination in
+        let repository = ExplorerRepository(publishFile: { source, destination in
             if destination.pathExtension == extensionToCollide { try original.write(to: destination) }
             try FileManager.default.moveItem(at: source, to: destination)
         })
+        let explorer = ExplorerService(repository: repository)
 
         await #expect(throws: (any Error).self) {
             try await explorer.addNote(at: folder, name: "Collision")
@@ -228,7 +231,7 @@ struct DocumentStorageTests {
     func failedSerializationPreservesLastSavedDocument() async throws {
         let folder = try temporaryFolder()
         defer { try? FileManager.default.removeItem(at: folder) }
-        let note = try await Explorer().addNote(at: folder, name: "Saved")
+        let note = try await ExplorerService(repository: ExplorerRepository()).addNote(at: folder, name: "Saved")
         let original = try Data(contentsOf: note.markup)
         var invalid = MultiPageDocument.empty
         invalid.pages[0].background = .lined(lineColor: .black, backgroundColor: .white, spacing: .infinity, lineWidth: 1)

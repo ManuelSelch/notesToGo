@@ -3,18 +3,6 @@ import Router
 import FactoryKit
 import Flux
 
-struct ExplorerApp {
-    func build() -> FluxStore<ExplorerFeature> {
-        return .init(
-            state: .init(),
-            middlewares: [
-                ExplorerMiddleware().handle,
-                LogMiddleware<ExplorerFeature>().handle
-            ]
-        )
-    }
-}
-
 struct ExplorerContainer: View {
     @Injected(\.router) var router
     @Environment(\.scenePhase) private var scenePhase
