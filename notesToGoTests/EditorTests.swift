@@ -21,73 +21,77 @@ struct EditorTests {
 
     @Test
     func open_loadsDocFromRepo() async throws {
-        let store = makeStore()
-        defer { store.tearDown() }
-        try await givenDocumentWasLoaded(document, in: store)
-        await store.finish()
+        try await withStore { store in
+            try await givenDocumentWasLoaded(document, in: store)
+        }
     }
 
     @Test
     func save_whenContentChanged_savesDocToRepo() async throws {
-        let store = makeStore()
-        defer { store.tearDown() }
-        try await givenDocumentWasLoaded(document, in: store)
-        store.dispatch(.canvasChanged(document.pages[0].id)) { $0.hasUnsavedChanges = true }
-        try await save(store)
-        await store.finish()
+        try await withStore { store in
+            try await givenDocumentWasLoaded(document, in: store)
+            store.dispatch(.canvasChanged(document.pages[0].id)) { $0.hasUnsavedChanges = true }
+            try await save(store)
+        }
     }
 
     @Test
     func pageAppended_addsNewPageToDoc() async throws {
-        let store = makeStore()
-        defer { store.tearDown() }
-        try await givenDocumentWasLoaded(document, in: store)
-        let page = Page.empty(id: UUID())
+        try await withStore { store in
+            try await givenDocumentWasLoaded(document, in: store)
+            let page = Page.empty(id: UUID())
 
-        store.dispatch(.pageAppended(page)) {
-            $0.document?.pages.append(page)
-            $0.hasUnsavedChanges = true
+            store.dispatch(.pageAppended(page)) {
+                $0.document?.pages.append(page)
+                $0.hasUnsavedChanges = true
+            }
+
+            try await save(store)
         }
-
-        try await save(store)
-        await store.finish()
     }
 
     @Test
     func insertCopyPasteAndMovePage_updatesDocument() async throws {
-        let store = makeStore()
-        defer { store.tearDown() }
-        var document = document
-        document.pages.append(.empty)
-        try await givenDocumentWasLoaded(document, in: store)
-        let first = document.pages[0]
-        let second = document.pages[1]
+        try await withStore { store in
+            var document = document
+            document.pages.append(.empty)
+            try await givenDocumentWasLoaded(document, in: store)
+            let first = document.pages[0]
+            let second = document.pages[1]
 
-        store.dispatch(.copyPage(first.id)) { $0.copiedPage = first }
-        let pasted = first.duplicated(id: UUID())
-        store.dispatch(.pagePasted(after: second.id, page: pasted)) {
-            $0.document?.pages.append(pasted)
-            $0.hasUnsavedChanges = true
-        }
-        store.dispatch(.movePage(source: pasted.id, destination: first.id)) {
-            $0.document?.pages = [pasted, first, second]
-        }
+            store.dispatch(.copyPage(first.id)) { $0.copiedPage = first }
+            let pasted = first.duplicated(id: UUID())
+            store.dispatch(.pagePasted(after: second.id, page: pasted)) {
+                $0.document?.pages.append(pasted)
+                $0.hasUnsavedChanges = true
+            }
+            store.dispatch(.movePage(source: pasted.id, destination: first.id)) {
+                $0.document?.pages = [pasted, first, second]
+            }
 
-        try await save(store)
-        await store.finish()
+            try await save(store)
+        }
     }
 
     @Test
     func toggleEditMode_togglesBetweenReadAndWriteMode() async {
-        let store = makeStore()
-        defer { store.tearDown() }
-        store.dispatch(.toggleEditMode) { $0.mode = .write }
-        store.dispatch(.toggleEditMode) { $0.mode = .read }
-        await store.finish()
+        await withStore { store in
+            store.dispatch(.toggleEditMode) { $0.mode = .write }
+            store.dispatch(.toggleEditMode) { $0.mode = .read }
+        }
     }
 
-    private func makeStore() -> TestStore<EditorFeature> {
-        .init(state: .init(), middlewares: [DocumentMiddleware().handle])
+    private func withStore(
+        _ test: @MainActor (TestStore<EditorFeature>) async throws -> Void
+    ) async rethrows {
+        let store = TestStore<EditorFeature>(state: .init(), middlewares: [DocumentMiddleware().handle])
+        do {
+            try await test(store)
+        } catch {
+            await store.finish()
+            throw error
+        }
+        await store.finish()
     }
 
     private func givenDocumentWasLoaded(_ document: MultiPageDocument, in store: TestStore<EditorFeature>) async throws {
