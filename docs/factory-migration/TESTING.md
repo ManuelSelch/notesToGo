@@ -8,6 +8,11 @@
 - UIKit/PaperKit tests retain `@MainActor`. Removing `.serialized` allows async tests to interleave across suspension points; it does not move main-actor work onto background threads.
 - UI-test configuration remains explicit launch-environment data consumed in the app process. Unit tests pass environment dictionaries directly; they do not mutate the runner's process environment.
 
+## Suite hierarchy
+Unit tests remain in one target and mirror production folders under `App`, `Modules/Editor`, `Modules/Explorer`, and `Shared`. Four named parent suites (`AppModuleTests`, `EditorModuleTests`, `ExplorerModuleTests`, `SharedModuleTests`) provide the corresponding App, Editor, Explorer, and Shared groups in Xcode's Test navigator. Each existing suite remains in its own file, nested through an extension of its module's parent suite.
+
+Parent suites are grouping-only: keep `.container` registrations and actor annotations on the existing inner suites. Do not add parent-level serialization or shared fixtures. Test type identifiers now include the parent type; update any per-suite test-plan or command-line selections accordingly. Module-prefixed display names alone would not create this hierarchy.
+
 ## Async lifecycle
 `EditorTests` use a local `TestStore` per test with the usual dispatch/receive assertions and repository roundtrip checks. The `.container` trait registers fresh services before the store captures its middleware. A small `withStore` helper creates the store inside that scope and awaits `finish()` on both success and thrown errors, rethrowing the original error after finishing. Tests need no explicit finish/teardown calls, lazy suite properties, or deinit-based cleanup. This provides an explicit lifecycle boundary before each test returns, independent of fixture lifetime. Finishing waits for middleware with a bounded timeout; it does not consume unexpected actions, which still fail the test.
 
