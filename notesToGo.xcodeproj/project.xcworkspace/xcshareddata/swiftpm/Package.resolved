@@ -1,15 +1,6 @@
 {
-  "originHash" : "2ef23863f3e65c340ff4940d35c22dfed8c70f4d07f92f1f790d97999be05588",
+  "originHash" : "084ca2f89d178f7f5663525673b4173340d9bb5062395ef47e05e44173a837d4",
   "pins" : [
-    {
-      "identity" : "dependencies",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/ManuelSelch/Dependencies",
-      "state" : {
-        "revision" : "05e83fce3f0d99224533d74499d09b2632884122",
-        "version" : "2.0.0"
-      }
-    },
     {
       "identity" : "factory",
       "kind" : "remoteSourceControl",

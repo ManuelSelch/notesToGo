@@ -11,7 +11,6 @@
 		97C63CA82F35F8FF007C45B7 /* FluxTestStore in Frameworks */ = {isa = PBXBuildFile; productRef = 97C63CA72F35F8FF007C45B7 /* FluxTestStore */; };
 		97C8D8B330822B0000131CBE /* FactoryKit in Frameworks */ = {isa = PBXBuildFile; productRef = 97C8D8B230822B0000131CBE /* FactoryKit */; };
 		97C8D8B530822B0000131CBE /* FactoryTesting in Frameworks */ = {isa = PBXBuildFile; productRef = 97C8D8B430822B0000131CBE /* FactoryTesting */; };
-		97F710B5300BD54900BCD806 /* Dependencies in Frameworks */ = {isa = PBXBuildFile; productRef = 97F710B4300BD54900BCD806 /* Dependencies */; };
 		97F710B7300BD54E00BCD806 /* Router in Frameworks */ = {isa = PBXBuildFile; productRef = 97F710B6300BD54E00BCD806 /* Router */; };
 		97F710B9300BD55300BCD806 /* PulseUI in Frameworks */ = {isa = PBXBuildFile; productRef = 97F710B8300BD55300BCD806 /* PulseUI */; };
 		97F710BB300BD5A400BCD806 /* Pulse in Frameworks */ = {isa = PBXBuildFile; productRef = 97F710BA300BD5A400BCD806 /* Pulse */; };
@@ -96,7 +95,6 @@
 				97F710B7300BD54E00BCD806 /* Router in Frameworks */,
 				97F710BB300BD5A400BCD806 /* Pulse in Frameworks */,
 				97F710B9300BD55300BCD806 /* PulseUI in Frameworks */,
-				97F710B5300BD54900BCD806 /* Dependencies in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -174,7 +172,6 @@
 			name = notesToGo;
 			packageProductDependencies = (
 				97C63C912F35F5BA007C45B7 /* Flux */,
-				97F710B4300BD54900BCD806 /* Dependencies */,
 				97F710B6300BD54E00BCD806 /* Router */,
 				97F710B8300BD55300BCD806 /* PulseUI */,
 				97F710BA300BD5A400BCD806 /* Pulse */,
@@ -268,7 +265,6 @@
 				97C63C902F35F5BA007C45B7 /* XCLocalSwiftPackageReference "../../../50 Coding/52 iOS/52.01 Packages/Flux" */,
 				97F710B1300BD4E400BCD806 /* XCRemoteSwiftPackageReference "Pulse" */,
 				97F710B2300BD52200BCD806 /* XCRemoteSwiftPackageReference "Router" */,
-				97F710B3300BD53E00BCD806 /* XCRemoteSwiftPackageReference "Dependencies" */,
 				97C8D8B130822B0000131CBE /* XCRemoteSwiftPackageReference "Factory" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -736,14 +732,6 @@
 				minimumVersion = 1.0.10;
 			};
 		};
-		97F710B3300BD53E00BCD806 /* XCRemoteSwiftPackageReference "Dependencies" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/ManuelSelch/Dependencies";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.0.0;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -766,11 +754,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 97C8D8B130822B0000131CBE /* XCRemoteSwiftPackageReference "Factory" */;
 			productName = FactoryTesting;
-		};
-		97F710B4300BD54900BCD806 /* Dependencies */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 97F710B3300BD53E00BCD806 /* XCRemoteSwiftPackageReference "Dependencies" */;
-			productName = Dependencies;
 		};
 		97F710B6300BD54E00BCD806 /* Router */ = {
 			isa = XCSwiftPackageProductDependency;

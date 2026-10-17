@@ -20,7 +20,7 @@ Parent suites are grouping-only: keep `.container` registrations and actor annot
 
 `FactoryIsolationTests` additionally exercises dispatch-style `Task { ... }` inheritance in overlapping container scopes. Each child task is retained and awaited, with parent cancellation forwarded to the child. A cancellation-aware rendezvous prevents either save completing before both have started. Both repositories deliberately use the same note URL and different documents, detecting service leakage independently of filesystem-path isolation. The parent container is checked after both scopes finish.
 
-These isolation regressions exercise Factory scoping and the reducer/middleware boundary. Production Flux dispatch and its Action-based API are unchanged; the async lifecycle changes are confined to FluxTestStore. Full app-store and UI behavior still require the iPad verification in migration slice 4.
+These isolation regressions exercise Factory scoping and the reducer/middleware boundary. Production Flux dispatch and its Action-based API are unchanged; the async lifecycle changes are confined to FluxTestStore. These focused regressions do not replace full app-store and UI verification on iPad.
 
 ## Local Flux development
 The Xcode project currently uses the editable Flux package at `../../../50 Coding/52 iOS/52.01 Packages/Flux`, relative to the NotesToGo project directory. The published Flux 1.0.10 does not provide async `finish()`; keep this local reference until a release containing the change is available. Other developer checkouts need the same relative layout or an updated package reference. The Action-based API is unchanged.
@@ -28,14 +28,34 @@ The Xcode project currently uses the editable Flux package at `../../../50 Codin
 ## Verification
 Flux's package-level finish/teardown regression tests can run on macOS with `swift test` in its checkout, without starting an iOS simulator.
 
-The existing simulator-testing pause still applies. Build-only checks compile these tests but do not execute their assertions or prove a successful parallel run.
+The user has fully lifted the simulator-testing pause: unit and UI tests may run freely. Use supported iPad destinations and separate build directories when Xcode is active. Build-only checks compile tests but do not execute their assertions or prove a successful parallel run.
 
-After explicit authorization, run unit tests on an iPad destination with parallel testing enabled, for example:
+Run unit tests on an iPad destination with parallel testing enabled, for example:
 
 ```sh
 xcodebuild -project notesToGo.xcodeproj -scheme notesToGo \
-  -destination 'platform=iOS Simulator,id=46FA7F93-092B-4F31-A08D-37EC0ECAA115' \
+  -destination 'platform=iOS Simulator,id=<IPAD-SIMULATOR-UDID>' \
   -only-testing:notesToGoTests -parallel-testing-enabled YES test
 ```
 
 Swift Testing controls parallel cases within its test process; Xcode's worker settings additionally control test-runner processes. Repeat the unit run to check for order-dependent failures. Run UI tests separately rather than treating a unit-test build as UI verification.
+
+## Migration and manual-save close-out — 2026-10-17
+All four Factory migration slices are complete. Legacy keys/mode switching/override plumbing are absent, the remaining unused imports and Xcode Dependencies package/product were removed, and normal package resolution removed only its pin. All ten other remote package pins are unchanged. The temporary local Flux reference remains intentional.
+
+Verification used an owned iPad Air 11-inch (M3), iOS 26.1, isolated DerivedData, and a separate copy of the package checkouts so active user builds were not disturbed.
+
+| Check | Result |
+| --- | --- |
+| Full unit baseline before legacy removal | 74 test methods / 104 executions; passed |
+| Full units after removal, parallel enabled, two workers | Three runs, each 74 methods / 104 executions; passed |
+| Full UI suite, separate sequential run | 19 tests; passed |
+| Unsigned Release build, arm64 iOS Simulator | Passed |
+
+No test failures, expected failures, or skips were reported. UI cleanup acknowledgements passed, and the owned simulator's `tmp/NotesToGoUITests` directory contained no remaining test directories before device removal.
+
+The persistence slice-3 audit confirmed the existing native canvas-content callback reaches dirty state; equal markup, initialization, selection, and transforms do not report edits. Save captures canvas markups, disables native/page editing while busy, matches immutable requests by ID, and keeps changes on failure. The approved stateless icon/spinner component and page-grid capture-without-autosave wiring required no additional implementation changes. The five manual-save UI flows cover clean reopening, save/busy blocking, grid edits without autosave, retained changes after failure, and retry.
+
+Physical Apple Pencil drawing/save/reopen remains a hardware check; unsupported finger drawing is not a simulator requirement. Save-and-close completion ordering and geometry/rotation roundtrips remain persistence slices 4 and 5, respectively, and are not claimed completed here.
+
+Local evidence: `/tmp/notestogo-closeout-unit-baseline.xcresult`, `/tmp/notestogo-closeout-unit-{1,2,3}.xcresult`, `/tmp/notestogo-closeout-ui.xcresult`, and `/tmp/notestogo-closeout-release.log`. These temporary artifacts are not committed.

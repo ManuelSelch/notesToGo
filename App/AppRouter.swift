@@ -1,7 +1,6 @@
 import FactoryKit
 import Foundation
 import Router
-import Dependencies
 
 typealias MyRouter = StackWithSheetRouter<AppRoute>
 typealias RouteType = Equatable & Hashable & Identifiable & Codable
