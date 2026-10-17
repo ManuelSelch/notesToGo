@@ -22,14 +22,14 @@ struct EditorTests {
     @Test
     func open_loadsDocFromRepo() async throws {
         try await withStore { store in
-            try await givenDocumentWasLoaded(document, in: store)
+            try await openDocumentAndExpectLoaded(document, in: store)
         }
     }
 
     @Test
     func save_whenContentChanged_savesDocToRepo() async throws {
         try await withStore { store in
-            try await givenDocumentWasLoaded(document, in: store)
+            try await openDocumentAndExpectLoaded(document, in: store)
             store.dispatch(.canvasChanged(document.pages[0].id)) { $0.hasUnsavedChanges = true }
             try await save(store)
         }
@@ -38,7 +38,7 @@ struct EditorTests {
     @Test
     func pageAppended_addsNewPageToDoc() async throws {
         try await withStore { store in
-            try await givenDocumentWasLoaded(document, in: store)
+            try await openDocumentAndExpectLoaded(document, in: store)
             let page = Page.empty(id: UUID())
 
             store.dispatch(.pageAppended(page)) {
@@ -55,7 +55,7 @@ struct EditorTests {
         try await withStore { store in
             var document = document
             document.pages.append(.empty)
-            try await givenDocumentWasLoaded(document, in: store)
+            try await openDocumentAndExpectLoaded(document, in: store)
             let first = document.pages[0]
             let second = document.pages[1]
 
@@ -94,7 +94,7 @@ struct EditorTests {
         await store.finish()
     }
 
-    private func givenDocumentWasLoaded(_ document: MultiPageDocument, in store: TestStore<EditorFeature>) async throws {
+    private func openDocumentAndExpectLoaded(_ document: MultiPageDocument, in store: TestStore<EditorFeature>) async throws {
         try await repository.save(document, at: note.markup)
         store.dispatch(.openNote(note)) {
             $0.note = note
